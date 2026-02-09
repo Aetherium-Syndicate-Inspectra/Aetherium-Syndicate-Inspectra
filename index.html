@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aetherium Genesis - Executive AI Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap">
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1337ec',
+                        surface: {
+                            dark: '#1e293b',
+                            darker: '#0f1115'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-slate-950 text-slate-100">
+    <div id="app">
+        <!-- Top Header -->
+        <header class="h-16 border-b border-slate-800 bg-slate-950/90 backdrop-blur flex items-center justify-between px-6 shrink-0 z-50">
+            <div class="flex items-center gap-4">
+                <div class="size-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-2xl">hub</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Aetherium Genesis</h1>
+                    <div class="flex items-center gap-2">
+                        <span class="size-2 bg-emerald-500 rounded-full pulse"></span>
+                        <span class="text-[10px] text-slate-400 font-mono tracking-widest uppercase">Executive Console v4.2.1</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <!-- Role Switcher -->
+                <div class="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+                    <span class="material-symbols-outlined text-sm text-slate-400">person_search</span>
+                    <select id="role-select" class="bg-transparent text-xs font-medium focus:outline-none cursor-pointer">
+                        <option value="executive">👑 Executive Director</option>
+                        <option value="analyst">📊 Senior Analyst</option>
+                        <option value="viewer">👁️ System Viewer</option>
+                        <option value="researcher">🤖 AI Researcher</option>
+                    </select>
+                </div>
+
+                <div class="h-8 w-px bg-slate-800"></div>
+
+                <div class="flex items-center gap-3">
+                    <button id="theme-toggle" class="p-2 text-slate-400 hover:text-white transition-colors">
+                        <span class="material-symbols-outlined">dark_mode</span>
+                    </button>
+                    <button class="p-2 text-slate-400 hover:text-white transition-colors relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <div class="flex items-center gap-3 pl-3 border-l border-slate-800">
+                        <div class="text-right hidden sm:block">
+                            <div class="text-sm font-bold text-white" id="user-name">Dr. Aris Thorne</div>
+                            <div class="text-[10px] text-primary font-bold uppercase tracking-wider" id="user-role-label">Executive Level 1</div>
+                        </div>
+                        <div class="size-9 rounded-lg border border-slate-700 bg-gradient-to-br from-primary/40 to-violet-500/30 flex items-center justify-center text-xs font-black text-white" id="user-avatar" aria-label="Current user avatar">AT</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar shrink-0">
+                <div class="p-4">
+                    <button id="global-action-btn" class="w-full bg-primary hover:bg-primary-hover text-white rounded-xl p-3 flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 group">
+                        <span class="material-symbols-outlined">add</span>
+                        <span class="font-bold text-sm">New Directive</span>
+                    </button>
+                </div>
+
+                <nav class="flex-1 overflow-y-auto py-2">
+                    <div class="px-4 mb-2">
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Operational Views</h3>
+                    </div>
+                    <a href="#" class="nav-item active" data-view="dashboard">
+                        <span class="material-symbols-outlined">dashboard</span>
+                        <span>🏛️ Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="spatial">
+                        <span class="material-symbols-outlined">hub</span>
+                        <span>🌌 Spatial Grid</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="command">
+                        <span class="material-symbols-outlined">terminal</span>
+                        <span>🎮 Command Center</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="meetings">
+                        <span class="material-symbols-outlined">groups</span>
+                        <span>🤝 AI Meetings</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="structure">
+                        <span class="material-symbols-outlined">account_tree</span>
+                        <span>🏢 Structure</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="analytics">
+                        <span class="material-symbols-outlined">monitoring</span>
+                        <span>📊 Analytics</span>
+                    </a>
+
+                    <div class="mt-8 px-4 mb-2">
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">System Control</h3>
+                    </div>
+                    <a href="#" class="nav-item text-rose-400 hover:text-rose-300" id="emergency-council-nav">
+                        <span class="material-symbols-outlined">warning</span>
+                        <span>Emergency Council</span>
+                    </a>
+                </nav>
+
+                <!-- System Load Mini -->
+                <div class="p-4 border-t border-slate-800 bg-slate-950/50">
+                    <div class="flex items-center justify-between text-[10px] font-bold text-slate-500 mb-2">
+                        <span class="tracking-widest uppercase">System Load</span>
+                        <span id="system-load-val">42%</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                        <div id="system-load-bar" class="h-full bg-emerald-500 transition-all duration-1000" style="width: 42%"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main View Container -->
+            <main id="view-container">
+                <!-- Views will be injected here -->
+                <div id="loader" class="absolute inset-0 bg-slate-950 z-50 transition-opacity duration-300">
+                    <div class="p-6 md:p-8 space-y-5">
+                        <div class="skeleton h-8 w-64 rounded-lg"></div>
+                        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            <div class="skeleton-card">
+                                <div class="skeleton h-4 w-28 rounded"></div>
+                                <div class="skeleton h-7 w-20 rounded mt-3"></div>
+                            </div>
+                            <div class="skeleton-card">
+                                <div class="skeleton h-4 w-24 rounded"></div>
+                                <div class="skeleton h-7 w-16 rounded mt-3"></div>
+                            </div>
+                            <div class="skeleton-card">
+                                <div class="skeleton h-4 w-32 rounded"></div>
+                                <div class="skeleton h-7 w-24 rounded mt-3"></div>
+                            </div>
+                        </div>
+                        <div class="text-xs font-mono text-slate-400 uppercase tracking-[0.2em]">Synchronizing AetherBus...</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Global Status Bar -->
+        <footer class="status-bar shrink-0">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-500">AetherBus:</span>
+                    <span class="text-emerald-400 font-bold" id="bus-status">OPERATIONAL</span>
+                </div>
+                <div class="w-px h-3 bg-slate-800"></div>
+                <div class="flex items-center gap-2">
+                    <span>Latency:</span>
+                    <span class="text-slate-200" id="latency-val">0.8ms</span>
+                </div>
+                <div class="hidden sm:flex items-center gap-2">
+                    <span>Throughput:</span>
+                    <span class="text-slate-200" id="throughput-val">10,240 req/s</span>
+                </div>
+            </div>
+            <div class="ml-auto flex items-center gap-4">
+                <div id="clock" class="text-slate-300 font-mono">14:02:59 UTC</div>
+                <div class="text-[10px] text-slate-500">v4.2.1-stable</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

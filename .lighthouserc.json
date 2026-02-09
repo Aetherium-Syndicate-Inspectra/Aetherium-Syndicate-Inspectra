@@ -1,0 +1,85 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 3,
+      "url": [
+        "http://127.0.0.1:8080/"
+      ],
+      "startServerCommand": "python3 -m http.server 8080",
+      "startServerReadyPattern": "Serving HTTP on",
+      "startServerReadyTimeout": 30000,
+      "settings": {
+        "budgets": [
+          {
+            "path": "/*",
+            "resourceSizes": [
+              {
+                "resourceType": "script",
+                "budget": 220
+              },
+              {
+                "resourceType": "stylesheet",
+                "budget": 80
+              },
+              {
+                "resourceType": "image",
+                "budget": 300
+              },
+              {
+                "resourceType": "total",
+                "budget": 650
+              }
+            ],
+            "resourceCounts": [
+              {
+                "resourceType": "third-party",
+                "budget": 8
+              }
+            ],
+            "timings": [
+              {
+                "metric": "first-contentful-paint",
+                "budget": 1800
+              },
+              {
+                "metric": "interactive",
+                "budget": 3500
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": [
+          "error",
+          {
+            "minScore": 0.85
+          }
+        ],
+        "largest-contentful-paint": [
+          "error",
+          {
+            "maxNumericValue": 3000
+          }
+        ],
+        "total-blocking-time": [
+          "error",
+          {
+            "maxNumericValue": 200
+          }
+        ],
+        "cumulative-layout-shift": [
+          "error",
+          {
+            "maxNumericValue": 0.1
+          }
+        ]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

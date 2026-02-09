@@ -170,22 +170,18 @@ Baseline หลักที่บังคับ:
 
 ## Next Development Roadmap (อัปเดตจากแผนล่าสุด)
 
-```mermaid
-timeline
-    title แผนพัฒนาตัวอย่าง Aetherium
-    section ระยะที่ 1 : เสริมความแข็งแกร่งให้แกนหลัก
-        Modern Stack Migration : ย้ายสถาปัตยกรรมจากปัจจุบันสู่ React + TypeScript
-        AetherBus API Bridge : พัฒนา/ปรับปรุง integration กับ backend และ realtime channel
-    section ระยะที่ 2 : สร้างความไว้วางใจและความเข้าใจ
-        Trust & Explainability Layer : แสดง decision trace ของแต่ละ Directive และเหตุผลการโหวต
-        Predictive Latency Guard : พยากรณ์ latency จาก metrics.updated พร้อม early warning
-    section ระยะที่ 3 : ทำให้การประสานงานอัจฉริยะ
-        Adaptive Workload Orchestrator : จัดสรรงานตาม skill matrix + workload แบบไดนามิก
-        Scenario Engine : จำลองเหตุการณ์ไม่คาดคิดเพื่อฝึกการตัดสินใจของทีม AI
-    section อนาคต
-        Executive Memory Graph : สร้าง knowledge graph สำหรับค้นหาการตัดสินใจย้อนหลัง
-        Red-Team Drill : ทดสอบความยืดหยุ่นของระบบด้วย adversarial simulations ต่อเนื่อง
-```
+> หมายเหตุ: เปลี่ยนจาก Mermaid `timeline` เป็นตาราง เพื่อหลีกเลี่ยงปัญหา render บางสภาพแวดล้อม (เช่น `Cannot read properties of undefined (reading 'events')`).
+
+| Phase | Initiative | Outcome ที่คาดหวัง | Data ที่ต้องเตรียม |
+|---|---|---|---|
+| ระยะที่ 1 | Modern Stack Migration (React + TypeScript) | แยกชั้น domain/UI ชัดเจน, พร้อม scale โมดูล | AppState/UIState schema, component contract |
+| ระยะที่ 1 | AetherBus API Bridge | เชื่อม backend + realtime ที่เสถียร | `metrics.updated`, `directive.updated`, connection telemetry |
+| ระยะที่ 2 | Trust & Explainability Layer | มองเห็นเหตุผลและ dissent ราย directive | vote records, rationale, evidence links |
+| ระยะที่ 2 | Predictive Latency Guard | แจ้งเตือน SLA breach ล่วงหน้า 15/30 นาที | latency/throughput/error/retry time-series |
+| ระยะที่ 3 | Adaptive Workload Orchestrator | ลด bottleneck จาก skill mismatch | skill matrix, utilization, queue depth |
+| ระยะที่ 3 | Scenario Engine | ซ้อมรับเหตุการณ์เชิงกลยุทธ์แบบ what-if | compliance/risk events, budget constraints |
+| ระยะถัดไป | Executive Memory Graph | semantic search + knowledge continuity | meeting transcript, resolution, KPI outcomes |
+| ระยะถัดไป | Red-Team Drill (Gamified) | ยกระดับ resilience benchmark แบบต่อเนื่อง | incident logs, MTTD/MTTR, blast radius |
 
 ## Phase-by-Phase Build Notes
 
@@ -212,6 +208,31 @@ timeline
 - เก็บ **counterfactual outcomes** จาก Scenario Engine เพื่อ train policy optimizer ว่าแนวทางไหนลด SLA breach ได้จริง
 - วัด **Human Override Frequency** เพื่อประเมินความน่าเชื่อถือ AI Council รายเดือน
 - สร้าง **Unified Feature Store** สำหรับ metrics + decisions + incidents เพื่อลดข้อมูลซ้ำและทำให้โมเดลวิเคราะห์ใช้ชุดข้อมูลเดียวกัน
+
+## Data Hygiene & Feature Prioritization Playbook
+
+เพื่อให้ระบบ "เข้าใจสถานะปัจจุบันเสมอ" เมื่อมีข้อมูลใหม่เข้ามาแบบซ้ำ/ทับซ้อน แนะนำมาตรฐานต่อไปนี้:
+
+1. **Canonical Event Keys**
+   - กำหนดคีย์หลักทุก event เป็น `(entity_id, event_type, event_time, source)`
+   - ถ้า key ซ้ำ ให้ merge โดยเลือก record ที่มี `ingested_at` ล่าสุด และ `quality_score` สูงสุด
+
+2. **Best Function Selection (เมื่อฟังก์ชันซ้ำบทบาทกัน)**
+   - จัดอันดับฟังก์ชันด้วยเกณฑ์: latency, explainability, failure rate, maintenance cost
+   - เก็บเฉพาะฟังก์ชันที่ได้ composite score สูงสุดเป็นค่า default แล้ว mark ตัวอื่นเป็น fallback
+
+3. **Conflict Resolution Policy**
+   - Decision data ขัดกัน: ใช้ quorum ล่าสุด + confidence weight ของ agent
+   - Metrics ขัดกัน: ใช้ source priority (`realtime > api snapshot > mock`) และ median smoothing
+
+4. **Duplicate Cleanup Pipeline**
+   - Detect: rolling hash + similarity threshold ของ payload
+   - Resolve: exact-duplicate drop, near-duplicate merge พร้อมเก็บ provenance
+   - Audit: เก็บ `dedup_reason` เพื่อย้อนรอยได้ใน explainability layer
+
+5. **Continuous Recommendation Loop**
+   - ทุกสิ้นสัปดาห์ให้รัน report 3 ชุด: SLA risk, workload fairness, policy drift
+   - ใช้ผล report ปรับ priority backlog อัตโนมัติ (เช่น ดัน Predictive Latency Guard ก่อนถ้า SLA risk สูง)
 
 ---
 

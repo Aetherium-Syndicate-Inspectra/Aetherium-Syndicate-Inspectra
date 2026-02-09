@@ -30,3 +30,27 @@ test('setRole notifies subscribers with roleChanged event', () => {
 
     assert.deepEqual(observed, { event: 'roleChanged', data: 'analyst' });
 });
+
+test('hydrate replaces collections and emits hydrated event', () => {
+    const state = new AppState();
+    let observed = null;
+
+    state.subscribe((event, data) => {
+        if (event === 'hydrated') observed = data;
+    });
+
+    state.hydrate({
+        agents: [{ id: 'new-agent' }],
+        directives: [{ id: 'DIR-999' }],
+        meetings: [{ id: 'new-meeting' }]
+    });
+
+    assert.equal(state.agents[0].id, 'new-agent');
+    assert.equal(state.directives[0].id, 'DIR-999');
+    assert.equal(state.meetings[0].id, 'new-meeting');
+    assert.deepEqual(observed, {
+        agents: [{ id: 'new-agent' }],
+        directives: [{ id: 'DIR-999' }],
+        meetings: [{ id: 'new-meeting' }]
+    });
+});

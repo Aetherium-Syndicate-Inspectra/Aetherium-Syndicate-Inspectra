@@ -1,12 +1,19 @@
 import { AppState } from './state/app-state.js';
+import { UIState } from './state/ui-state.js';
 import { ThemeManager } from './utils/theme-manager.js';
 import { MockAetherBus } from './services/mock-aetherbus.js';
+import { ApiClient } from './services/api-client.js';
+import { RealtimeChannel } from './services/realtime-channel.js';
 
 class App {
     constructor() {
         this.state = new AppState();
-        this.bus = new MockAetherBus(this.state);
+        this.uiState = new UIState();
         this.themeManager = new ThemeManager();
+        this.apiClient = new ApiClient();
+
+        this.bus = null;
+        this.realtimeChannel = null;
 
         this.viewContainer = document.getElementById('view-container');
         this.navItems = document.querySelectorAll('.nav-item');
@@ -22,31 +29,89 @@ class App {
         this.setupEventListeners();
         this.startClock();
 
-        // Subscribe to state changes
         this.state.subscribe((event, data) => {
             this.onStateChange(event, data);
         });
 
-        // Initial view
-        await this.loadView('dashboard');
+        this.uiState.subscribe((event, data) => {
+            this.onUIStateChange(event, data);
+        });
 
-        // Hide loader
-        const loader = document.getElementById('loader');
-        if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.remove(), 300);
+        await this.bootstrapData();
+
+        await this.loadView(this.uiState.activeView);
+        this.uiState.setLoading(false);
+    }
+
+    async bootstrapData() {
+        try {
+            const payload = await this.apiClient.bootstrap();
+            this.state.hydrate(payload);
+            this.uiState.setConnection({ api: 'connected' });
+            this.connectRealtime();
+        } catch (error) {
+            console.warn('[App] API bootstrap failed, using mock transport.', error);
+            this.uiState.setConnection({ api: 'fallback', realtime: 'simulated', transport: 'mock' });
+            this.bus = new MockAetherBus(this.state);
+        }
+    }
+
+    connectRealtime() {
+        this.realtimeChannel = new RealtimeChannel({
+            onEvent: (payload) => this.handleRealtimeEvent(payload),
+            onStatus: (statusPatch) => this.uiState.setConnection(statusPatch)
+        });
+
+        this.realtimeChannel.connect();
+    }
+
+    handleRealtimeEvent(payload) {
+        switch (payload.type) {
+            case 'agent.updated':
+                this.state.upsertAgent(payload.data);
+                break;
+            case 'directive.updated':
+            case 'directive.created':
+                this.state.upsertDirective(payload.data);
+                break;
+            case 'meeting.appended':
+                this.state.setMeetings(payload.data);
+                break;
+            case 'metrics.updated':
+                this.state.updateMetrics(payload.data);
+                this.syncGlobalMetrics();
+                break;
+            default:
+                console.info('[Realtime] Unsupported event type', payload.type);
         }
     }
 
     onStateChange(event, data) {
-        // Global UI updates
         if (event === 'roleChanged') {
             this.updateUIPermissions();
         }
 
-        // View-specific updates (delegated to the view instance)
+        if (event === 'metricsUpdated') {
+            this.syncGlobalMetrics();
+        }
+
         if (this.currentViewInstance && this.currentViewInstance.onStateChange) {
             this.currentViewInstance.onStateChange(event, data);
+        }
+    }
+
+    onUIStateChange(event, data) {
+        if (event === 'connectionChanged') {
+            this.renderConnectionStatus(data);
+            return;
+        }
+
+        if (event === 'loadingChanged' && data === false) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 300);
+            }
         }
     }
 
@@ -55,7 +120,10 @@ class App {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const view = item.getAttribute('data-view');
-                if (view) this.loadView(view);
+                if (view) {
+                    this.uiState.setActiveView(view);
+                    this.loadView(view);
+                }
             });
         });
 
@@ -103,6 +171,45 @@ class App {
         this.viewContainer.style.opacity = '1';
     }
 
+    renderConnectionStatus(connection) {
+        const busStatus = document.getElementById('bus-status');
+        if (!busStatus) return;
+
+        if (connection.realtime === 'connected') {
+            busStatus.textContent = `LIVE (${connection.transport.toUpperCase()})`;
+            busStatus.className = 'text-emerald-400 font-bold';
+            return;
+        }
+
+        if (connection.api === 'connected') {
+            busStatus.textContent = 'API CONNECTED';
+            busStatus.className = 'text-amber-400 font-bold';
+            return;
+        }
+
+        busStatus.textContent = 'SIMULATED';
+        busStatus.className = 'text-slate-300 font-bold';
+    }
+
+    syncGlobalMetrics() {
+        const { latency, throughput, load } = this.state.metrics;
+
+        const latEl = document.getElementById('latency-val');
+        const thrEl = document.getElementById('throughput-val');
+        const loadValEl = document.getElementById('system-load-val');
+        const loadBarEl = document.getElementById('system-load-bar');
+
+        if (latEl) latEl.textContent = `${latency}ms`;
+        if (thrEl) thrEl.textContent = `${Number(throughput).toLocaleString()} req/s`;
+        if (loadValEl) loadValEl.textContent = `${load}%`;
+        if (loadBarEl) {
+            loadBarEl.style.width = `${load}%`;
+            if (load > 80) loadBarEl.className = 'h-full bg-rose-500 transition-all duration-1000';
+            else if (load > 60) loadBarEl.className = 'h-full bg-amber-500 transition-all duration-1000';
+            else loadBarEl.className = 'h-full bg-emerald-500 transition-all duration-1000';
+        }
+    }
+
     updateUIPermissions() {
         const role = this.state.role;
         const label = document.getElementById('user-role-label');
@@ -122,19 +229,25 @@ class App {
             if (userName) userName.textContent = 'Dr. Aris Thorne';
         }
 
-        // Re-render
         if (this.currentViewName) {
             const current = this.currentViewName;
-            this.currentViewName = null; // Force reload
+            this.currentViewName = null;
             this.loadView(current);
         }
     }
 
-    openDirectiveModal() {
+    async openDirectiveModal() {
         const title = prompt('หัวข้อคำสั่ง (Directive Title):');
-        if (title) {
-            const dept = prompt('แผนก (Marketing/Finance/R&D/Operations):', 'Operations');
-            this.state.addDirective({ title, department: dept });
+        if (!title) return;
+
+        const department = prompt('แผนก (Marketing/Finance/R&D/Operations):', 'Operations') || 'Operations';
+
+        try {
+            const created = await this.apiClient.createDirective({ title, department });
+            this.state.upsertDirective(created);
+        } catch (error) {
+            console.warn('[App] Failed to save directive to API, using local state only.', error);
+            this.state.addDirective({ title, department });
         }
     }
 

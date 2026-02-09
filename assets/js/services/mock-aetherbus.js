@@ -15,7 +15,7 @@ export class MockAetherBus {
             this.simulateAgents();
         }, 5000);
 
-        // Occasional new meetings or messages (every 15 seconds)
+        // Occasional directive workflow updates (every 15 seconds)
         setInterval(() => {
             this.simulateEvents();
         }, 15000);

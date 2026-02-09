@@ -4,7 +4,7 @@ Aetherium-Syndicate-Inspectra คือแดชบอร์ดต้นแบ�
 
 ## Overview
 
-โปรเจคนี้สาธิตหน้า **Aetherium Genesis Executive Dashboard** สำหรับ:
+โปรเจ็กต์นี้สาธิตหน้า **Aetherium Genesis Executive Dashboard** สำหรับ:
 - ติดตามสถานะ CEO AI Council แบบกึ่งเรียลไทม์
 - สร้าง Directive ใหม่ผ่านฟอร์มบนหน้า Dashboard
 - ดูกระดาน Active Directives (Kanban snapshot)
@@ -14,15 +14,17 @@ Aetherium-Syndicate-Inspectra คือแดชบอร์ดต้นแบ�
 
 ```text
 Aetherium-Syndicate-Inspectra/
-├── .github/workflows/
-│   ├── deploy.yml
-│   └── lighthouse.yml
 ├── assets/
 │   ├── css/style.css
-│   └── js/dashboard.js
-├── docs/
-├── public/
+│   └── js/
+│       ├── app.js
+│       ├── services/mock-aetherbus.js
+│       ├── state/app-state.js
+│       ├── utils/
+│       └── views/
+├── backup/dashboard.js
 ├── index.html
+├── server.log
 └── README.md
 ```
 
@@ -35,6 +37,12 @@ python3 -m http.server 8080
 # open http://127.0.0.1:8080
 ```
 
+## Tests
+
+```bash
+node --test tests/*.test.mjs
+```
+
 ## Implemented UI Modules
 
 1. **CEO AI Council Monitoring**
@@ -43,6 +51,13 @@ python3 -m http.server 8080
 4. **Recent AI Meetings Feed**
 5. **Company Structure Snapshot**
 6. **AetherBus Throughput Indicator**
+
+## Suggested Next Technical Steps
+
+- เชื่อม `assets/js/app.js` เข้ากับ API จริง (`/api/agents`, `/api/directives`, `/api/meetings`)
+- เพิ่ม WebSocket/SSE สำหรับอัปเดตสถานะทันที
+- แยก UI state management และเตรียมย้ายสู่ React + TypeScript เมื่อฟีเจอร์โตขึ้น
+- ตั้ง baseline performance budget และบังคับใน Lighthouse CI
 
 ## Creative Extension Ideas (เพิ่มประสิทธิภาพ + ความท้าทาย)
 
@@ -66,12 +81,9 @@ python3 -m http.server 8080
    - สร้าง knowledge graph จากรายงานประชุม AI
    - ทำ semantic search เพื่อย้อนดูการตัดสินใจเชิงประวัติ
 
-## Suggested Next Technical Steps
-
-- เชื่อม `assets/js/dashboard.js` เข้ากับ API จริง (`/api/agents`, `/api/directives`, `/api/meetings`)
-- เพิ่ม WebSocket/SSE สำหรับอัปเดตสถานะทันที
-- แยก UI state management และเตรียมย้ายสู่ React + TypeScript เมื่อฟีเจอร์โตขึ้น
-- ตั้ง baseline performance budget และบังคับใน Lighthouse CI
+6. **Gamified Red-Team Drill**
+   - เพิ่มโหมดโจมตีจำลอง (adversarial scenarios) สำหรับฝึกความพร้อมของ AI Council
+   - บันทึกคะแนน resilience รายทีม เพื่อใช้เทียบ benchmark รายเดือน
 
 ---
 

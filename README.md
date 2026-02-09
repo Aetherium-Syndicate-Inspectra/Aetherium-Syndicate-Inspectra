@@ -252,3 +252,20 @@ cargo test
 - เชื่อม `DeterministicReplayLog` ออกเป็นไฟล์ trace มาตรฐาน (เช่น JSONL + hash chain) สำหรับ audit ภายนอก
 - ขยาย duplicate-function gate ให้รู้จัก semantic duplicate (AST-level) ไม่ใช่ตรวจแค่ชื่อฟังก์ชัน
 - ถ้าจะใช้กับข้อมูลใหม่ปริมาณสูง: เพิ่ม policy สำหรับ auto-select single-best source จาก freshness + integrity score และ purge records ซ้ำแบบ scheduled compaction
+
+## GitHub Actions Deploy Permission Update
+
+เพื่อแก้ปัญหา workflow deploy ไม่มีสิทธิ์ push ไปยัง branch `gh-pages` ได้เพิ่มสิทธิ์แบบ fine-grained ในไฟล์ `.github/workflows/deploy.yml` ดังนี้:
+
+```yaml
+permissions:
+  contents: write
+```
+
+แนวทางนี้ทำให้สิทธิ์เขียนถูกจำกัดเฉพาะ job `deploy` ตามหลัก least privilege และไม่ต้องเปิด Read/Write ทั้ง repository ในหน้า Settings.
+
+### ข้อเสนอแนะต่อยอด
+
+- เพิ่ม branch protection rule สำหรับ `gh-pages` ให้รับเฉพาะการ push จาก GitHub Actions token
+- เพิ่ม workflow check ที่ตรวจว่าไฟล์ workflow สำคัญทุกไฟล์ระบุ `permissions` ชัดเจน
+

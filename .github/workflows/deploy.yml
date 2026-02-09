@@ -12,6 +12,19 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 🛡️ Enforce Single Best Function
+        run: |
+          if [ ! -f canonical_registry.json ]; then
+            echo '{"approved_functions": ["__init__", "main"]}' > canonical_registry.json
+          fi
+          python scripts/enforce_canonical.py
+
       - name: Deploy static site
         uses: JamesIves/github-pages-deploy-action@v4
         with:

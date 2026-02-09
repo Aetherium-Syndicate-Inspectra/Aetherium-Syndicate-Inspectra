@@ -2,8 +2,24 @@
 name = "tachyon-core"
 version = "0.1.0"
 edition = "2021"
-description = "Aetherium Intent Vector V2 (Tachyon Class) binary schema and governance core"
+authors = ["Aetherium Syndicate <architect@aetherium.ai>"]
+description = "High-performance Data Plane for AetherBus Tachyon Protocol"
 license = "MIT"
 
-[dependencies]
+[lib]
+name = "tachyon_core"
+crate-type = ["cdylib"]
 
+[dependencies]
+pyo3 = { version = "0.20.0", features = ["extension-module", "abi3-py39"] }
+zerocopy = { version = "0.7.32", features = ["derive"] }
+xxhash-rust = { version = "0.8.8", features = ["xxh64"] }
+serde = { version = "1.0", features = ["derive"] }
+rayon = "1.8"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

@@ -1,8 +1,14 @@
+#![allow(non_local_definitions)]
+
 use std::array;
 use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+use pyo3::prelude::*;
+use xxhash_rust::xxh64::xxh64;
+use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
 pub const INTENT_DIMENSIONS: usize = 1024;
 pub const ENTROPY_SEED_BYTES: usize = 32;
@@ -121,6 +127,116 @@ impl IntentVectorV2 {
             .with_provenance(next_provenance)
             .build_with_version(self.version + 1)
     }
+
+    pub fn as_bytes_slice(&self) -> &[u8] {
+        // SAFETY: IntentVectorV2 is repr(C) and we expose an immutable byte view over self.
+        unsafe {
+            std::slice::from_raw_parts(
+                (self as *const Self).cast::<u8>(),
+                std::mem::size_of::<Self>(),
+            )
+        }
+    }
+}
+
+pub const INTENT_VECTOR_WIRE_BYTES: usize = 4128;
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, AsBytes, FromZeroes, FromBytes)]
+pub struct IntentVectorWireV2 {
+    pub sync_id: u64,
+    pub entity_id: u64,
+    pub vector: [f32; INTENT_DIMENSIONS],
+    pub entropy_seed: u64,
+    pub ghost_flag: u8,
+    pub _padding: [u8; 7],
+}
+
+impl IntentVectorWireV2 {
+    pub fn as_bytes_slice(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
+pub trait IdentityAnnihilation {
+    fn annihilate_identity(&self) -> Result<IntentVectorWireV2, GovernanceRejection>;
+}
+
+#[pyclass]
+pub struct RawInput {
+    #[pyo3(get, set)]
+    pub user_id: String,
+    #[pyo3(get, set)]
+    pub command: String,
+}
+
+#[pymethods]
+impl RawInput {
+    #[new]
+    fn new(user_id: String, command: String) -> Self {
+        Self { user_id, command }
+    }
+
+    fn to_tachyon_vector(&self) -> PyResult<Vec<u8>> {
+        let vector = self
+            .annihilate_identity()
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
+        Ok(vector.as_bytes_slice().to_vec())
+    }
+}
+
+impl IdentityAnnihilation for RawInput {
+    fn annihilate_identity(&self) -> Result<IntentVectorWireV2, GovernanceRejection> {
+        let mut vector = [0.0f32; INTENT_DIMENSIONS];
+        let bytes = self.command.as_bytes();
+        for (idx, byte) in bytes.iter().take(INTENT_DIMENSIONS).enumerate() {
+            vector[idx] = (*byte as f32 / 255.0) * 2.0 - 1.0;
+        }
+
+        Ok(IntentVectorWireV2 {
+            sync_id: next_lamport_timestamp(),
+            entity_id: xxh64(self.user_id.as_bytes(), 0),
+            vector,
+            entropy_seed: xxh64(self.command.as_bytes(), 42),
+            ghost_flag: 0,
+            _padding: [0; 7],
+        })
+    }
+}
+
+#[pyclass]
+pub struct TachyonEngine;
+
+#[pymethods]
+impl TachyonEngine {
+    #[new]
+    fn new() -> Self {
+        Self
+    }
+
+    fn process_intent(&self, user_id: &str, vector_data: Vec<f32>) -> PyResult<Vec<u8>> {
+        let mut vector = [0.0f32; INTENT_DIMENSIONS];
+        let len = vector_data.len().min(INTENT_DIMENSIONS);
+        vector[..len].copy_from_slice(&vector_data[..len]);
+
+        let wire = IntentVectorWireV2 {
+            sync_id: next_lamport_timestamp(),
+            entity_id: xxh64(user_id.as_bytes(), 0),
+            vector,
+            entropy_seed: xxh64(user_id.as_bytes(), 1),
+            ghost_flag: 0,
+            _padding: [0; 7],
+        };
+
+        Ok(wire.as_bytes_slice().to_vec())
+    }
+}
+
+#[pymodule]
+fn tachyon_core(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_class::<RawInput>()?;
+    m.add_class::<TachyonEngine>()?;
+    Ok(())
 }
 
 #[derive(Debug, Clone)]
@@ -594,6 +710,14 @@ mod tests {
     fn schema_size_is_close_to_tachyon_target() {
         assert!(IntentVectorV2::size_in_bytes() >= 4_192);
         assert!(IntentVectorV2::size_in_bytes() <= 4_256);
+    }
+
+    #[test]
+    fn wire_payload_size_is_exactly_4128_bytes() {
+        assert_eq!(
+            std::mem::size_of::<IntentVectorWireV2>(),
+            INTENT_VECTOR_WIRE_BYTES
+        );
     }
 
     #[test]

@@ -168,22 +168,51 @@ Baseline หลักที่บังคับ:
 4. สร้าง **Scenario Engine** + **Gamified Red-Team Drill** (ยกระดับการฝึกและความพร้อมเชิงกลยุทธ์)
 5. ปิดท้ายด้วย **Executive Memory Graph** (ทำให้ระบบเรียนรู้ข้ามเวลาและค้นหาบริบทได้ลึกขึ้น)
 
-## คำแนะนำการต่อยอดเชิงสร้างสรรค์ (เพิ่มเติมจาก baseline)
+## Next Development Roadmap (อัปเดตจากแผนล่าสุด)
+
+```mermaid
+timeline
+    title แผนพัฒนาตัวอย่าง Aetherium
+    section ระยะที่ 1 : เสริมความแข็งแกร่งให้แกนหลัก
+        Modern Stack Migration : ย้ายสถาปัตยกรรมจากปัจจุบันสู่ React + TypeScript
+        AetherBus API Bridge : พัฒนา/ปรับปรุง integration กับ backend และ realtime channel
+    section ระยะที่ 2 : สร้างความไว้วางใจและความเข้าใจ
+        Trust & Explainability Layer : แสดง decision trace ของแต่ละ Directive และเหตุผลการโหวต
+        Predictive Latency Guard : พยากรณ์ latency จาก metrics.updated พร้อม early warning
+    section ระยะที่ 3 : ทำให้การประสานงานอัจฉริยะ
+        Adaptive Workload Orchestrator : จัดสรรงานตาม skill matrix + workload แบบไดนามิก
+        Scenario Engine : จำลองเหตุการณ์ไม่คาดคิดเพื่อฝึกการตัดสินใจของทีม AI
+    section อนาคต
+        Executive Memory Graph : สร้าง knowledge graph สำหรับค้นหาการตัดสินใจย้อนหลัง
+        Red-Team Drill : ทดสอบความยืดหยุ่นของระบบด้วย adversarial simulations ต่อเนื่อง
+```
+
+## Phase-by-Phase Build Notes
+
+1. **Trust & Explainability Layer (ทำก่อน)**
+   - เพิ่มหน้า "Decision Trace" ต่อ directive: ผู้เสนอ, ผู้เห็นด้วย/ไม่เห็นด้วย, เหตุผล, หลักฐานประกอบ
+   - เตรียม event schema เช่น `directive.vote.recorded` เพื่อบันทึกที่มาของข้อสรุป
+
+2. **Predictive Latency Guard**
+   - ใช้ stream จาก `metrics.updated` เพื่อทำ baseline forecasting (เช่น moving average + rolling z-score)
+   - เพิ่มแผงแนวโน้ม latency (15/30 นาทีล่วงหน้า) และ SLA breach alert
+
+3. **Adaptive Workload Orchestrator**
+   - ฝั่ง backend ควรส่งข้อมูล skill tags, utilization, queue depth ราย agent
+   - ฝั่ง frontend แสดง skill heatmap และ bottleneck warning แบบ actionable
+
+4. **Scenario Engine + Red-Team Drill**
+   - นิยามสถานการณ์มาตรฐาน: market shock, cyber incident, compliance conflict
+   - วัดผลด้วย resilience metrics เช่น MTTR, decision quality delta, policy violation rate
+
+## คำแนะนำการต่อยอดเชิงสร้างสรรค์ (สรุปฉบับทำความสะอาดข้อมูลซ้ำ)
 
 - เพิ่ม **Directive Risk Score** จากข้อมูล deadline slippage + dissent rate เพื่อ prioritization อัตโนมัติ
 - นำ **cross-team dependency graph** มารวมกับ bottleneck heatmap เพื่อตรวจหาคอขวดแบบลูกโซ่
 - เก็บ **counterfactual outcomes** จาก Scenario Engine เพื่อ train policy optimizer ว่าแนวทางไหนลด SLA breach ได้จริง
 - วัด **Human Override Frequency** เพื่อประเมินความน่าเชื่อถือ AI Council รายเดือน
+- สร้าง **Unified Feature Store** สำหรับ metrics + decisions + incidents เพื่อลดข้อมูลซ้ำและทำให้โมเดลวิเคราะห์ใช้ชุดข้อมูลเดียวกัน
 
 ---
 
 > แนวคิดหลัก: "Resonance Pathway of Intelligence" — จากแดชบอร์ดสาธิต สู่ control plane สำหรับองค์กร AI เต็มรูปแบบ
-
-
-## แนวทางต่อยอดด้วยข้อมูลจริง (เพิ่มประสิทธิภาพ + ความท้าทาย)
-
-- เพิ่ม **Realtime Queue Depth Forecast** จากข้อมูล queue depth รายนาที + retry depth เพื่อคาดการณ์ congestion 15–30 นาทีล่วงหน้า
-- สร้าง **Directive Outcome Dataset** (directive_id, owner_agent, approval_latency, outcome_kpi_delta) เพื่อ train ranking model สำหรับลำดับความสำคัญ directive
-- ทำ **Policy Drift Monitor** โดยเทียบ policy exception trend กับ regulatory deadline เพื่อแจ้งเตือนก่อนเกิด compliance shock
-- เก็บ **Human-in-the-loop intervention logs** (override reason + confidence delta) เพื่อปรับ trust score ของแต่ละ agent ให้แม่นขึ้น
-

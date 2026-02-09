@@ -14,5 +14,6 @@ jobs:
         with:
           urls: |
             http://127.0.0.1:8080/index.html
+          staticDistDir: .
           uploadArtifacts: true
           temporaryPublicStorage: true

@@ -25,6 +25,18 @@ export class AppState {
         this.listeners = [];
     }
 
+    hydrate({ agents = this.agents, directives = this.directives, meetings = this.meetings } = {}) {
+        this.agents = Array.isArray(agents) ? agents : this.agents;
+        this.directives = Array.isArray(directives) ? directives : this.directives;
+        this.meetings = Array.isArray(meetings) ? meetings : this.meetings;
+
+        this.notify('hydrated', {
+            agents: this.agents,
+            directives: this.directives,
+            meetings: this.meetings
+        });
+    }
+
     setRole(role) {
         this.role = role;
         this.notify('roleChanged', role);
@@ -50,6 +62,24 @@ export class AppState {
         };
         this.directives.unshift(newDir);
         this.notify('directiveAdded', newDir);
+        return newDir;
+    }
+
+    upsertDirective(directive) {
+        const index = this.directives.findIndex((item) => item.id === directive.id);
+        if (index === -1) {
+            this.directives.unshift(directive);
+            this.notify('directiveAdded', directive);
+            return;
+        }
+
+        this.directives[index] = { ...this.directives[index], ...directive };
+        this.notify('directiveUpdated', this.directives[index]);
+    }
+
+    setMeetings(meetings) {
+        this.meetings = meetings;
+        this.notify('meetingsUpdated', this.meetings);
     }
 
     updateAgent(agentId, updates) {
@@ -58,6 +88,18 @@ export class AppState {
             Object.assign(agent, updates);
             this.notify('agentUpdated', agent);
         }
+    }
+
+    upsertAgent(agentPayload) {
+        const agent = this.agents.find((item) => item.id === agentPayload.id);
+        if (!agent) {
+            this.agents.push(agentPayload);
+            this.notify('agentUpdated', agentPayload);
+            return;
+        }
+
+        Object.assign(agent, agentPayload);
+        this.notify('agentUpdated', agent);
     }
 
     updateMetrics(metrics) {

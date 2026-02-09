@@ -9,6 +9,7 @@ Aetherium-Syndicate-Inspectra คือแดชบอร์ดต้นแบ�
 - สร้าง Directive ใหม่ผ่านฟอร์มบนหน้า Dashboard
 - ดูกระดาน Active Directives (Kanban snapshot)
 - ตรวจสอบการประชุม AI ล่าสุด และสถานะ AetherBus
+- เชื่อมข้อมูลจาก API จริง + realtime transport (WebSocket/SSE) พร้อม fallback mock
 
 ## Current Repository Structure
 
@@ -18,13 +19,20 @@ Aetherium-Syndicate-Inspectra/
 │   ├── css/style.css
 │   └── js/
 │       ├── app.js
-│       ├── services/mock-aetherbus.js
-│       ├── state/app-state.js
+│       ├── services/
+│       │   ├── api-client.js
+│       │   ├── mock-aetherbus.js
+│       │   └── realtime-channel.js
+│       ├── state/
+│       │   ├── app-state.js
+│       │   └── ui-state.js
 │       ├── utils/
 │       └── views/
+├── tests/
+├── .lighthouserc.json
+├── lighthouse-budget.json
 ├── backup/dashboard.js
 ├── index.html
-├── server.log
 └── README.md
 ```
 
@@ -37,27 +45,74 @@ python3 -m http.server 8080
 # open http://127.0.0.1:8080
 ```
 
+## Backend API Contract (สำหรับโหมด real data)
+
+ระบบ Frontend จะ bootstrap ด้วย endpoint เหล่านี้:
+
+- `GET /api/agents`
+- `GET /api/directives`
+- `GET /api/meetings`
+- `POST /api/directives`
+
+Realtime status updates รองรับ 2 transport:
+
+1. `ws://<host>/ws/status` (preferred)
+2. `GET /api/events` (SSE fallback)
+
+ตัวอย่าง event payload ที่รองรับ:
+
+```json
+{
+  "type": "metrics.updated",
+  "data": {
+    "latency": 1.1,
+    "throughput": 12000,
+    "load": 58
+  }
+}
+```
+
+รองรับ `agent.updated`, `directive.created`, `directive.updated`, `meeting.appended`, `metrics.updated`
+
 ## Tests
 
 ```bash
 node --test tests/*.test.mjs
 ```
 
-## Implemented UI Modules
+## Performance Budget Baseline + Lighthouse CI
 
-1. **CEO AI Council Monitoring**
-2. **New Directive Modal + Submit Flow**
-3. **Active Directives Board**
-4. **Recent AI Meetings Feed**
-5. **Company Structure Snapshot**
-6. **AetherBus Throughput Indicator**
+ตั้งค่า baseline performance budget และ assertion policy ไว้แล้วที่:
 
-## Suggested Next Technical Steps
+- `.lighthouserc.json`
+- `lighthouse-budget.json`
 
-- เชื่อม `assets/js/app.js` เข้ากับ API จริง (`/api/agents`, `/api/directives`, `/api/meetings`)
-- เพิ่ม WebSocket/SSE สำหรับอัปเดตสถานะทันที
-- แยก UI state management และเตรียมย้ายสู่ React + TypeScript เมื่อฟีเจอร์โตขึ้น
-- ตั้ง baseline performance budget และบังคับใน Lighthouse CI
+ตัวอย่างคำสั่งรัน Lighthouse CI:
+
+```bash
+npx @lhci/cli autorun --config=.lighthouserc.json
+```
+
+Baseline หลักที่บังคับ:
+
+- Performance score ขั้นต่ำ: `0.90`
+- LCP สูงสุด: `2500ms`
+- TBT สูงสุด: `200ms`
+- CLS สูงสุด: `0.10`
+
+## Architecture Notes (เตรียมย้ายสู่ React + TypeScript)
+
+โค้ดถูกแยก state ออกเป็น 2 ชั้น:
+
+1. **Domain State (`AppState`)**
+   - เก็บข้อมูลธุรกิจ: agents, directives, meetings, metrics
+   - รองรับ hydrate/upsert/update เพื่อรองรับข้อมูลจาก API/realtime
+
+2. **UI State (`UIState`)**
+   - เก็บ active view, loading, connection status
+   - ลด coupling ระหว่าง view lifecycle กับ data lifecycle
+
+รูปแบบนี้ทำให้ migration ไป React + TypeScript ทำได้ง่ายขึ้นโดย map `AppState/UIState` เป็น context/store (เช่น Zustand/Redux Toolkit) แล้วค่อยย้าย view module ทีละส่วน
 
 ## Creative Extension Ideas (เพิ่มประสิทธิภาพ + ความท้าทาย)
 
@@ -100,6 +155,13 @@ node --test tests/*.test.mjs
 3. เพิ่ม **Adaptive Workload Orchestrator** (ลด bottleneck ในการปฏิบัติการ)
 4. สร้าง **Scenario Engine** + **Gamified Red-Team Drill** (ยกระดับการฝึกและความพร้อมเชิงกลยุทธ์)
 5. ปิดท้ายด้วย **Executive Memory Graph** (ทำให้ระบบเรียนรู้ข้ามเวลาและค้นหาบริบทได้ลึกขึ้น)
+
+## คำแนะนำการต่อยอดเชิงสร้างสรรค์ (เพิ่มเติมจาก baseline)
+
+- เพิ่ม **Directive Risk Score** จากข้อมูล deadline slippage + dissent rate เพื่อ prioritization อัตโนมัติ
+- นำ **cross-team dependency graph** มารวมกับ bottleneck heatmap เพื่อตรวจหาคอขวดแบบลูกโซ่
+- เก็บ **counterfactual outcomes** จาก Scenario Engine เพื่อ train policy optimizer ว่าแนวทางไหนลด SLA breach ได้จริง
+- วัด **Human Override Frequency** เพื่อประเมินความน่าเชื่อถือ AI Council รายเดือน
 
 ---
 

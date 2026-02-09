@@ -37,10 +37,10 @@ class App {
             this.onUIStateChange(event, data);
         });
 
-        await this.bootstrapData();
-
         await this.loadView(this.uiState.activeView);
         this.uiState.setLoading(false);
+
+        this.bootstrapData();
     }
 
     async bootstrapData() {

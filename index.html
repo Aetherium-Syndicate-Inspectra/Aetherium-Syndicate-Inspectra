@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aetherium Genesis - Executive AI Console</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
@@ -21,7 +21,7 @@
             }
         }
     </script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" />
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="bg-slate-950 text-slate-100">
@@ -68,7 +68,7 @@
                             <div class="text-sm font-bold text-white" id="user-name">Dr. Aris Thorne</div>
                             <div class="text-[10px] text-primary font-bold uppercase tracking-wider" id="user-role-label">Executive Level 1</div>
                         </div>
-                        <div class="size-9 rounded-lg bg-cover bg-center border border-slate-700" id="user-avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAFeNRZHbO80u7ftemjOACgo-gIk1eeY-Mqh2Ak6axzFbQxGEuonP1IxuOjYUeVysHLF4pRtqd9sPEDdJ7e250ek-mcdPlAliSVhL5HNZbAnfCFa0PGAeYk7Y7RgnRhyYDyE56cAoGOr5rSsNAPGHyUaWbgcqrB18_8QRW-YwFnHVY6b2zP3gxah3pB0O-cfhbaAYfyf7BltZRzlUF-nLk098F6MiV41m5NKiUv9L9dLO-KU3FdDib05aviJXARWm6ofkTDSWfbvFU');"></div>
+                        <div class="size-9 rounded-lg border border-slate-700 bg-gradient-to-br from-primary/40 to-violet-500/30 flex items-center justify-center text-xs font-black text-white" id="user-avatar" aria-label="Current user avatar">AT</div>
                     </div>
                 </div>
             </div>

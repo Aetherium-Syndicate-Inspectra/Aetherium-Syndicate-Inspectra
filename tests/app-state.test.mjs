@@ -54,3 +54,51 @@ test('hydrate replaces collections and emits hydrated event', () => {
         meetings: [{ id: 'new-meeting' }]
     });
 });
+
+test('feature store deduplicates by canonical key and keeps best quality/latest record', () => {
+    const state = new AppState();
+    const keyRecord = {
+        entity_id: 'DIR-012',
+        event_type: 'directive.decision',
+        event_time: '2026-02-01T00:10:00Z',
+        source: 'council'
+    };
+
+    state.ingestFeatureRecord('decisions', {
+        ...keyRecord,
+        ingested_at: '2030-02-01T01:00:00Z',
+        quality_score: 0.99,
+        deadlineSlippage: 0.2,
+        dissentRate: 0.4
+    });
+
+    state.ingestFeatureRecord('decisions', {
+        ...keyRecord,
+        ingested_at: '2030-02-01T00:30:00Z',
+        quality_score: 0.5,
+        deadlineSlippage: 0.8,
+        dissentRate: 0.8
+    });
+
+    const replaced = state.featureStore.decisions.find((row) => row.entity_id === 'DIR-012' && row.event_time === '2026-02-01T00:10:00Z' && row.source === 'council');
+    assert.equal(replaced.quality_score, 0.99);
+    assert.equal(replaced.deadlineSlippage, 0.2);
+});
+
+test('directive risk ranking sorts highest risk first', () => {
+    const state = new AppState();
+    const ranking = state.getDirectiveRiskRanking();
+
+    assert.equal(ranking[0].directiveId, 'DIR-019');
+    assert.ok(ranking[0].riskScore >= ranking[1].riskScore);
+});
+
+test('human override frequency aggregates by month', () => {
+    const state = new AppState();
+    const summary = state.getHumanOverrideFrequencyByMonth();
+
+    assert.deepEqual(summary, [
+        { month: '2026-01', count: 2 },
+        { month: '2026-02', count: 1 }
+    ]);
+});

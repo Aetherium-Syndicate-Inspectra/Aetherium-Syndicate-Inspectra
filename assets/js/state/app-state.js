@@ -30,9 +30,19 @@ export class AppState {
         this.notify('roleChanged', role);
     }
 
+    getNextDirectiveId() {
+        const maxId = this.directives.reduce((max, directive) => {
+            const match = /^DIR-(\d+)$/.exec(directive.id);
+            if (!match) return max;
+            return Math.max(max, Number.parseInt(match[1], 10));
+        }, 0);
+
+        return `DIR-${String(maxId + 1).padStart(3, '0')}`;
+    }
+
     addDirective(directive) {
         const newDir = {
-            id: `DIR-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+            id: this.getNextDirectiveId(),
             status: 'pending',
             time: 'Just now',
             author: 'U',

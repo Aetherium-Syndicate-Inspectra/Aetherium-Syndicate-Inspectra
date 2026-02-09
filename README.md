@@ -85,6 +85,22 @@ node --test tests/*.test.mjs
    - เพิ่มโหมดโจมตีจำลอง (adversarial scenarios) สำหรับฝึกความพร้อมของ AI Council
    - บันทึกคะแนน resilience รายทีม เพื่อใช้เทียบ benchmark รายเดือน
 
+## Recommended Data Sources (แนวทางต่อยอดด้วยข้อมูลจริง)
+
+- **Operations + Queue Metrics**: latency, throughput, error rate, retry depth จาก AetherBus เพื่อเลี้ยง Predictive Latency Guard
+- **Workforce/Agent Skill Matrix**: skill tags, utilization, avg completion time เพื่อเลี้ยง Adaptive Workload Orchestrator
+- **Compliance + Risk Events**: audit logs, policy exceptions, regulatory deadlines เพื่อสร้าง Scenario Engine ที่สมจริง
+- **Meeting Corpus**: transcript, resolution, dissent notes, outcome KPI เพื่อสร้าง Executive Memory Graph และ Explainability Layer
+- **Incident + Red-Team Logs**: attack vector, mean time to detect/respond, blast radius เพื่อทำ resilience benchmark รายเดือน
+
+## Suggested Implementation Sequence (แนะนำลำดับทำงาน)
+
+1. เริ่มจาก **Trust & Explainability Layer** (ได้ผลไว, ยกระดับความโปร่งใสทันที)
+2. ต่อด้วย **Predictive Latency Guard** (สร้าง early warning สำหรับ SLA)
+3. เพิ่ม **Adaptive Workload Orchestrator** (ลด bottleneck ในการปฏิบัติการ)
+4. สร้าง **Scenario Engine** + **Gamified Red-Team Drill** (ยกระดับการฝึกและความพร้อมเชิงกลยุทธ์)
+5. ปิดท้ายด้วย **Executive Memory Graph** (ทำให้ระบบเรียนรู้ข้ามเวลาและค้นหาบริบทได้ลึกขึ้น)
+
 ---
 
 > แนวคิดหลัก: "Resonance Pathway of Intelligence" — จากแดชบอร์ดสาธิต สู่ control plane สำหรับองค์กร AI เต็มรูปแบบ

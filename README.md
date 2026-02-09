@@ -243,6 +243,7 @@ cargo test
 
 5. **Duplicate Function Cleanup Gate (CI Rule)**
    - เพิ่มสคริปต์ `scripts/check-duplicate-functions.mjs`
+   - สคริปต์รองรับหลาย fallback (`git ls-files` → `rg` → recursive fs scan) เพื่อทำงานได้แม้ runner ไม่มี `rg`
    - เพิ่ม GitHub Actions workflow `duplicate-function-gate.yml` เพื่อบังคับแนวทาง single best function
 
 ## คำแนะนำต่อยอด/ประยุกต์ใช้ (รอบถัดไป)

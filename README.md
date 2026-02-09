@@ -221,24 +221,33 @@ cd tachyon-core
 cargo test
 ```
 
-## คำแนะนำต่อยอด (Performance + Creative Challenge)
+## Tachyon Performance + Creative Challenge — Implementation Status
 
-1. **SIMD Vector Path (AVX2/AVX-512/NEON)**
-   - ทำ fast-path สำหรับ normalize/check vector 1024 มิติแบบ lane-parallel
-   - เป้าหมาย: ลดเวลา Firma check ต่อ intent ให้ต่ำกว่า baseline 30-50%
+สิ่งที่ถูกเพิ่มแล้ว (และนำออกจากรายการข้อเสนอเพื่อให้เอกสารสะท้อนสถานะปัจจุบัน):
+
+1. **SIMD Firma fast-path + Normalize helper**
+   - `firma_check` ใช้ fast-path สำหรับ AVX2/NEON ด้วย runtime feature detection
+   - มี scalar fallback เสมอ และเพิ่ม `normalize_intent_vector` สำหรับ clamp ค่าให้อยู่ในช่วง `[-1, 1]`
 
 2. **RDMA Envelope Pool + Lock-free Ring**
-   - เตรียม memory pool แบบ hugepage และ ring buffer แบบ single-producer/multi-consumer
-   - ลด allocation churn และเพิ่มความคงที่ของ p99 latency
+   - เพิ่ม `HugePageEnvelopePool` สำหรับ reuse envelope และประเมินจำนวน hugepage blocks
+   - เพิ่ม `SpmcRingBuffer` แบบ single-producer/multi-consumer ลด allocation churn ในเส้นทางส่งข้อมูล
 
 3. **Ghost Worker Safety Ledger**
-   - แยก speculative result ไปยัง shadow ledger เสมอ
-   - commit ได้เมื่อได้รับ confirm signal เพื่อลดความเสี่ยงข้อมูลขยะ
+   - เพิ่ม `GhostWorkerSafetyLedger` เพื่อเก็บ speculative entries ใน shadow ledger
+   - รองรับ `confirm_commit(sync_id)` เพื่อ commit เฉพาะรายการที่ได้รับสัญญาณยืนยัน
 
 4. **Deterministic Replay Dataset**
-   - บันทึก seed + sync_id + governance decision สำหรับ replay ที่ทำซ้ำได้
-   - ใช้ทั้ง benchmarking และ incident forensics
+   - เพิ่ม `DeterministicReplayLog` + `ReplayRecord` สำหรับเก็บ `seed + sync_id + governance decision`
+   - รองรับ use case benchmark replay และ incident forensics
 
 5. **Duplicate Function Cleanup Gate (CI Rule)**
-   - เพิ่ม CI check เพื่อตรวจฟังก์ชันซ้ำบทบาทในหลายโมดูล แล้วบังคับเลือก single best function
-   - ช่วยให้ codebase สะอาดและสะท้อนสภาพระบบปัจจุบันต่อเนื่อง
+   - เพิ่มสคริปต์ `scripts/check-duplicate-functions.mjs`
+   - เพิ่ม GitHub Actions workflow `duplicate-function-gate.yml` เพื่อบังคับแนวทาง single best function
+
+## คำแนะนำต่อยอด/ประยุกต์ใช้ (รอบถัดไป)
+
+- เพิ่ม benchmark จริงด้วย `criterion` เพื่อวัดว่า SIMD path ลดเวลา `firma_check` ได้ตามเป้าหมาย 30–50% ใน workload production profile
+- เชื่อม `DeterministicReplayLog` ออกเป็นไฟล์ trace มาตรฐาน (เช่น JSONL + hash chain) สำหรับ audit ภายนอก
+- ขยาย duplicate-function gate ให้รู้จัก semantic duplicate (AST-level) ไม่ใช่ตรวจแค่ชื่อฟังก์ชัน
+- ถ้าจะใช้กับข้อมูลใหม่ปริมาณสูง: เพิ่ม policy สำหรับ auto-select single-best source จาก freshness + integrity score และ purge records ซ้ำแบบ scheduled compaction

@@ -1,0 +1,29 @@
+.panel {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 0.9rem;
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+}
+.card-title { font-weight: 600; margin-bottom: 0.7rem; }
+.input {
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.6rem;
+  color: #e2e8f0;
+  padding: 0.6rem 0.7rem;
+}
+.kanban-col { background: #0f172a; border: 1px solid #334155; border-radius: 0.7rem; padding: 0.6rem; }
+.kanban-col h4 { color: #a5b4fc; font-size: 0.75rem; margin-bottom: 0.4rem; }
+.task { background: #1e293b; padding: 0.5rem; border-radius: 0.45rem; border: 1px solid #334155; }
+.meeting { padding: 0.5rem; border: 1px solid #334155; border-radius: 0.5rem; background: #0f172a; }
+.aetherbus-status::after {
+  content: '';
+  display: block;
+  height: 2px;
+  margin-top: 0.6rem;
+  background: linear-gradient(90deg, transparent, #34d399, transparent);
+  animation: flow 2.8s linear infinite;
+}
+@keyframes flow { from { transform: translateX(-30%);} to { transform: translateX(30%);} }

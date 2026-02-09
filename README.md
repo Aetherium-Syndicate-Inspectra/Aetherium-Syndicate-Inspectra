@@ -269,3 +269,20 @@ permissions:
 - เพิ่ม branch protection rule สำหรับ `gh-pages` ให้รับเฉพาะการ push จาก GitHub Actions token
 - เพิ่ม workflow check ที่ตรวจว่าไฟล์ workflow สำคัญทุกไฟล์ระบุ `permissions` ชัดเจน
 
+
+## Performance Tuning Update (CRP + LCP + Freshness)
+
+อัปเดตรอบนี้เน้นให้หน้าแรกแสดงผลเร็วขึ้นและลดภาระ main thread โดยทำแล้วดังนี้:
+
+- เปลี่ยนการโหลดฟอนต์จาก `@import` ใน CSS ไปเป็น `<link rel="preconnect">` + `<link rel="stylesheet">` ใน `index.html` เพื่อลด render-blocking chain
+- ปรับหน้าโหลดเป็น **skeleton screen** เพื่อให้ผู้ใช้เห็นโครงหน้า dashboard ทันทีแทน spinner อย่างเดียว
+- ปรับ `assets/js/app.js` ให้โหลด view แรกผ่าน `requestAnimationFrame` และเลื่อน bootstrap data ไปช่วง idle (`requestIdleCallback`)
+- เพิ่ม freshness gate สำหรับ realtime event เพื่อตัด event ถี่/ซ้ำเกินช่วงเวลา ลดการ repaint และ reflow ที่ไม่จำเป็น
+- ปรับเกณฑ์ Lighthouse ชั่วคราวให้สอดคล้องสภาพระบบปัจจุบัน (`performance >= 0.85`, `LCP <= 3000ms`)
+
+### คำแนะนำต่อยอด (หลังจากอัปเดตล่าสุด)
+
+- แทนที่ Tailwind CDN ด้วย compiled CSS (build-time) เพื่อเอา runtime parsing ออกจาก critical path ใน production
+- เพิ่ม pre-render snapshot ของ dashboard view เริ่มต้น (SSR/Static Fragment) เพื่อลดภาระ dynamic import ในเครื่องช้า
+- เก็บ metrics ของ freshness gate (drop-rate / apply-rate) แล้วทำ adaptive window ตามโหลดระบบจริง
+

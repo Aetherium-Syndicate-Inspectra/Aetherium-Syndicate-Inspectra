@@ -21,6 +21,7 @@ class App {
 
         this.currentViewName = null;
         this.currentViewInstance = null;
+        this.lastEventTimeByType = new Map();
 
         this.init();
     }
@@ -37,10 +38,27 @@ class App {
             this.onUIStateChange(event, data);
         });
 
-        await this.loadView(this.uiState.activeView);
-        this.uiState.setLoading(false);
+        this.loadInitialView();
+        this.scheduleBootstrapData();
+    }
 
-        this.bootstrapData();
+
+    loadInitialView() {
+        requestAnimationFrame(async () => {
+            await this.loadView(this.uiState.activeView);
+            this.uiState.setLoading(false);
+        });
+    }
+
+    scheduleBootstrapData() {
+        const kickoff = () => this.bootstrapData();
+
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(kickoff, { timeout: 1200 });
+            return;
+        }
+
+        setTimeout(kickoff, 0);
     }
 
     async bootstrapData() {
@@ -66,6 +84,10 @@ class App {
     }
 
     handleRealtimeEvent(payload) {
+        if (!this.shouldProcessEvent(payload)) {
+            return;
+        }
+
         switch (payload.type) {
             case 'agent.updated':
                 this.state.upsertAgent(payload.data);
@@ -84,6 +106,26 @@ class App {
             default:
                 console.info('[Realtime] Unsupported event type', payload.type);
         }
+    }
+
+
+    shouldProcessEvent(payload) {
+        const eventType = payload?.type || 'unknown';
+        const freshnessWindowMs = eventType === 'metrics.updated' ? 750 : 250;
+        const payloadTimestamp = Number.parseInt(payload?.timestamp ?? payload?.ts ?? Date.now(), 10);
+        const eventTime = Number.isNaN(payloadTimestamp) ? Date.now() : payloadTimestamp;
+        const previousEventTime = this.lastEventTimeByType.get(eventType) || 0;
+
+        if (eventTime <= previousEventTime) {
+            return false;
+        }
+
+        if (eventTime - previousEventTime < freshnessWindowMs) {
+            return false;
+        }
+
+        this.lastEventTimeByType.set(eventType, eventTime);
+        return true;
     }
 
     onStateChange(event, data) {

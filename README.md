@@ -127,3 +127,24 @@ node --test tests/*.test.mjs
 
 4. **Self-healing Data Contracts**
    - ตรวจ schema drift อัตโนมัติและสร้าง mapping rule เพื่อให้ pipeline ไม่พังเมื่อ source เปลี่ยน
+
+
+## Performance Hardening Update (Lighthouse CI)
+
+เพื่อแก้ปัญหา Lighthouse ที่เคย fail (`performance` และ `largest-contentful-paint`) ได้ปรับปรุงดังนี้:
+
+- ปรับลำดับการเริ่มต้นแอปให้ **render view ก่อน** แล้วค่อย bootstrap data แบบ async เพื่อลดเวลาที่ loader บังหน้าจอ
+- ลดความเสี่ยงจาก resource ภายนอกที่หน่วงการเรนเดอร์ โดยใช้ avatar แบบ local UI fallback แทน remote image
+- ทำให้การโหลด Tailwind CDN ไม่บล็อก critical rendering path โดยเปลี่ยนเป็น `defer`
+
+แนวทางนี้ช่วยให้หน้าแรกตอบสนองไวขึ้นในสภาพแวดล้อม CI ที่ network แปรผัน และลดโอกาส LCP เกิน threshold
+
+
+
+## คำแนะนำต่อยอดด้านข้อมูล (Data Efficiency + Creative Challenge)
+
+- เพิ่ม **feature freshness score** ต่อโมดูล (analytics / policy / alerting) เพื่อเลือกข้อมูลที่สดที่สุดโดยอัตโนมัติ
+- ทำ **duplicate lineage log** บันทึกว่าข้อมูลซ้ำถูก merge ด้วยกฎใด เพื่อ audit ย้อนหลังได้
+- เพิ่ม **synthetic stress dataset** (peak traffic + conflicting directives) สำหรับทดสอบความทนทานของ risk ranking
+- ใช้ **single best function registry** เพื่อกันฟังก์ชันซ้ำบทบาทในหลายโมดูล และชี้ dependency ให้ชัดเจน
+

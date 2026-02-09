@@ -193,3 +193,52 @@ node --test tests/*.test.mjs
 - ทำ **duplicate lineage log** บันทึกว่าข้อมูลซ้ำถูก merge ด้วยกฎใด เพื่อ audit ย้อนหลังได้
 - เพิ่ม **synthetic stress dataset** (peak traffic + conflicting directives) สำหรับทดสอบความทนทานของ risk ranking
 - ใช้ **single best function registry** เพื่อกันฟังก์ชันซ้ำบทบาทในหลายโมดูล และชี้ dependency ให้ชัดเจน
+
+## Aetherium Intent Vector V2 (Tachyon Core) — Draft Implementation
+
+เพิ่มโมดูล Rust ใหม่ที่แปลงสเปก **Aetherium Intent Vector V2 (v2.0-tachyon)** เป็นโครงสร้างไบนารีแบบ fixed-size เพื่อรองรับแนวทาง Zero-Copy และ Governance-first
+
+### สิ่งที่ถูกติดตั้งในรีโป
+
+- โฟลเดอร์ใหม่ `tachyon-core/` (Rust crate)
+- โครงสร้างข้อมูล `#[repr(C)]` สำหรับ:
+  - `CognitiveState` (Intent Space 5D + valence/energy/turbulence)
+  - `TachyonMetadata` (entropy seed, payload pointer, rkey, ghost flag)
+  - `Provenance` (sender hash, integrity hash, audit clearance)
+  - `IntentVectorV2` (1024-dim vector + immutable envelope)
+- Lamport timestamp generator แบบ atomic (`next_lamport_timestamp`)
+- Governance Veto pipeline:
+  1. Inspira Check
+  2. Firma Check
+  3. Audit Gate
+- Identity Annihilation helper (`identity_annihilation`) แทนการเก็บ PII ตรง
+- Unit tests สำหรับขนาด schema, immutability, timestamp monotonicity, และ rejection paths
+
+### วิธีทดสอบโมดูล Tachyon Core
+
+```bash
+cd tachyon-core
+cargo test
+```
+
+## คำแนะนำต่อยอด (Performance + Creative Challenge)
+
+1. **SIMD Vector Path (AVX2/AVX-512/NEON)**
+   - ทำ fast-path สำหรับ normalize/check vector 1024 มิติแบบ lane-parallel
+   - เป้าหมาย: ลดเวลา Firma check ต่อ intent ให้ต่ำกว่า baseline 30-50%
+
+2. **RDMA Envelope Pool + Lock-free Ring**
+   - เตรียม memory pool แบบ hugepage และ ring buffer แบบ single-producer/multi-consumer
+   - ลด allocation churn และเพิ่มความคงที่ของ p99 latency
+
+3. **Ghost Worker Safety Ledger**
+   - แยก speculative result ไปยัง shadow ledger เสมอ
+   - commit ได้เมื่อได้รับ confirm signal เพื่อลดความเสี่ยงข้อมูลขยะ
+
+4. **Deterministic Replay Dataset**
+   - บันทึก seed + sync_id + governance decision สำหรับ replay ที่ทำซ้ำได้
+   - ใช้ทั้ง benchmarking และ incident forensics
+
+5. **Duplicate Function Cleanup Gate (CI Rule)**
+   - เพิ่ม CI check เพื่อตรวจฟังก์ชันซ้ำบทบาทในหลายโมดูล แล้วบังคับเลือก single best function
+   - ช่วยให้ codebase สะอาดและสะท้อนสภาพระบบปัจจุบันต่อเนื่อง

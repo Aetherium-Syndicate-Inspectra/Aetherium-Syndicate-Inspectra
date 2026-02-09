@@ -1,0 +1,9 @@
+[package]
+name = "tachyon-core"
+version = "0.1.0"
+edition = "2021"
+description = "Aetherium Intent Vector V2 (Tachyon Class) binary schema and governance core"
+license = "MIT"
+
+[dependencies]
+

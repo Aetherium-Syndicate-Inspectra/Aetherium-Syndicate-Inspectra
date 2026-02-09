@@ -82,6 +82,18 @@ node --test tests/*.test.mjs
 
 ## Performance Budget Baseline + Lighthouse CI
 
+## CI Failure Fix Note (Job 62975897492)
+
+สาเหตุหลักของงาน Lighthouse CI ล้มเหลวคือ workflow เดิมไม่ได้สตาร์ต static server ก่อน collect audit แต่ config ใช้ URL `http://127.0.0.1:8080/` อยู่แล้ว ทำให้เชื่อมต่อไม่สำเร็จ
+
+ตอนนี้แก้แล้วโดย:
+- ใส่ `startServerCommand: python3 -m http.server 8080`
+- ใส่ `startServerReadyPattern` และ timeout
+- บังคับ budget ใน `collect.settings.budgets` เพื่อให้ enforce ได้ใน CI โดยตรง
+
+ผลคือ action `treosh/lighthouse-ci-action` สามารถเปิดหน้าเว็บได้เองและตรวจ budget/assertion ได้ครบ
+
+
 ตั้งค่า baseline performance budget และ assertion policy ไว้แล้วที่:
 
 - `.lighthouserc.json`
@@ -166,3 +178,12 @@ Baseline หลักที่บังคับ:
 ---
 
 > แนวคิดหลัก: "Resonance Pathway of Intelligence" — จากแดชบอร์ดสาธิต สู่ control plane สำหรับองค์กร AI เต็มรูปแบบ
+
+
+## แนวทางต่อยอดด้วยข้อมูลจริง (เพิ่มประสิทธิภาพ + ความท้าทาย)
+
+- เพิ่ม **Realtime Queue Depth Forecast** จากข้อมูล queue depth รายนาที + retry depth เพื่อคาดการณ์ congestion 15–30 นาทีล่วงหน้า
+- สร้าง **Directive Outcome Dataset** (directive_id, owner_agent, approval_latency, outcome_kpi_delta) เพื่อ train ranking model สำหรับลำดับความสำคัญ directive
+- ทำ **Policy Drift Monitor** โดยเทียบ policy exception trend กับ regulatory deadline เพื่อแจ้งเตือนก่อนเกิด compliance shock
+- เก็บ **Human-in-the-loop intervention logs** (override reason + confidence delta) เพื่อปรับ trust score ของแต่ละ agent ให้แม่นขึ้น
+

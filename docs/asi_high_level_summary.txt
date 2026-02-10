@@ -1,0 +1,24 @@
+ASI High-Level Summary (Auto-generated)
+
+1) Core Platform
+- FastAPI API Gateway + Tachyon Rust core bridge
+- Realtime status via WebSocket/SSE
+
+2) Entitlement & Monetization
+- Tier model: SOLO / SYNDICATE / SINGULARITY
+- API-key hashing (SHA-256), feature gating, tier-based rate limiting
+- Billing APIs for status, upgrade, marketplace, and credit top-up
+
+3) Identity
+- Google Sign-In endpoint for ID token verification
+- Auto-provision user + default SOLO subscription
+
+4) Fiat Gateway
+- Tokenized payment method linking (no raw card/CVV storage)
+- Transaction ledger for SUBSCRIPTION / TOPUP statuses
+- Webhook signature verification (HMAC-SHA256)
+
+5) Recommended Next Enhancements
+- Replace mock charge path with real Omise/Stripe SDK integration
+- Add recurring billing scheduler + retry/backoff policy
+- Add fraud/risk scoring per transaction and gateway failover

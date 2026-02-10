@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASI Billing Settings</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#0b1020; color:#edf2ff; margin:0; }
+    .wrap { max-width: 860px; margin: 24px auto; padding: 20px; }
+    .card { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+    input, select, button { width:100%; padding:10px; margin-top:8px; border-radius:8px; border:1px solid #2f3b63; background:#131d3a; color:#fff; }
+    button { background:#3967ff; border:none; font-weight:700; cursor:pointer; }
+    .muted { color:#a5b3e0; font-size: 13px; }
+    pre { background:#0c1530; border-radius:8px; padding:12px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2>Billing Settings · Fiat Link</h2>
+      <p class="muted">ส่งเฉพาะ token จาก Payment Gateway เท่านั้น (PCI-DSS safe). ห้ามส่งเลขบัตร/CVV เข้า ASI Backend</p>
+    </div>
+
+    <div class="card">
+      <h3>Link Payment Method</h3>
+      <label>Provider</label>
+      <select id="provider">
+        <option value="OMISE">OMISE</option>
+        <option value="STRIPE">STRIPE</option>
+        <option value="K_BANK">K_BANK</option>
+      </select>
+      <label>Gateway Token</label>
+      <input id="token" placeholder="tokn_test_xxx / tok_xxx" />
+      <label>Last Digits</label>
+      <input id="lastDigits" placeholder="4242" maxlength="4" />
+      <label>Bank Name</label>
+      <input id="bankName" placeholder="Visa / KBANK" />
+      <button id="linkBtn">Add Payment Method</button>
+    </div>
+
+    <div class="card">
+      <h3>Response</h3>
+      <pre id="output">Waiting...</pre>
+    </div>
+  </div>
+
+  <script>
+    async function linkPaymentMethod() {
+      const apiKey = localStorage.getItem('asi_api_key') || '';
+      const payload = {
+        provider: document.getElementById('provider').value,
+        token: document.getElementById('token').value.trim(),
+        last_digits: document.getElementById('lastDigits').value.trim() || null,
+        bank_name: document.getElementById('bankName').value.trim() || null,
+        is_default: true,
+      };
+
+      try {
+        const res = await fetch('http://localhost:8000/api/billing/payment-methods', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey,
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('output').textContent = String(err);
+      }
+    }
+
+    document.getElementById('linkBtn').addEventListener('click', linkPaymentMethod);
+  </script>
+</body>
+</html>

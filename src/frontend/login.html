@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASI Login</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body { background:#0a0a0f; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh; font-family:Arial,sans-serif; }
+    .login-card { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 24px; text-align:center; }
+    .hint { opacity: .8; font-size: 13px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>ACCESS CONTROL</h1>
+    <p>Identity Verification Required</p>
+
+    <div id="g_id_onload"
+         data-client_id="YOUR_GOOGLE_CLIENT_ID"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="filled_black"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+    </div>
+
+    <p class="hint">Set GOOGLE_CLIENT_ID in backend env and replace YOUR_GOOGLE_CLIENT_ID for local test.</p>
+  </div>
+
+  <script>
+    async function handleCredentialResponse(response) {
+      try {
+        const res = await fetch('http://localhost:8000/api/auth/google', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ token: response.credential })
+        });
+
+        const data = await res.json();
+        if (data.status === 'success') {
+          localStorage.setItem('asi_token', data.access_token);
+          localStorage.setItem('user_profile', JSON.stringify(data.user));
+          if (data.user.api_key) {
+            localStorage.setItem('asi_api_key', data.user.api_key);
+          }
+          window.location.href = '../../index.html';
+          return;
+        }
+
+        alert('Login failed: ' + JSON.stringify(data));
+      } catch (err) {
+        console.error(err);
+        alert('Unable to login. Check backend connectivity.');
+      }
+    }
+  </script>
+</body>
+</html>

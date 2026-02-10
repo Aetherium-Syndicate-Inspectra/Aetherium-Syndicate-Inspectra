@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use pyo3::prelude::*;
+use serde::{Deserialize, Serialize};
 use xxhash_rust::xxh64::xxh64;
 use zerocopy::{AsBytes, FromBytes, FromZeroes};
 
@@ -162,6 +163,99 @@ pub trait IdentityAnnihilation {
     fn annihilate_identity(&self) -> Result<IntentVectorWireV2, GovernanceRejection>;
 }
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Archetype {
+    Sentinel = 0,
+    Catalyst = 1,
+    Harmonizer = 2,
+    Prophet = 3,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, AsBytes, FromZeroes, FromBytes, Serialize, Deserialize)]
+pub struct QuantumTraits {
+    pub logic_emotion_bias: f32,
+    pub risk_tolerance: f32,
+    pub time_horizon: f32,
+    pub empathy_resonance: f32,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, AsBytes, FromZeroes, FromBytes)]
+pub struct IdentityCard {
+    pub id: u64,
+    pub archetype: u8,
+    pub _archetype_padding: [u8; 7],
+    pub traits: QuantumTraits,
+    pub expertise_vector: [f32; 64],
+    pub generation: u16,
+    pub _padding: [u8; 6],
+}
+
+impl IdentityCard {
+    pub fn new_sentinel(id: u64) -> Self {
+        Self {
+            id,
+            archetype: Archetype::Sentinel as u8,
+            _archetype_padding: [0; 7],
+            traits: QuantumTraits {
+                logic_emotion_bias: 0.95,
+                risk_tolerance: 0.1,
+                time_horizon: 0.8,
+                empathy_resonance: 0.3,
+            },
+            expertise_vector: [0.0; 64],
+            generation: 1,
+            _padding: [0; 6],
+        }
+    }
+
+    pub fn new_catalyst(id: u64) -> Self {
+        Self {
+            id,
+            archetype: Archetype::Catalyst as u8,
+            _archetype_padding: [0; 7],
+            traits: QuantumTraits {
+                logic_emotion_bias: 0.4,
+                risk_tolerance: 0.9,
+                time_horizon: 0.4,
+                empathy_resonance: 0.6,
+            },
+            expertise_vector: [0.0; 64],
+            generation: 1,
+            _padding: [0; 6],
+        }
+    }
+
+    pub fn new_harmonizer(id: u64) -> Self {
+        Self {
+            id,
+            archetype: Archetype::Harmonizer as u8,
+            _archetype_padding: [0; 7],
+            traits: QuantumTraits {
+                logic_emotion_bias: 0.5,
+                risk_tolerance: 0.5,
+                time_horizon: 0.6,
+                empathy_resonance: 0.95,
+            },
+            expertise_vector: [0.0; 64],
+            generation: 1,
+            _padding: [0; 6],
+        }
+    }
+}
+
+#[pyclass]
+pub struct SpeculationResult {
+    #[pyo3(get)]
+    pub best_future_score: f32,
+    #[pyo3(get)]
+    pub confidence: f32,
+    #[pyo3(get)]
+    pub action_code: String,
+}
+
 #[pyclass]
 pub struct RawInput {
     #[pyo3(get, set)]
@@ -230,12 +324,63 @@ impl TachyonEngine {
 
         Ok(wire.as_bytes_slice().to_vec())
     }
+
+    fn mint_starter_deck(&self, seed_id: u64) -> PyResult<(Vec<u8>, Vec<u8>, Vec<u8>)> {
+        let (sentinel, (catalyst, harmonizer)) = rayon::join(
+            || IdentityCard::new_sentinel(seed_id + 1),
+            || {
+                rayon::join(
+                    || IdentityCard::new_catalyst(seed_id + 2),
+                    || IdentityCard::new_harmonizer(seed_id + 3),
+                )
+            },
+        );
+
+        Ok((
+            sentinel.as_bytes().to_vec(),
+            catalyst.as_bytes().to_vec(),
+            harmonizer.as_bytes().to_vec(),
+        ))
+    }
+
+    fn inspect_identity_json(&self, card_bytes: &[u8]) -> PyResult<String> {
+        let card = IdentityCard::read_from(card_bytes).ok_or_else(|| {
+            pyo3::exceptions::PyValueError::new_err("Invalid Card Layout: Corrupted Identity")
+        })?;
+
+        let role = match card.archetype {
+            0 => "Sentinel",
+            1 => "Catalyst",
+            2 => "Harmonizer",
+            3 => "Prophet",
+            _ => "Unknown",
+        };
+
+        let json = serde_json::json!({
+            "id": card.id,
+            "archetype": role,
+            "traits": {
+                "logic_bias": card.traits.logic_emotion_bias,
+                "risk_tolerance": card.traits.risk_tolerance,
+                "empathy": card.traits.empathy_resonance,
+                "time_horizon": card.traits.time_horizon,
+            },
+            "generation": card.generation,
+            "metadata": {
+                "status": "Active",
+                "origin": "Tachyon Core v4.2",
+            }
+        });
+
+        Ok(json.to_string())
+    }
 }
 
 #[pymodule]
 fn tachyon_core(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<RawInput>()?;
     m.add_class::<TachyonEngine>()?;
+    m.add_class::<SpeculationResult>()?;
     Ok(())
 }
 

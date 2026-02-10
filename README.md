@@ -253,6 +253,31 @@ cargo test
 - ขยาย duplicate-function gate ให้รู้จัก semantic duplicate (AST-level) ไม่ใช่ตรวจแค่ชื่อฟังก์ชัน
 - ถ้าจะใช้กับข้อมูลใหม่ปริมาณสูง: เพิ่ม policy สำหรับ auto-select single-best source จาก freshness + integrity score และ purge records ซ้ำแบบ scheduled compaction
 
+
+## Unified Tachyon Python Test Suite (`test_tachyon.py`)
+
+ได้อัปเกรดสคริปต์ `test_tachyon.py` เป็น **Integrated Version** ที่ครอบคลุมทั้ง
+- Identity Annihilation (wire payload verification)
+- Ghost Worker Speculation (normal)
+- Nirodha Protocol (high turbulence)
+- Real Execution mode (ghost=0)
+- Stress/Throughput benchmark (100,000 iterations)
+
+> หมายเหตุความเข้ากันได้: หาก `tachyon_core` รุ่นปัจจุบันยังไม่ expose `speculate_futures()` สคริปต์จะ mark เป็น `SKIPPED` เฉพาะเคสที่ต้องใช้ API นั้น และยังรันทดสอบส่วนอื่นได้ต่อเนื่อง
+
+### วิธีรัน
+
+```bash
+cd tachyon-core
+cargo build --release
+cd ..
+# Linux/macOS
+cp tachyon-core/target/release/libtachyon_core.so ./tachyon_core.so
+python3 test_tachyon.py
+```
+
+> หากข้อมูลจาก payload หรือ source ใหม่เข้ามาซ้ำกัน ให้คงไว้เฉพาะฟังก์ชัน/เส้นทางที่ดีที่สุด (single-best path) และล้างข้อมูลซ้ำซ้อนเป็นรอบ ๆ เพื่อให้การวิเคราะห์ระบบปัจจุบันยังชัดเจน
+
 ## GitHub Actions Deploy Permission Update
 
 เพื่อแก้ปัญหา workflow deploy ไม่มีสิทธิ์ push ไปยัง branch `gh-pages` ได้เพิ่มสิทธิ์แบบ fine-grained ในไฟล์ `.github/workflows/deploy.yml` ดังนี้:

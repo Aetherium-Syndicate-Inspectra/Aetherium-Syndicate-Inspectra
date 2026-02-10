@@ -441,3 +441,80 @@ python3 test_identity.py
 - สร้าง **Executive KPI Evidence Table** (metric, source, timestamp, verification status) เป็นภาคผนวกถาวรในทุกฉบับวิเคราะห์
 - เชื่อม **Deterministic Replay Log + Lineage Hash Chain** เข้ากับแดชบอร์ดผู้บริหาร เพื่อให้ตัวเลขทุกค่าตรวจสอบย้อนกลับได้
 - เพิ่ม **Scenario Pack สำหรับนักลงทุน** 3 กรณี (base/upside/stress) ผูกกับข้อจำกัดด้านพลังงานและความพร้อมของชิป เพื่อสื่อสารความเสี่ยงเชิงเศรษฐศาสตร์ได้แม่นยำขึ้น
+
+
+## Monetization & Entitlement Engine (Implemented)
+
+เพิ่มโมดูล Economy ใน Backend แล้ว โดยมีความสามารถหลักดังนี้:
+
+- SQLite schema สำหรับ `users`, `subscriptions`, `usage_logs`, `agents_registry` พร้อมการเริ่มต้นอัตโนมัติเมื่อเปิด FastAPI
+- บังคับใช้สิทธิ์ผ่าน Gatekeeper dependency (`X-API-Key`) แบบ Intercept & Verify
+- เก็บ `api_key` แบบ hash (`SHA-256`) ในฐานข้อมูล
+- รองรับ Rate Limit ตาม Tier
+  - SOLO: 60 req/min
+  - SYNDICATE: 300 req/min
+  - SINGULARITY: ไม่จำกัด
+- บันทึก Audit logs ของเหตุการณ์สำคัญลง `auditorium/logs/economy_audit.jsonl`
+- เพิ่ม endpoint สำหรับระบบรายได้:
+  - `GET /api/billing/status`
+  - `POST /api/billing/upgrade`
+  - `GET /api/marketplace/agents`
+  - `POST /api/credits/topup`
+
+## Google Authentication (Implemented)
+
+เพิ่ม Google Sign-In integration ดังนี้:
+
+- Backend endpoint: `POST /api/auth/google` สำหรับ verify Google ID token
+- เมื่อ login ครั้งแรก ระบบจะสร้าง user + subscription tier เริ่มต้นเป็น `SOLO`
+- ออก access token (JWT แบบ HS256) เพื่อใช้กับระบบ ASI
+- หน้า login: `src/frontend/login.html` สำหรับรับ credential จาก Google และส่งเข้า Backend
+
+### Environment Variables
+
+```bash
+export GOOGLE_CLIENT_ID="<your-google-oauth-client-id>"
+export ASI_JWT_SECRET="<strong-secret>"
+export ASI_DB_PATH="data/asi.db"   # optional
+```
+
+## Tachyon Priority Integration
+
+- ขยาย Rust interface `TachyonEngine.process_intent(user_id, vector_data, priority=1)`
+- รองรับ priority 1/2/3 เพื่อจัดเส้นทางประมวลผลเชิงลำดับชั้นของแพ็กเกจ
+
+## แนวทางต่อยอด (Recommended Next Steps)
+
+- เพิ่ม refresh token + key rotation สำหรับ production auth
+- เพิ่ม dashboard widget แสดง quota คงเหลือแบบ realtime
+- เพิ่ม integration test สำหรับ entitlement matrix (tier × feature × status)
+
+
+## Fiat Gateway Protocol (Implemented)
+
+เพิ่มระบบผูกบัญชี/บัตรผ่าน tokenization ตามแนวทาง PCI-DSS แล้ว:
+
+- เพิ่มตาราง `payment_methods` และ `transactions` โดยเก็บเฉพาะ token + ข้อมูล masked (`last_digits`) และห้ามเก็บเลขบัตร/CVV
+- เพิ่ม API สำหรับผูกบัญชีและดูรายการช่องทางชำระเงิน
+  - `POST /api/billing/payment-methods`
+  - `GET /api/billing/payment-methods`
+- เพิ่ม flow ตัดเงินผ่าน token (mock gateway) สำหรับ
+  - `POST /api/billing/upgrade` (รองรับ `charge_amount_thb`)
+  - `POST /api/credits/topup` (รองรับ `charge_amount_thb`)
+- เพิ่ม `POST /api/billing/webhook` พร้อมตรวจสอบ `X-Gateway-Signature` ด้วย HMAC-SHA256
+- เพิ่มหน้า UI ตัวอย่าง `src/frontend/billing_settings.html` สำหรับเชื่อม token จาก gateway ฝั่ง browser
+
+### Payment Security Notes
+
+- Production ต้องใช้ HTTPS เท่านั้น
+- ห้ามส่ง raw PAN/CVV เข้า ASI Backend (ต้อง tokenize ฝั่ง gateway script)
+- ตั้งค่า `PAYMENT_WEBHOOK_SECRET` ให้เป็นค่าเฉพาะใน production
+
+### Environment Variables (Updated)
+
+```bash
+export GOOGLE_CLIENT_ID="<your-google-oauth-client-id>"
+export ASI_JWT_SECRET="<strong-secret>"
+export ASI_DB_PATH="data/asi.db"              # optional
+export PAYMENT_WEBHOOK_SECRET="<webhook-secret>"
+```

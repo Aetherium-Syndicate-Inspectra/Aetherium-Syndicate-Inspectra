@@ -308,16 +308,23 @@ impl TachyonEngine {
         Self
     }
 
-    fn process_intent(&self, user_id: &str, vector_data: Vec<f32>) -> PyResult<Vec<u8>> {
+    #[pyo3(signature = (user_id, vector_data, priority=1))]
+    fn process_intent(&self, user_id: &str, vector_data: Vec<f32>, priority: u8) -> PyResult<Vec<u8>> {
         let mut vector = [0.0f32; INTENT_DIMENSIONS];
         let len = vector_data.len().min(INTENT_DIMENSIONS);
         vector[..len].copy_from_slice(&vector_data[..len]);
+
+        let entropy_salt = match priority {
+            3 => 3,
+            2 => 2,
+            _ => 1,
+        };
 
         let wire = IntentVectorWireV2 {
             sync_id: next_lamport_timestamp(),
             entity_id: xxh64(user_id.as_bytes(), 0),
             vector,
-            entropy_seed: xxh64(user_id.as_bytes(), 1),
+            entropy_seed: xxh64(user_id.as_bytes(), entropy_salt),
             ghost_flag: 0,
             _padding: [0; 7],
         };

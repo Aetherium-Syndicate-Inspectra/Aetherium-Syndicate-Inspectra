@@ -518,3 +518,55 @@ export ASI_JWT_SECRET="<strong-secret>"
 export ASI_DB_PATH="data/asi.db"              # optional
 export PAYMENT_WEBHOOK_SECRET="<webhook-secret>"
 ```
+
+## Integrated Code: AI Physiology Stack (Backbone + Immune System + Brain Stem)
+
+มีการบูรณาการโค้ดใหม่เป็น 3 ส่วนหลักเพื่อให้ระบบสอดคล้องกันทั้ง transport, validation, และ gateway orchestration:
+
+1. **The Backbone — `api_gateway/aetherbus_extreme.py`**
+   - เพิ่ม AetherBus Extreme สำหรับ event-driven communication แบบ async
+   - ใช้ canonical event envelope เดียวกัน (`event_id`, `event_type`, `event_time`, `source`, `canonical_key`, `payload`)
+   - มี short-term memory (`history_limit`) และ endpoint เรียกดู event ล่าสุดผ่าน gateway
+
+2. **The Immune System — `tools/contracts/contract_checker.py`**
+   - เพิ่ม ContractChecker สำหรับตรวจ schema `ipw_v1`
+   - มี quality rubric เดียวกันทั้งระบบ: `confidence`, `freshness`, `completeness`
+   - มีฟังก์ชัน dedup ที่เลือก event คุณภาพดีที่สุดเมื่อ canonical key ซ้ำ
+
+3. **The Brain Stem — `api_gateway/main.py`**
+   - เชื่อม FastAPI + AetherBus + ContractChecker + Tachyon Core (ถ้ามี)
+   - Endpoint สำคัญ:
+     - `GET /` สถานะระบบ
+     - `POST /api/genesis/mint` สร้าง agent ผ่าน Tachyon Core
+     - `GET /api/events/recent` ดู recent events จาก bus
+     - `WS /ws/feed` realtime feed + contract validation + system alerts
+
+### Awakening Protocol (ใหม่)
+
+```bash
+python -m api_gateway.main
+```
+
+> หาก `tachyon_core` ยังไม่ถูกติดตั้ง ระบบจะทำงานแบบ Spinal Reflex Mode (ไม่มี brain connection)
+
+## Extension Recommendations (ต่อยอดเชิงประสิทธิภาพและความท้าทาย)
+
+- เพิ่ม `jsonschema` หรือ `pydantic` schema registry จริงจาก `docs/schemas/` เพื่อรองรับหลาย contract version
+- เพิ่ม fuzz/regression suite สำหรับ malformed payload และ schema drift
+- เพิ่ม persistence ของ event stream ไปยัง time-series DB เพื่อ replay และ policy forensics
+- เพิ่ม semantic dedup (embedding/AST-assisted) สำหรับข้อมูลซ้ำที่ canonical key ไม่เหมือนแต่ความหมายเดียวกัน
+
+## Integration Refinement Update (Canonical Consistency)
+
+ปรับปรุงรอบล่าสุดเพื่อแก้จุดไม่สอดคล้องกันระหว่าง Backbone/Immune/Gateway และลดโค้ดซ้ำ:
+
+- เพิ่มโมดูลกลาง `tools/contracts/canonical.py` ให้ทุกระบบใช้ฟังก์ชัน canonical key เดียวกัน (`build_canonical_key`)
+- รวมสูตรคำนวณคะแนนคุณภาพเป็นฟังก์ชันกลาง (`quality_total`) เพื่อใช้ตัดสิน dedup แบบ single-best function
+- อัปเดต `AetherBusExtreme` ให้ใช้ canonical helper เดียวกับ `ContractChecker` และเพิ่ม debug log ตอน unsubscribe
+- คงพฤติกรรม tuple-return ของ `ContractChecker.validate(...)` เพื่อเข้ากับ `main.py`
+- เพิ่ม regression tests สำหรับ AetherBus (`subscribe`/`unsubscribe`/`recent_events`) และ canonical key consistency
+
+### ข้อแนะนำต่อยอดทันที
+
+- เพิ่ม schema version registry (`ipw_v1`, `ipw_v2`, …) พร้อม migration map เพื่อรองรับ backward compatibility
+- เพิ่ม end-to-end websocket contract test (valid/malformed/violation) เพื่อป้องกัน drift ระหว่าง frontend กับ gateway

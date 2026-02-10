@@ -23,6 +23,8 @@ export class AppState {
             load: 42
         };
 
+        this.starterDeck = null;
+
         this.featureStore = {
             metrics: [],
             decisions: [],
@@ -110,15 +112,17 @@ export class AppState {
         });
     }
 
-    hydrate({ agents = this.agents, directives = this.directives, meetings = this.meetings } = {}) {
+    hydrate({ agents = this.agents, directives = this.directives, meetings = this.meetings, starterDeck = this.starterDeck } = {}) {
         this.agents = Array.isArray(agents) ? agents : this.agents;
         this.directives = Array.isArray(directives) ? directives : this.directives;
         this.meetings = Array.isArray(meetings) ? meetings : this.meetings;
+        this.starterDeck = starterDeck && typeof starterDeck === 'object' ? starterDeck : this.starterDeck;
 
         this.notify('hydrated', {
             agents: this.agents,
             directives: this.directives,
-            meetings: this.meetings
+            meetings: this.meetings,
+            starterDeck: this.starterDeck
         });
     }
 

@@ -387,3 +387,43 @@ python3 test_identity.py
 - เพิ่ม **archetype-specific expertise initialization** จากข้อมูลจริง (เช่น incident history, domain skills) แทนค่าเริ่มต้นศูนย์ทั้งเวกเตอร์
 - ต่อ `inspect_identity_json` เข้ากับ **real-time dashboard stream** เพื่อเทียบ trait drift ข้ามช่วงเวลา
 - เพิ่ม **dedup pipeline สำหรับ identity snapshots** (เลือก snapshot ที่สดและครบที่สุด) แล้วลบ payload ซ้ำเพื่อให้ lineage ชัดเจนและรักษาความสะอาดของข้อมูล
+
+## เอกสารทางเทคนิค: ความสามารถในการใช้เหตุผล (Reasoning) ของ LLMs
+
+สรุปแนวทางพัฒนาระบบให้เหตุผลของ LLMs จากมุมมองเชิงระบบ เพื่อใช้เป็นกรอบออกแบบสำหรับการยกระดับแพลตฟอร์ม Aetherium
+
+### 1) มิติระบอบการทำงาน (Reasoning Regimes)
+
+- **Inference-Time Scaling:** เพิ่มการคำนวณช่วงตอบจริงด้วย tree search และ repeated sampling เพื่อคัดเลือกเส้นทางคำตอบที่ดีที่สุด
+- **Learning to Reason:** ฝึกโมเดลด้วย reasoning trajectories (มนุษย์/สังเคราะห์) เพื่อให้สร้างขั้นตอนแก้ปัญหาที่ถูกต้องได้เป็นธรรมชาติ
+
+### 2) มิติสถาปัตยกรรม (Reasoning Architectures)
+
+- **Standalone LLMs:** โมเดลเดี่ยวที่สร้าง-ตรวจ-ปรับปรุงคำตอบด้วยตนเอง (self-refinement)
+- **Agentic / Multi-Agent Systems:** แยกบทบาทเป็น Generator, Verifier/Judge, Refiner และให้โต้แย้งกันเพื่อลด hallucination
+
+### 3) การเปลี่ยนผ่านสู่ Reinforcement Learning (RL)
+
+- ลดการพึ่งพา prompt engineering เพียงอย่างเดียว และใช้ RL เพื่อสร้างการคิดแบบยาวและลึก
+- แนวทางอย่าง **DeepSeek-R1-Zero** สะท้อนว่าโมเดลพัฒนาการตรวจสอบตนเองได้ แม้ไม่มี human CoT
+- **GRPO** ช่วยเพิ่มประสิทธิภาพการฝึก RL โดยลดภาระจากการใช้ value model แยก
+- RL ทำให้เกิดพฤติกรรมทบทวนข้อผิดพลาดระหว่างทาง (ลักษณะคล้าย “Aha moment”)
+
+### 4) Verifiers และเครื่องมือภายนอก
+
+- **Process Reward Models (PRMs):** ให้ feedback ระดับขั้นตอน ช่วยระบุจุดเริ่มผิดได้เร็ว
+- **Tool Augmentation:** เชื่อม calculator/compiler/knowledge base เพื่อเพิ่มความแม่นยำในการตรวจคำตอบ
+
+### 5) เป้าหมายระยะยาวสู่ AGI (Level 2 Reasoning AI)
+
+- วางแผนเชิงกลยุทธ์หลายขั้นตอนภายใต้ความไม่แน่นอนสูง
+- เรียนรู้เชิงวิวัฒนาการผ่าน self-evolution เมื่อข้อมูลมนุษย์คุณภาพสูงเริ่มจำกัด
+- เพิ่มความน่าเชื่อถือด้วยการเปิดเผยโครง reasoning ที่ตรวจสอบได้
+
+### แนวทางประยุกต์ใช้กับ Aetherium-Syndicate-Inspectra (Actionable)
+
+- เพิ่มโหมด **Generator–Verifier–Refiner loop** สำหรับคำสั่งสำคัญระดับ governance ก่อน commit directive
+- เพิ่ม **step-level scoring** ใน pipeline วิเคราะห์เหตุผล โดยต่อเข้ากับ telemetry เดิมเพื่อจับจุดเสี่ยงเชิงตรรกะ
+- เพิ่ม **tool-routed reasoning**: งานตัวเลขวิกฤตส่งให้ calculator engine, งานกฎระเบียบส่ง policy checker
+- สร้าง **reasoning replay dataset** จากเคสจริงในระบบ เพื่อฝึก/verifier tuning และลดความซ้ำซ้อนของข้อผิดพลาดเดิม
+- กำหนด **single-best reasoning trace** ต่อเหตุการณ์ (freshness + integrity + verifier score) และกำจัด trace ที่ซ้ำซ้อนเพื่อลด noise

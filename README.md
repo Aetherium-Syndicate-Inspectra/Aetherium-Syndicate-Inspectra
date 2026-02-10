@@ -361,3 +361,29 @@ permissions:
 - เพิ่ม `PyBuffer`/memoryview export เพื่อลดการ copy ตอนส่ง payload จาก Rust ไป Python ใน throughput สูง
 - เพิ่ม benchmark แบบ multi-process Python callers + shared-nothing workers เพื่อประเมินเพดานจริงใกล้ 15M msg/sec
 - เพิ่ม lineage stream เป็น append-only JSONL พร้อม sequence id เพื่อผูกกับ deterministic replay log ได้ทันที
+
+## Identity Crystallization (Tachyon Core v0.2.0)
+
+อัปเดตล่าสุดใน `tachyon-core` เพิ่มระบบ Identity Cards และ Python interface สำหรับงาน Dashboard/Marketplace แล้ว:
+
+- เพิ่ม archetype deck เริ่มต้น: `Sentinel`, `Catalyst`, `Harmonizer`
+- เพิ่มเมธอด `mint_starter_deck(seed_id)` เพื่อสร้างการ์ด 3 ใบแบบ parallel (Rayon)
+- เพิ่มเมธอด `inspect_identity_json(card_bytes)` เพื่อแปลงไบนารีการ์ดเป็น JSON สำหรับ UI
+- เพิ่ม dependency `serde_json` เพื่อรองรับ JSON serialization ฝั่ง Rust
+- เพิ่มสคริปต์ยืนยันระบบแบบ end-to-end: `test_identity.py`
+
+### Deployment Steps
+
+```bash
+cd tachyon-core
+cargo build --release
+cp target/release/libtachyon_core.so ../tachyon_core.so
+cd ..
+python3 test_identity.py
+```
+
+### คำแนะนำต่อยอด/ประยุกต์ใช้ (ข้อมูลใหม่ที่ช่วยเพิ่มประสิทธิภาพ)
+
+- เพิ่ม **archetype-specific expertise initialization** จากข้อมูลจริง (เช่น incident history, domain skills) แทนค่าเริ่มต้นศูนย์ทั้งเวกเตอร์
+- ต่อ `inspect_identity_json` เข้ากับ **real-time dashboard stream** เพื่อเทียบ trait drift ข้ามช่วงเวลา
+- เพิ่ม **dedup pipeline สำหรับ identity snapshots** (เลือก snapshot ที่สดและครบที่สุด) แล้วลบ payload ซ้ำเพื่อให้ lineage ชัดเจนและรักษาความสะอาดของข้อมูล

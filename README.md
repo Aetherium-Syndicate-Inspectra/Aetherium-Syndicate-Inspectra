@@ -82,12 +82,38 @@ Aetherium-Syndicate-Inspectra/
 
 ## Quick Start
 
+### 1) รัน FastAPI Bridge (เชื่อม Frontend ↔ Tachyon Core)
+
 ```bash
 git clone <repo-url>
 cd Aetherium-Syndicate-Inspectra
+python3 -m venv .venv
+source .venv/bin/activate
+pip install fastapi uvicorn
+# ต้องมี tachyon_core Python extension ที่ build จาก tachyon-core แล้ว
+uvicorn src.backend.api_server:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### 2) รัน Frontend
+
+```bash
 python3 -m http.server 8080
 # open http://127.0.0.1:8080
 ```
+
+> หาก API ไม่ได้รันพอร์ตเดียวกับหน้าเว็บ ให้กำหนด `window.__AETHERIUM_API_BASE_URL__ = "http://127.0.0.1:8000"` ก่อนโหลด `assets/js/app.js`
+
+
+## FastAPI Bridge ที่เพิ่มเข้ามา
+
+ไฟล์ใหม่ `src/backend/api_server.py` ทำหน้าที่เป็น API/Realtime bridge ระหว่าง Dashboard กับ `tachyon_core` โดยมี endpoint สำคัญ:
+
+- `GET /api/mint-starter-deck?seed=999` เรียก Rust `TachyonEngine.mint_starter_deck` และ `inspect_identity_json`
+- `GET /api/agents`, `GET /api/directives`, `GET /api/meetings`, `POST /api/directives`
+- `WS /ws/status` (สำหรับ frontend channel ปัจจุบัน), `WS /ws/aetherbus` (heartbeat channel)
+- `GET /api/events` (SSE fallback)
+
+Frontend (`ApiClient.bootstrap`) ถูกอัปเดตให้โหลด `starterDeck` จาก API จริงแทน mock อย่างเดียว และ hydrate เข้า state แล้ว
 
 ## Backend API Contract (สำหรับโหมด real data)
 

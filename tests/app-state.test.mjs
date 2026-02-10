@@ -51,7 +51,8 @@ test('hydrate replaces collections and emits hydrated event', () => {
     assert.deepEqual(observed, {
         agents: [{ id: 'new-agent' }],
         directives: [{ id: 'DIR-999' }],
-        meetings: [{ id: 'new-meeting' }]
+        meetings: [{ id: 'new-meeting' }],
+        starterDeck: null
     });
 });
 

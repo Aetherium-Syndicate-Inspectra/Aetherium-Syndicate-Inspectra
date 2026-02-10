@@ -2,19 +2,27 @@ const DEFAULT_HEADERS = {
     Accept: 'application/json'
 };
 
+function detectBaseUrl() {
+    const configured = window.__AETHERIUM_API_BASE_URL__
+        || window.localStorage.getItem('aetherium:apiBaseUrl')
+        || '';
+    return configured.replace(/\/$/, '');
+}
+
 export class ApiClient {
-    constructor(baseUrl = '') {
+    constructor(baseUrl = detectBaseUrl()) {
         this.baseUrl = baseUrl;
     }
 
     async bootstrap() {
-        const [agents, directives, meetings] = await Promise.all([
+        const [agents, directives, meetings, starterDeck] = await Promise.all([
             this.get('/api/agents'),
             this.get('/api/directives'),
-            this.get('/api/meetings')
+            this.get('/api/meetings'),
+            this.get('/api/mint-starter-deck?seed=999')
         ]);
 
-        return { agents, directives, meetings };
+        return { agents, directives, meetings, starterDeck };
     }
 
     async createDirective(payload) {

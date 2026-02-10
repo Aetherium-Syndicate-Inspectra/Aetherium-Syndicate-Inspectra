@@ -1,193 +1,147 @@
 <!DOCTYPE html>
-<html lang="th" data-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aetherium Genesis - Executive AI Console</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap">
-    <script>
-        window.tailwind = window.tailwind || {};
-        window.tailwind.config = {
-            darkMode: 'class',
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ASI: A2A Negotiation &amp; Bidding Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        primary: '#1337ec',
-                        surface: {
-                            dark: '#1e293b',
-                            darker: '#0f1115'
-                        }
-                    }
-                }
-            }
+                        "primary": "#f4ab25",
+                        "primary-dim": "#b37b1b",
+                        "accent-blue": "#00f0ff",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#0a0a0f",
+                        "surface-dark": "#13131a",
+                        "surface-darker": "#050508",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "monospace"],
+                        "mono": ["Space Grotesk", "monospace"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
         }
     </script>
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    <link rel="stylesheet" href="assets/css/style.css">
+<style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #f4ab25; }
+        .glow-text { text-shadow: 0 0 10px rgba(244, 171, 37, 0.5); }
+        .glow-border { box-shadow: 0 0 15px rgba(244, 171, 37, 0.1) inset; }
+        .scanline {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 50;
+            opacity: 0.15;
+        }
+        .cyber-grid {
+            background-size: 40px 40px;
+            background-image:
+                linear-gradient(to right, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+        }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100">
-    <div id="app">
-        <!-- Top Header -->
-        <header class="h-16 border-b border-slate-800 bg-slate-950/90 backdrop-blur flex items-center justify-between px-6 shrink-0 z-50">
-            <div class="flex items-center gap-4">
-                <div class="size-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
-                    <span class="material-symbols-outlined text-2xl">hub</span>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight">Aetherium Genesis</h1>
-                    <div class="flex items-center gap-2">
-                        <span class="size-2 bg-emerald-500 rounded-full pulse"></span>
-                        <span class="text-[10px] text-slate-400 font-mono tracking-widest uppercase">Executive Console v4.2.1</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-6">
-                <!-- Role Switcher -->
-                <div class="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
-                    <span class="material-symbols-outlined text-sm text-slate-400">person_search</span>
-                    <select id="role-select" class="bg-transparent text-xs font-medium focus:outline-none cursor-pointer">
-                        <option value="executive">👑 Executive Director</option>
-                        <option value="analyst">📊 Senior Analyst</option>
-                        <option value="viewer">👁️ System Viewer</option>
-                        <option value="researcher">🤖 AI Researcher</option>
-                    </select>
-                </div>
-
-                <div class="h-8 w-px bg-slate-800"></div>
-
-                <div class="flex items-center gap-3">
-                    <button id="theme-toggle" class="p-2 text-slate-400 hover:text-white transition-colors">
-                        <span class="material-symbols-outlined">dark_mode</span>
-                    </button>
-                    <button class="p-2 text-slate-400 hover:text-white transition-colors relative">
-                        <span class="material-symbols-outlined">notifications</span>
-                        <span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full"></span>
-                    </button>
-                    <div class="flex items-center gap-3 pl-3 border-l border-slate-800">
-                        <div class="text-right hidden sm:block">
-                            <div class="text-sm font-bold text-white" id="user-name">Dr. Aris Thorne</div>
-                            <div class="text-[10px] text-primary font-bold uppercase tracking-wider" id="user-role-label">Executive Level 1</div>
-                        </div>
-                        <div class="size-9 rounded-lg border border-slate-700 bg-gradient-to-br from-primary/40 to-violet-500/30 flex items-center justify-center text-xs font-black text-white" id="user-avatar" aria-label="Current user avatar">AT</div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <div class="main-content">
-            <!-- Sidebar Navigation -->
-            <aside class="sidebar shrink-0">
-                <div class="p-4">
-                    <button id="global-action-btn" class="w-full bg-primary hover:bg-primary-hover text-white rounded-xl p-3 flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 group">
-                        <span class="material-symbols-outlined">add</span>
-                        <span class="font-bold text-sm">New Directive</span>
-                    </button>
-                </div>
-
-                <nav class="flex-1 overflow-y-auto py-2">
-                    <div class="px-4 mb-2">
-                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Operational Views</h3>
-                    </div>
-                    <a href="#" class="nav-item active" data-view="dashboard">
-                        <span class="material-symbols-outlined">dashboard</span>
-                        <span>🏛️ Dashboard</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="spatial">
-                        <span class="material-symbols-outlined">hub</span>
-                        <span>🌌 Spatial Grid</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="command">
-                        <span class="material-symbols-outlined">terminal</span>
-                        <span>🎮 Command Center</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="meetings">
-                        <span class="material-symbols-outlined">groups</span>
-                        <span>🤝 AI Meetings</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="structure">
-                        <span class="material-symbols-outlined">account_tree</span>
-                        <span>🏢 Structure</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="analytics">
-                        <span class="material-symbols-outlined">monitoring</span>
-                        <span>📊 Analytics</span>
-                    </a>
-
-                    <div class="mt-8 px-4 mb-2">
-                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">System Control</h3>
-                    </div>
-                    <a href="#" class="nav-item text-rose-400 hover:text-rose-300" id="emergency-council-nav">
-                        <span class="material-symbols-outlined">warning</span>
-                        <span>Emergency Council</span>
-                    </a>
-                </nav>
-
-                <!-- System Load Mini -->
-                <div class="p-4 border-t border-slate-800 bg-slate-950/50">
-                    <div class="flex items-center justify-between text-[10px] font-bold text-slate-500 mb-2">
-                        <span class="tracking-widest uppercase">System Load</span>
-                        <span id="system-load-val">42%</span>
-                    </div>
-                    <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                        <div id="system-load-bar" class="h-full bg-emerald-500 transition-all duration-1000" style="width: 42%"></div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Main View Container -->
-            <main id="view-container">
-                <!-- Views will be injected here -->
-                <div id="loader" class="absolute inset-0 bg-slate-950 z-50 transition-opacity duration-300">
-                    <div class="p-6 md:p-8 space-y-5">
-                        <div class="skeleton h-8 w-64 rounded-lg"></div>
-                        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                            <div class="skeleton-card">
-                                <div class="skeleton h-4 w-28 rounded"></div>
-                                <div class="skeleton h-7 w-20 rounded mt-3"></div>
-                            </div>
-                            <div class="skeleton-card">
-                                <div class="skeleton h-4 w-24 rounded"></div>
-                                <div class="skeleton h-7 w-16 rounded mt-3"></div>
-                            </div>
-                            <div class="skeleton-card">
-                                <div class="skeleton h-4 w-32 rounded"></div>
-                                <div class="skeleton h-7 w-24 rounded mt-3"></div>
-                            </div>
-                        </div>
-                        <div class="text-xs font-mono text-slate-400 uppercase tracking-[0.2em]">Synchronizing AetherBus...</div>
-                    </div>
-                </div>
-            </main>
-        </div>
-
-        <!-- Global Status Bar -->
-        <footer class="status-bar shrink-0">
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-2">
-                    <span class="text-slate-500">AetherBus:</span>
-                    <span class="text-emerald-400 font-bold" id="bus-status">OPERATIONAL</span>
-                </div>
-                <div class="w-px h-3 bg-slate-800"></div>
-                <div class="flex items-center gap-2">
-                    <span>Latency:</span>
-                    <span class="text-slate-200" id="latency-val">0.8ms</span>
-                </div>
-                <div class="hidden sm:flex items-center gap-2">
-                    <span>Throughput:</span>
-                    <span class="text-slate-200" id="throughput-val">10,240 req/s</span>
-                </div>
-            </div>
-            <div class="ml-auto flex items-center gap-4">
-                <div id="clock" class="text-slate-300 font-mono">14:02:59 UTC</div>
-                <div class="text-[10px] text-slate-500">v4.2.1-stable</div>
-            </div>
-        </footer>
-    </div>
-
-    <!-- Scripts -->
-    <script type="module" src="assets/js/app.js"></script>
-</body>
-</html>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-300 font-display h-screen flex flex-col overflow-hidden selection:bg-primary selection:text-black">
+<div class="scanline"></div>
+<header class="h-14 bg-white dark:bg-surface-dark border-b border-primary/20 flex items-center justify-between px-6 z-10 shrink-0">
+<div class="flex items-center space-x-4">
+<div class="flex items-center gap-2">
+<span class="material-icons-outlined text-primary text-2xl animate-pulse">hub</span>
+<h1 class="text-xl font-bold tracking-widest text-black dark:text-white uppercase">ASI <span class="text-primary">v4.2.2</span></h1>
+</div>
+<div class="h-6 w-px bg-slate-700 mx-2"></div>
+<div class="flex items-center space-x-2 text-xs font-mono text-primary uppercase tracking-wider">
+<span class="inline-block w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+<span>System Online</span>
+<span class="text-slate-500 mx-1">|</span>
+<span>Latency: 12ms</span>
+</div>
+</div>
+<div class="flex items-center space-x-8">
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-slate-500 uppercase tracking-widest">Successful Contracts/sec</span>
+<span class="text-xl font-bold text-accent-blue font-mono tabular-nums leading-none">4,892.4</span>
+</div>
+<div class="flex items-center gap-3 border border-red-500/30 bg-red-500/10 px-3 py-1.5 rounded cursor-pointer hover:bg-red-500/20 transition-colors group">
+<span class="material-icons-outlined text-red-500 text-sm group-hover:animate-pulse">warning</span>
+<span class="text-xs font-bold text-red-400 tracking-wider uppercase">Human Oversight</span>
+</div>
+<div class="h-8 w-8 rounded bg-primary/20 flex items-center justify-center border border-primary/50">
+<span class="material-icons-outlined text-primary text-sm">settings</span>
+</div>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden relative">
+<div class="flex-1 flex flex-col relative bg-surface-darker">
+<div class="flex-1 relative cyber-grid overflow-hidden">
+<div class="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none bg-cover bg-center" data-alt="Abstract network of glowing nodes and connections representing AI negotiation sphere" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDixYVu3-Sr0bNYqo6QgGjsXAHMKoYwKwx5ftY4HFyEJ5Oa5FDoTzCGy6yR9paBUyOTDnrPBvd6m_nQEwwukNtRf9SsSOeyO3EVt6Bs1L7C-TUrk5pbvVaNQ2JBDGcBNZH7i_2d0iuCd2AxSwSaI11ajB4x6o9WqGNrI2RKJyWGelgytG5ueIuT6QCdhlFV24jVR7BUOZiT5kQV68okDJSsEee3aZ77E8SkFL1fcCUXX454ha1jq1PYBg8MJJ2IkFt4WSRqdGXNYGk');"></div>
+<div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+<div class="bg-surface-dark/90 backdrop-blur border border-primary/20 p-2 rounded w-48 shadow-lg">
+<div class="flex justify-between items-center mb-1"><span class="text-[10px] uppercase text-slate-400">Active Nodes</span><span class="text-xs font-mono text-primary">1,024</span></div>
+<div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-primary h-full w-3/4 shadow-[0_0_10px_#f4ab25]"></div></div>
+</div>
+<div class="bg-surface-dark/90 backdrop-blur border border-accent-blue/20 p-2 rounded w-48 shadow-lg">
+<div class="flex justify-between items-center mb-1"><span class="text-[10px] uppercase text-slate-400">Network Load</span><span class="text-xs font-mono text-accent-blue">89%</span></div>
+<div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-accent-blue h-full w-[89%] shadow-[0_0_10px_#00f0ff]"></div></div>
+</div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-64 h-64 border border-primary/30 rounded-full flex items-center justify-center relative animate-[spin_20s_linear_infinite]">
+<div class="absolute inset-0 border border-dashed border-primary/20 rounded-full scale-125"></div>
+<div class="absolute inset-0 border border-dotted border-accent-blue/30 rounded-full scale-150 animate-[spin_30s_linear_infinite_reverse]"></div>
+<div class="w-32 h-32 bg-primary/5 rounded-full blur-xl animate-pulse"></div>
+<div class="text-center z-10"><div class="text-4xl font-bold text-white glow-text tracking-tighter">CORE</div><div class="text-[10px] text-primary uppercase tracking-[0.3em] mt-1">Negotiating</div></div>
+</div>
+<div class="absolute top-1/4 left-1/3 bg-black/60 border-l-2 border-primary px-3 py-1 backdrop-blur-sm"><div class="text-xs text-primary font-bold">AGT-Omega</div><div class="text-[10px] text-slate-300">Bid: 4.5k T/s</div></div>
+<div class="absolute bottom-1/3 right-1/4 bg-black/60 border-l-2 border-accent-blue px-3 py-1 backdrop-blur-sm"><div class="text-xs text-accent-blue font-bold">AGT-Zeta</div><div class="text-[10px] text-slate-300">Bid: 12TB Mem</div></div>
+</div>
+</div>
+<div class="h-48 bg-surface-dark border-t border-slate-800 flex divide-x divide-slate-800 shrink-0 z-20 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+<div class="w-2/3 p-4 flex flex-col">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider flex items-center gap-2"><span class="material-icons-outlined text-sm">show_chart</span>Sentiment &amp; Intent Analysis</h3>
+<div class="flex gap-2"><span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] rounded border border-primary/20">Aggressive</span><span class="px-2 py-0.5 bg-accent-blue/10 text-accent-blue text-[10px] rounded border border-accent-blue/20">Cooperative</span></div>
+</div>
+<div class="flex-1 flex items-end gap-[2px] h-full overflow-hidden opacity-80">
+<div class="w-1 bg-primary/60 h-[40%] rounded-t-sm"></div><div class="w-1 bg-primary/40 h-[25%] rounded-t-sm"></div><div class="w-1 bg-accent-blue/60 h-[55%] rounded-t-sm"></div><div class="w-1 bg-accent-blue/80 h-[70%] rounded-t-sm"></div><div class="w-1 bg-primary/90 h-[95%] rounded-t-sm"></div><div class="w-1 bg-accent-blue/90 h-[90%] rounded-t-sm"></div><div class="w-1 bg-primary/70 h-[75%] rounded-t-sm"></div><div class="w-1 bg-accent-blue/50 h-[50%] rounded-t-sm"></div><div class="w-1 bg-primary/30 h-[30%] rounded-t-sm"></div><div class="w-1 bg-accent-blue/40 h-[45%] rounded-t-sm"></div><div class="w-1 bg-primary/60 h-[65%] rounded-t-sm"></div><div class="w-1 bg-primary/80 h-[85%] rounded-t-sm"></div>
+</div>
+</div>
+<div class="w-1/3 p-4 flex flex-col bg-red-900/5 relative overflow-hidden">
+<h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider flex items-center gap-2 mb-4 relative z-10"><span class="material-icons-outlined text-sm text-primary">gavel</span>Active Conflicts <span class="bg-primary text-black text-[10px] px-1.5 rounded-sm font-bold">2</span></h3>
+<div class="flex-1 space-y-3 overflow-y-auto relative z-10 pr-1">
+<div class="p-3 bg-surface-darker/80 border-l-2 border-primary rounded-r-sm"><div class="flex justify-between items-start mb-2"><span class="text-xs text-slate-200 font-bold">Res. Contention: Node 4</span><span class="text-[10px] text-primary animate-pulse">Resolving...</span></div><div class="flex justify-between text-[10px] text-slate-500 mb-1"><span>Analysis</span><span>82%</span></div><div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"><div class="bg-primary h-full w-[82%]"></div></div></div>
+<div class="p-3 bg-surface-darker/80 border-l-2 border-slate-600 rounded-r-sm opacity-60"><div class="flex justify-between items-start mb-2"><span class="text-xs text-slate-200 font-bold">Protocol Timeout: AGT-9</span><span class="text-[10px] text-slate-400">Queued</span></div><div class="flex justify-between text-[10px] text-slate-500 mb-1"><span>Wait Time</span><span>0.4s</span></div><div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"><div class="bg-slate-500 h-full w-[10%]"></div></div></div>
+</div>
+</div>
+</div>
+</div>
+<aside class="w-[450px] bg-surface-dark border-l border-primary/20 flex flex-col z-30 shadow-2xl">
+<div class="h-12 border-b border-primary/20 flex items-center justify-between px-4 bg-surface-darker/50"><h2 class="text-sm font-bold uppercase tracking-widest text-white flex items-center gap-2"><span class="material-icons-outlined text-primary text-sm">table_view</span>Bid Ledger</h2></div>
+<div class="grid grid-cols-12 gap-2 px-4 py-2 bg-slate-800/50 text-[10px] uppercase font-bold text-slate-400 tracking-wider"><div class="col-span-3">Agent ID</div><div class="col-span-3">Resource</div><div class="col-span-3 text-right">Value (Cr)</div><div class="col-span-3 text-center">Status</div></div>
+<div class="flex-1 overflow-y-auto font-mono text-xs relative">
+<div class="grid grid-cols-12 gap-2 px-4 py-3 border-b border-slate-800 bg-primary/5 hover:bg-primary/10 transition-colors cursor-default group glow-border"><div class="col-span-3 text-primary font-bold group-hover:text-white">AGT-X99</div><div class="col-span-3 text-slate-300">Tachyon Bw</div><div class="col-span-3 text-right text-white font-bold">45,200</div><div class="col-span-3 flex justify-center"><span class="px-2 py-0.5 rounded-full bg-primary text-black text-[10px] font-bold uppercase animate-pulse">Proposing</span></div></div>
+<div class="grid grid-cols-12 gap-2 px-4 py-3 border-b border-slate-800 hover:bg-slate-800/50 transition-colors cursor-default"><div class="col-span-3 text-accent-blue font-bold">AGT-B04</div><div class="col-span-3 text-slate-400">Compute</div><div class="col-span-3 text-right text-slate-300">12,500</div><div class="col-span-3 flex justify-center"><span class="px-2 py-0.5 rounded-full border border-primary/50 text-primary text-[10px] uppercase">Countering</span></div></div>
+<div class="grid grid-cols-12 gap-2 px-4 py-3 border-b border-slate-800 hover:bg-slate-800/50 transition-colors cursor-default opacity-60"><div class="col-span-3 text-slate-500">AGT-M12</div><div class="col-span-3 text-slate-500">Memory</div><div class="col-span-3 text-right text-slate-500">8,100</div><div class="col-span-3 flex justify-center"><span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] uppercase">Settled</span></div></div>
+<div class="grid grid-cols-12 gap-2 px-4 py-3 border-b border-slate-800 hover:bg-slate-800/50 transition-colors cursor-default"><div class="col-span-3 text-white font-bold">AGT-Z01</div><div class="col-span-3 text-slate-300">Full Node</div><div class="col-span-3 text-right text-primary font-bold">102,000</div><div class="col-span-3 flex justify-center"><span class="px-2 py-0.5 rounded-full border border-primary/50 text-primary text-[10px] uppercase">Countering</span></div></div>
+</div>
+<div class="p-4 border-t border-primary/20 bg-surface-darker text-[10px] text-slate-500 flex justify-between uppercase tracking-widest"><span>Total Active Bids: <span class="text-white">124</span></span><span>Vol: <span class="text-white">12.4M Cr</span></span></div>
+</aside>
+</main>
+</body></html>

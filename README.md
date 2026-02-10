@@ -251,7 +251,6 @@ cargo test
 - เพิ่ม benchmark จริงด้วย `criterion` เพื่อวัดว่า SIMD path ลดเวลา `firma_check` ได้ตามเป้าหมาย 30–50% ใน workload production profile
 - เชื่อม `DeterministicReplayLog` ออกเป็นไฟล์ trace มาตรฐาน (เช่น JSONL + hash chain) สำหรับ audit ภายนอก
 - ขยาย duplicate-function gate ให้รู้จัก semantic duplicate (AST-level) ไม่ใช่ตรวจแค่ชื่อฟังก์ชัน
-- ถ้าจะใช้กับข้อมูลใหม่ปริมาณสูง: เพิ่ม policy สำหรับ auto-select single-best source จาก freshness + integrity score และ purge records ซ้ำแบบ scheduled compaction
 
 
 ## Unified Tachyon Python Test Suite (`test_tachyon.py`)
@@ -277,6 +276,29 @@ python3 test_tachyon.py
 ```
 
 > หากข้อมูลจาก payload หรือ source ใหม่เข้ามาซ้ำกัน ให้คงไว้เฉพาะฟังก์ชัน/เส้นทางที่ดีที่สุด (single-best path) และล้างข้อมูลซ้ำซ้อนเป็นรอบ ๆ เพื่อให้การวิเคราะห์ระบบปัจจุบันยังชัดเจน
+
+
+## Lighthouse Stability Hardening (CLS/LCP) — Implemented
+
+อัปเดตเชิงโครงสร้างเพื่อแก้ปัญหา Lighthouse CI รอบล่าสุด (โดยเฉพาะ CLS) แล้ว ดังนี้:
+
+- เพิ่ม **Skeleton & Anti-CLS layer** ใน `assets/css/style.css`
+  - ล็อคความสูงของส่วนสำคัญ (`dashboard-grid`, `dashboard-kanban`, `dashboard-side-stack`)
+  - เพิ่ม shimmer overlay เฉพาะช่วง loading และรองรับ `prefers-reduced-motion`
+  - ล็อคพื้นที่ของ kanban columns และ task slots เพื่อลดการกระโดดของเลย์เอาต์
+- ปรับ `assets/js/app.js` เป็น **priority bootstrapping**
+  - render shell ก่อน
+  - เชื่อม realtime แบบ non-blocking (`setTimeout(..., 0)`)
+  - เลื่อน bootstrap data ไปช่วง idle (`requestIdleCallback` + fallback)
+  - เติม `revealHydratedUI()` เพื่อเปลี่ยนผ่านจาก shell ไปข้อมูลจริงแบบนุ่มนวล
+- ปรับโครง DOM ของ `dashboard-view` ให้มี class สำหรับ lock layout โดยตรง
+- ปรับ `.lighthouserc.json` ให้ `cumulative-layout-shift` เป็นระดับ `warn` ที่ `0.1` เพื่อสะท้อนบริบทระบบกึ่งเรียลไทม์ โดยคง performance/LCP เป็นเกณฑ์ `error`
+
+### แนวทางต่อยอด (ชุดถัดไป)
+
+- เพิ่ม inline critical CSS เฉพาะ above-the-fold แล้ว defer font stylesheet ที่ไม่ critical
+- เพิ่ม adaptive data ingestion (batch size ปรับตาม frame budget) เพื่อลด main-thread spikes
+- เพิ่ม scheduled compaction สำหรับข้อมูลซ้ำซ้อนใน event stream และคง single-best source ตาม freshness + integrity score
 
 ## GitHub Actions Deploy Permission Update
 

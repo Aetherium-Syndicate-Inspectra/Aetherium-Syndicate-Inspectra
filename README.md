@@ -388,42 +388,30 @@ python3 test_identity.py
 - ต่อ `inspect_identity_json` เข้ากับ **real-time dashboard stream** เพื่อเทียบ trait drift ข้ามช่วงเวลา
 - เพิ่ม **dedup pipeline สำหรับ identity snapshots** (เลือก snapshot ที่สดและครบที่สุด) แล้วลบ payload ซ้ำเพื่อให้ lineage ชัดเจนและรักษาความสะอาดของข้อมูล
 
-## เอกสารทางเทคนิค: ความสามารถในการใช้เหตุผล (Reasoning) ของ LLMs
+## Strategic Economic Intelligence Brief 2025 (Financial-Publication Style)
 
-สรุปแนวทางพัฒนาระบบให้เหตุผลของ LLMs จากมุมมองเชิงระบบ เพื่อใช้เป็นกรอบออกแบบสำหรับการยกระดับแพลตฟอร์ม Aetherium
+สรุปเชิงผู้บริหารจากการเทียบแนวคิด ASI v4.2.2 กับสัญญาณจากผลประกอบการ Big Tech ปี 2025:
 
-### 1) มิติระบอบการทำงาน (Reasoning Regimes)
+1. **จาก "ความเร็ว" สู่ "คุณภาพการตัดสินใจ"**  
+   ตลาดกำลังขยับจาก one-shot generation ไปสู่ reasoning workflows ที่ต้องใช้ compute หนาแน่นขึ้นอย่างมีนัยสำคัญ จึงสอดคล้องกับแนวทางของ ASI ที่ยกระดับ governance และ decision quality มากกว่าไล่ latency เพียงอย่างเดียว
 
-- **Inference-Time Scaling:** เพิ่มการคำนวณช่วงตอบจริงด้วย tree search และ repeated sampling เพื่อคัดเลือกเส้นทางคำตอบที่ดีที่สุด
-- **Learning to Reason:** ฝึกโมเดลด้วย reasoning trajectories (มนุษย์/สังเคราะห์) เพื่อให้สร้างขั้นตอนแก้ปัญหาที่ถูกต้องได้เป็นธรรมชาติ
+2. **Agentic AI = โครงสร้างแรงงานดิจิทัลใหม่**  
+   ทิศทางระดับองค์กรกำลังมุ่งสู่ agent ecosystem แบบหลายบทบาท (sales, service, finance, risk) ซึ่งตรงกับกรอบ Persona/Identity Sets ในสถาปัตยกรรมของโปรเจ็กต์นี้
 
-### 2) มิติสถาปัตยกรรม (Reasoning Architectures)
+3. **Quantum + Data Fabric เป็นฐานโครงสร้างรุ่นถัดไป**  
+   สัญญาณจากผู้เล่นระดับโลกชี้ว่าการลงทุนกำลังมุ่งไปที่ utility-scale quantum milestones และ unified data layer เพื่อให้ agent เข้าถึงบริบทธุรกิจร่วมกัน ลด silo และลด hallucination
 
-- **Standalone LLMs:** โมเดลเดี่ยวที่สร้าง-ตรวจ-ปรับปรุงคำตอบด้วยตนเอง (self-refinement)
-- **Agentic / Multi-Agent Systems:** แยกบทบาทเป็น Generator, Verifier/Judge, Refiner และให้โต้แย้งกันเพื่อลด hallucination
+4. **ความเสี่ยงทางเศรษฐศาสตร์ที่ต้องกำกับพร้อมกัน**  
+   แม้โอกาสเติบโตสูง แต่ข้อจำกัดจริงยังอยู่ที่พลังงาน, ซัพพลายชิป, และความพร้อมของข้อมูลคุณภาพสูง รวมถึงวินัยด้าน CapEx ในรอบลงทุน AI ขนาดใหญ่
 
-### 3) การเปลี่ยนผ่านสู่ Reinforcement Learning (RL)
+### Validation & Data Hygiene Notes
 
-- ลดการพึ่งพา prompt engineering เพียงอย่างเดียว และใช้ RL เพื่อสร้างการคิดแบบยาวและลึก
-- แนวทางอย่าง **DeepSeek-R1-Zero** สะท้อนว่าโมเดลพัฒนาการตรวจสอบตนเองได้ แม้ไม่มี human CoT
-- **GRPO** ช่วยเพิ่มประสิทธิภาพการฝึก RL โดยลดภาระจากการใช้ value model แยก
-- RL ทำให้เกิดพฤติกรรมทบทวนข้อผิดพลาดระหว่างทาง (ลักษณะคล้าย “Aha moment”)
+- ตัวเลขเชิงเทคนิคภายใน (เช่น throughput ระดับสูงมาก, Shannon index, conflict-resolution latency) ควรยืนยันซ้ำกับ benchmark/replay จากเอกสารวิศวกรรมต้นฉบับก่อนใช้สื่อสารเชิงการเงิน
+- ยึดหลัก **single-best source** สำหรับ KPI ที่ซ้ำซ้อน: เก็บเฉพาะค่าที่ trace ได้, มี provenance ชัดเจน, และสอดคล้องกับช่วงเวลาอ้างอิงเดียวกัน
+- แยกให้ชัดระหว่างข้อมูล "market-validated" กับข้อมูล "internal prototype" ในทุก executive brief
 
-### 4) Verifiers และเครื่องมือภายนอก
+### Recommended Next Applications
 
-- **Process Reward Models (PRMs):** ให้ feedback ระดับขั้นตอน ช่วยระบุจุดเริ่มผิดได้เร็ว
-- **Tool Augmentation:** เชื่อม calculator/compiler/knowledge base เพื่อเพิ่มความแม่นยำในการตรวจคำตอบ
-
-### 5) เป้าหมายระยะยาวสู่ AGI (Level 2 Reasoning AI)
-
-- วางแผนเชิงกลยุทธ์หลายขั้นตอนภายใต้ความไม่แน่นอนสูง
-- เรียนรู้เชิงวิวัฒนาการผ่าน self-evolution เมื่อข้อมูลมนุษย์คุณภาพสูงเริ่มจำกัด
-- เพิ่มความน่าเชื่อถือด้วยการเปิดเผยโครง reasoning ที่ตรวจสอบได้
-
-### แนวทางประยุกต์ใช้กับ Aetherium-Syndicate-Inspectra (Actionable)
-
-- เพิ่มโหมด **Generator–Verifier–Refiner loop** สำหรับคำสั่งสำคัญระดับ governance ก่อน commit directive
-- เพิ่ม **step-level scoring** ใน pipeline วิเคราะห์เหตุผล โดยต่อเข้ากับ telemetry เดิมเพื่อจับจุดเสี่ยงเชิงตรรกะ
-- เพิ่ม **tool-routed reasoning**: งานตัวเลขวิกฤตส่งให้ calculator engine, งานกฎระเบียบส่ง policy checker
-- สร้าง **reasoning replay dataset** จากเคสจริงในระบบ เพื่อฝึก/verifier tuning และลดความซ้ำซ้อนของข้อผิดพลาดเดิม
-- กำหนด **single-best reasoning trace** ต่อเหตุการณ์ (freshness + integrity + verifier score) และกำจัด trace ที่ซ้ำซ้อนเพื่อลด noise
+- สร้าง **Executive KPI Evidence Table** (metric, source, timestamp, verification status) เป็นภาคผนวกถาวรในทุกฉบับวิเคราะห์
+- เชื่อม **Deterministic Replay Log + Lineage Hash Chain** เข้ากับแดชบอร์ดผู้บริหาร เพื่อให้ตัวเลขทุกค่าตรวจสอบย้อนกลับได้
+- เพิ่ม **Scenario Pack สำหรับนักลงทุน** 3 กรณี (base/upside/stress) ผูกกับข้อจำกัดด้านพลังงานและความพร้อมของชิป เพื่อสื่อสารความเสี่ยงเชิงเศรษฐศาสตร์ได้แม่นยำขึ้น

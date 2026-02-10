@@ -5,6 +5,8 @@ import time
 from itertools import count
 from typing import Any, Awaitable, Callable
 
+from tools.contracts.canonical import build_canonical_key
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | AETHERBUS | %(levelname)s | %(message)s",
@@ -42,6 +44,7 @@ class AetherBusExtreme:
                 handlers.remove(handler)
             if not handlers and topic in self._subscribers:
                 self._subscribers.pop(topic)
+        logger.debug("🔌 Synapse disconnected from topic: %s", topic)
 
     def _canonical_event(self, topic: str, payload: Any) -> dict[str, Any]:
         event = {
@@ -51,8 +54,10 @@ class AetherBusExtreme:
             "source": "api_gateway",
             "payload": payload,
         }
-        event["canonical_key"] = (
-            f"{event['event_id']}:{event['event_type']}:{event['event_time']}:{event['source']}"
+        event["canonical_key"] = build_canonical_key(
+            event_type=event["event_type"],
+            event_time=event["event_time"],
+            source=event["source"],
         )
         return event
 

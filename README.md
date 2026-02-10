@@ -555,3 +555,18 @@ python -m api_gateway.main
 - เพิ่ม fuzz/regression suite สำหรับ malformed payload และ schema drift
 - เพิ่ม persistence ของ event stream ไปยัง time-series DB เพื่อ replay และ policy forensics
 - เพิ่ม semantic dedup (embedding/AST-assisted) สำหรับข้อมูลซ้ำที่ canonical key ไม่เหมือนแต่ความหมายเดียวกัน
+
+## Integration Refinement Update (Canonical Consistency)
+
+ปรับปรุงรอบล่าสุดเพื่อแก้จุดไม่สอดคล้องกันระหว่าง Backbone/Immune/Gateway และลดโค้ดซ้ำ:
+
+- เพิ่มโมดูลกลาง `tools/contracts/canonical.py` ให้ทุกระบบใช้ฟังก์ชัน canonical key เดียวกัน (`build_canonical_key`)
+- รวมสูตรคำนวณคะแนนคุณภาพเป็นฟังก์ชันกลาง (`quality_total`) เพื่อใช้ตัดสิน dedup แบบ single-best function
+- อัปเดต `AetherBusExtreme` ให้ใช้ canonical helper เดียวกับ `ContractChecker` และเพิ่ม debug log ตอน unsubscribe
+- คงพฤติกรรม tuple-return ของ `ContractChecker.validate(...)` เพื่อเข้ากับ `main.py`
+- เพิ่ม regression tests สำหรับ AetherBus (`subscribe`/`unsubscribe`/`recent_events`) และ canonical key consistency
+
+### ข้อแนะนำต่อยอดทันที
+
+- เพิ่ม schema version registry (`ipw_v1`, `ipw_v2`, …) พร้อม migration map เพื่อรองรับ backward compatibility
+- เพิ่ม end-to-end websocket contract test (valid/malformed/violation) เพื่อป้องกัน drift ระหว่าง frontend กับ gateway

@@ -1,6 +1,8 @@
 import time
 from typing import Any
 
+from tools.contracts.canonical import build_canonical_key, quality_total
+
 
 class ContractChecker:
     """
@@ -62,7 +64,7 @@ class ContractChecker:
 
     def canonicalize_event(self, payload: dict[str, Any], event_type: str, source: str) -> dict[str, Any]:
         event_time = payload.get("timestamp", time.time())
-        canonical_key = f"{event_type}:{event_time}:{source}"
+        canonical_key = build_canonical_key(event_type=event_type, event_time=float(event_time), source=source)
         return {
             "event_type": event_type,
             "event_time": event_time,
@@ -78,15 +80,13 @@ class ContractChecker:
             if not key:
                 continue
             quality = event.get("quality", {})
-            current_score = sum(float(quality.get(metric, 0.0)) for metric in ("confidence", "freshness", "completeness"))
+            current_score = quality_total(quality)
             previous = dedup_map.get(key)
             if previous is None:
                 dedup_map[key] = event
                 continue
             previous_quality = previous.get("quality", {})
-            previous_score = sum(
-                float(previous_quality.get(metric, 0.0)) for metric in ("confidence", "freshness", "completeness")
-            )
+            previous_score = quality_total(previous_quality)
             if current_score >= previous_score:
                 dedup_map[key] = event
         return list(dedup_map.values())

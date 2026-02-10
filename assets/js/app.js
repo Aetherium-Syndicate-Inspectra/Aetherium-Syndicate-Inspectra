@@ -29,6 +29,7 @@ class App {
     async init() {
         this.setupEventListeners();
         this.startClock();
+        this.renderInitialSkeleton();
 
         this.state.subscribe((event, data) => {
             this.onStateChange(event, data);
@@ -39,9 +40,25 @@ class App {
         });
 
         this.loadInitialView();
+        this.scheduleRealtimeConnect();
         this.scheduleBootstrapData();
     }
 
+    renderInitialSkeleton() {
+        const root = document.getElementById('dashboard-root');
+        if (!root) return;
+
+        root.classList.remove('fade-in-data');
+        root.classList.add('dashboard-shell-loading');
+    }
+
+    revealHydratedUI() {
+        const root = document.getElementById('dashboard-root');
+        if (!root) return;
+
+        root.classList.remove('dashboard-shell-loading');
+        root.classList.add('fade-in-data');
+    }
 
     loadInitialView() {
         requestAnimationFrame(async () => {
@@ -50,15 +67,19 @@ class App {
         });
     }
 
+    scheduleRealtimeConnect() {
+        setTimeout(() => this.connectRealtime(), 0);
+    }
+
     scheduleBootstrapData() {
         const kickoff = () => this.bootstrapData();
 
         if ('requestIdleCallback' in window) {
-            window.requestIdleCallback(kickoff, { timeout: 1200 });
+            window.requestIdleCallback(kickoff, { timeout: 1500 });
             return;
         }
 
-        setTimeout(kickoff, 0);
+        setTimeout(kickoff, 200);
     }
 
     async bootstrapData() {
@@ -66,11 +87,12 @@ class App {
             const payload = await this.apiClient.bootstrap();
             this.state.hydrate(payload);
             this.uiState.setConnection({ api: 'connected' });
-            this.connectRealtime();
+            this.revealHydratedUI();
         } catch (error) {
             console.warn('[App] API bootstrap failed, using mock transport.', error);
             this.uiState.setConnection({ api: 'fallback', realtime: 'simulated', transport: 'mock' });
             this.bus = new MockAetherBus(this.state);
+            this.revealHydratedUI();
         }
     }
 

@@ -518,3 +518,40 @@ export ASI_JWT_SECRET="<strong-secret>"
 export ASI_DB_PATH="data/asi.db"              # optional
 export PAYMENT_WEBHOOK_SECRET="<webhook-secret>"
 ```
+
+## Integrated Code: AI Physiology Stack (Backbone + Immune System + Brain Stem)
+
+มีการบูรณาการโค้ดใหม่เป็น 3 ส่วนหลักเพื่อให้ระบบสอดคล้องกันทั้ง transport, validation, และ gateway orchestration:
+
+1. **The Backbone — `api_gateway/aetherbus_extreme.py`**
+   - เพิ่ม AetherBus Extreme สำหรับ event-driven communication แบบ async
+   - ใช้ canonical event envelope เดียวกัน (`event_id`, `event_type`, `event_time`, `source`, `canonical_key`, `payload`)
+   - มี short-term memory (`history_limit`) และ endpoint เรียกดู event ล่าสุดผ่าน gateway
+
+2. **The Immune System — `tools/contracts/contract_checker.py`**
+   - เพิ่ม ContractChecker สำหรับตรวจ schema `ipw_v1`
+   - มี quality rubric เดียวกันทั้งระบบ: `confidence`, `freshness`, `completeness`
+   - มีฟังก์ชัน dedup ที่เลือก event คุณภาพดีที่สุดเมื่อ canonical key ซ้ำ
+
+3. **The Brain Stem — `api_gateway/main.py`**
+   - เชื่อม FastAPI + AetherBus + ContractChecker + Tachyon Core (ถ้ามี)
+   - Endpoint สำคัญ:
+     - `GET /` สถานะระบบ
+     - `POST /api/genesis/mint` สร้าง agent ผ่าน Tachyon Core
+     - `GET /api/events/recent` ดู recent events จาก bus
+     - `WS /ws/feed` realtime feed + contract validation + system alerts
+
+### Awakening Protocol (ใหม่)
+
+```bash
+python -m api_gateway.main
+```
+
+> หาก `tachyon_core` ยังไม่ถูกติดตั้ง ระบบจะทำงานแบบ Spinal Reflex Mode (ไม่มี brain connection)
+
+## Extension Recommendations (ต่อยอดเชิงประสิทธิภาพและความท้าทาย)
+
+- เพิ่ม `jsonschema` หรือ `pydantic` schema registry จริงจาก `docs/schemas/` เพื่อรองรับหลาย contract version
+- เพิ่ม fuzz/regression suite สำหรับ malformed payload และ schema drift
+- เพิ่ม persistence ของ event stream ไปยัง time-series DB เพื่อ replay และ policy forensics
+- เพิ่ม semantic dedup (embedding/AST-assisted) สำหรับข้อมูลซ้ำที่ canonical key ไม่เหมือนแต่ความหมายเดียวกัน

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enterprise Software Simulation Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0b1020',
+            panel: '#121a31',
+            panelSoft: '#1a2544',
+            accent: '#f59e0b',
+            good: '#34d399'
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-bg text-slate-100 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-6 space-y-5">
+    <header class="rounded-xl bg-panel border border-slate-700 p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-2xl font-bold">Enterprise Software Simulation Hub</h1>
+          <p class="mt-1 text-sm text-slate-300">คลิกไอคอนเพื่อเปิดหน้าต่างจำลองของแต่ละแพลตฟอร์ม</p>
+        </div>
+        <a href="index.html" class="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm hover:bg-slate-600">
+          <span aria-hidden="true">↩</span>
+          <span>กลับหน้า Role Navigator</span>
+        </a>
+      </div>
+    </header>
+
+    <section class="rounded-xl bg-panel border border-slate-700 p-4">
+      <h2 class="font-semibold mb-3">Software Windows Launcher</h2>
+      <div id="launcherGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+    </section>
+
+    <section class="rounded-xl bg-panel border border-slate-700 p-4">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <h2 class="font-semibold">Simulation Window</h2>
+        <span id="windowStatus" class="text-xs rounded bg-slate-800 px-2 py-1">ยังไม่ได้เลือกแพลตฟอร์ม</span>
+      </div>
+      <div id="softwareWindow" class="rounded-xl border border-slate-600 bg-panelSoft p-4 min-h-[280px]"></div>
+    </section>
+  </div>
+
+  <script>
+    const softwareTemplates = [
+      {
+        id: 'SAP_S4HANA',
+        icon: '🏭',
+        name: 'SAP S/4HANA',
+        subtitle: 'ERP Giant',
+        layers: ['Database (HANA In-Memory)', 'Application (Business Logic)', 'Presentation (Fiori UI)'],
+        modules: ['Finance (FI/CO)', 'Sales (SD)', 'Procurement (MM)', 'HR (HCM)', 'Supply Chain (SCM)']
+      },
+      {
+        id: 'Salesforce_CRM',
+        icon: '☁️',
+        name: 'Salesforce CRM',
+        subtitle: 'Cloud CRM',
+        layers: ['Database (Objects/Fields)', 'Application (Apex/Flows)', 'Presentation (Lightning UI)'],
+        modules: ['Sales Cloud', 'Service Cloud', 'Marketing Cloud', 'Commerce Cloud']
+      },
+      {
+        id: 'Workday_HCM',
+        icon: '👥',
+        name: 'Workday HCM',
+        subtitle: 'HR-first Platform',
+        layers: ['Unified Object Data Model', 'Application Workflows', 'Self-Service Presentation'],
+        modules: ['Core HR', 'Compensation', 'Benefits', 'Talent', 'Learning', 'Absence', 'Payroll']
+      },
+      {
+        id: 'Oracle_Fusion_ERP',
+        icon: '🧠',
+        name: 'Oracle Fusion Cloud ERP',
+        subtitle: 'Modular Cloud ERP',
+        layers: ['Autonomous Database', 'Application Processes', 'Redwood UI'],
+        modules: ['Financials', 'Procurement', 'Project Management', 'SCM', 'HCM']
+      },
+      {
+        id: 'Dynamics_365',
+        icon: '📊',
+        name: 'Microsoft Dynamics 365',
+        subtitle: 'SaaS + Power Platform',
+        layers: ['Data (CDS)', 'Business Apps', 'Power Apps UI'],
+        modules: ['Finance', 'Sales', 'Operations', 'Customer Service', 'HR']
+      }
+    ];
+
+    const launcherGrid = document.getElementById('launcherGrid');
+    const softwareWindow = document.getElementById('softwareWindow');
+    const windowStatus = document.getElementById('windowStatus');
+
+    function renderLauncher() {
+      launcherGrid.innerHTML = softwareTemplates.map((item) => `
+        <button type="button" data-software-id="${item.id}" class="software-btn text-left rounded-xl border border-slate-600 bg-slate-900/80 p-4 hover:border-amber-400 hover:bg-slate-900 transition">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-2xl" aria-hidden="true">${item.icon}</span>
+            <div>
+              <div class="font-semibold">${item.name}</div>
+              <div class="text-xs text-slate-400">${item.subtitle}</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-300">กดเพื่อเปิดหน้าต่างจำลองและดู layers/modules</p>
+        </button>
+      `).join('');
+
+      document.querySelectorAll('.software-btn').forEach((btn) => {
+        btn.addEventListener('click', () => openSoftwareWindow(btn.dataset.softwareId));
+      });
+    }
+
+    function openSoftwareWindow(softwareId) {
+      const selected = softwareTemplates.find((item) => item.id === softwareId);
+      if (!selected) return;
+
+      windowStatus.textContent = `Active Window: ${selected.name}`;
+      softwareWindow.innerHTML = `
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-lg font-semibold flex items-center gap-2"><span aria-hidden="true">${selected.icon}</span>${selected.name}</h3>
+            <p class="text-sm text-slate-300 mt-1">${selected.subtitle}</p>
+          </div>
+          <div class="grid md:grid-cols-2 gap-3">
+            <div class="rounded-lg border border-slate-600 bg-slate-900/70 p-3">
+              <h4 class="font-medium mb-2">Architecture Layers</h4>
+              <ul class="list-disc ml-5 text-sm text-slate-300 space-y-1">
+                ${selected.layers.map((layer) => `<li>${layer}</li>`).join('')}
+              </ul>
+            </div>
+            <div class="rounded-lg border border-slate-600 bg-slate-900/70 p-3">
+              <h4 class="font-medium mb-2">Core Modules</h4>
+              <ul class="list-disc ml-5 text-sm text-slate-300 space-y-1">
+                ${selected.modules.map((module) => `<li>${module}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+          <div class="rounded-lg border border-cyan-500/40 bg-cyan-500/10 p-3 text-sm text-cyan-200">
+            Quick Action: เปิดหน้าหลักแล้วใช้ LLM Chat เพื่อสั่งจำลองโมดูล เช่น
+            <code class="bg-slate-900 px-1 py-0.5 rounded">Run ${selected.name} finance simulation</code>
+          </div>
+        </div>
+      `;
+    }
+
+    renderLauncher();
+    openSoftwareWindow(softwareTemplates[0].id);
+  </script>
+</body>
+</html>

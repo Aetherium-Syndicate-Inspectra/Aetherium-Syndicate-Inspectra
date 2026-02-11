@@ -1,5 +1,6 @@
 import time
 import unittest
+from math import inf
 
 from tools.contracts.contract_checker import ContractChecker
 
@@ -41,6 +42,18 @@ class ContractCheckerTests(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual(result["payload"]["intent"], "canonical-intent")
         self.assertEqual(result["payload"]["vector"], [0.3])
+
+    def test_validate_rejects_boolean_timestamp_even_if_python_treats_bool_as_int(self):
+        payload = {"intent": "optimize", "vector": [0.1, 0.2], "timestamp": True}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertFalse(ok)
+        self.assertEqual(result["error"], "Field 'timestamp' must be number")
+
+    def test_validate_rejects_non_finite_numeric_timestamp(self):
+        payload = {"intent": "optimize", "vector": [0.1, 0.2], "timestamp": inf}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertFalse(ok)
+        self.assertEqual(result["error"], "Field 'timestamp' must be finite number")
 
 
     def test_deduplicate_events_prefers_better_quality(self):

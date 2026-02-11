@@ -1,170 +1,224 @@
 <!DOCTYPE html>
-<html lang="th" class="dark">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Universal Role Navigator + Resonance Control Plane</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Platform Index | Creator Studio</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script>
-    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { bg: '#0b1020', panel: '#121a31', panelSoft: '#1a2544', accent: '#f59e0b', good: '#34d399' } } } };
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2b6cee",
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+          },
+          fontFamily: {
+            display: ["Space Grotesk"],
+          },
+          borderRadius: {
+            DEFAULT: "0.25rem",
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px",
+          },
+        },
+      },
+    };
   </script>
+  <style>
+    body {
+      font-family: "Space Grotesk", sans-serif;
+      background-color: #101622;
+    }
+
+    .glass-nav {
+      background: rgba(16, 22, 34, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(43, 108, 238, 0.1);
+    }
+
+    .hero-glow {
+      background: radial-gradient(circle at 50% 50%, rgba(43, 108, 238, 0.15) 0%, rgba(16, 22, 34, 0) 70%);
+    }
+
+    .studio-btn-glow {
+      box-shadow: 0 0 20px rgba(43, 108, 238, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .studio-btn-glow:hover {
+      box-shadow: 0 0 35px rgba(43, 108, 238, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .grid-pattern {
+      background-image:
+        linear-gradient(rgba(43, 108, 238, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(43, 108, 238, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+  </style>
 </head>
-<body class="bg-bg text-slate-100 min-h-screen">
-  <div class="max-w-7xl mx-auto px-4 py-5 space-y-4">
-    <header class="rounded-xl bg-panel border border-slate-700 p-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 class="text-2xl font-bold">Universal Role Navigator (Adaptive Registry)</h1>
-          <p class="text-sm text-slate-300 mt-1">Role Registry + Adaptive Role Generator + Skills Graph + Tournament + Hub</p>
+<body class="bg-background-light text-slate-900 font-display selection:bg-primary/30 dark:bg-background-dark dark:text-slate-100">
+  <nav class="glass-nav fixed top-0 z-50 w-full">
+    <div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center gap-2">
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+          <span class="material-icons-round text-white">auto_awesome</span>
         </div>
+        <span class="text-xl font-bold tracking-tight">STUDIO<span class="text-primary">.</span>OS</span>
       </div>
-    </header>
 
-    <main class="grid grid-cols-1 xl:grid-cols-12 gap-4">
-      <section class="xl:col-span-3 bg-panel rounded-xl border border-slate-700 p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="font-semibold">Canonical Role Registry</h2>
-          <span id="roleCount" class="text-xs px-2 py-1 rounded bg-slate-800"></span>
-        </div>
-        <label class="text-xs text-slate-400 block mb-2">Workspace Presets
-          <select id="workspacePreset" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm">
-            <option value="all">All Roles</option>
-            <option value="executive">Executive View</option>
-            <option value="ops">Ops View</option>
-            <option value="engineering">Engineering View</option>
-          </select>
-        </label>
-        <div class="text-xs text-slate-400">Meta-Schema: Focus / KPI / Horizon / Capability</div>
-        <div id="roleGroups" class="space-y-3"></div>
-      </section>
+      <div class="hidden items-center space-x-8 md:flex">
+        <a class="text-sm font-medium transition-colors hover:text-primary" href="#">Docs</a>
+        <a class="text-sm font-medium transition-colors hover:text-primary" href="#">Community</a>
+        <a class="text-sm font-medium transition-colors hover:text-primary" href="creator-studio.html" target="_blank" rel="noopener">Creator Studio</a>
+        <div class="h-4 w-px bg-primary/20"></div>
+        <button class="text-sm font-medium transition-colors hover:text-primary" type="button">Sign In</button>
+        <button class="rounded-lg bg-primary/10 px-5 py-2 text-sm font-semibold text-primary transition-all hover:bg-primary/20" type="button">
+          Contact Sales
+        </button>
+      </div>
 
-      <section class="xl:col-span-5 bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <h2 class="font-semibold">Role Intelligence Card</h2>
-          <div class="text-xs flex bg-slate-900 rounded-lg p-1">
-            <button id="cardTabRole" class="px-2 py-1 rounded bg-accent text-slate-900">Role</button>
-            <button id="cardTabSkills" class="px-2 py-1 rounded text-slate-300">Skills View</button>
+      <div class="md:hidden">
+        <span class="material-icons-round">menu</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden pt-20">
+    <div class="grid-pattern absolute inset-0 opacity-40"></div>
+    <div class="hero-glow pointer-events-none absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2"></div>
+
+    <div class="relative z-10 mx-auto max-w-5xl px-4 text-center">
+      <div class="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
+        <span class="relative flex h-2 w-2">
+          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
+        </span>
+        New Release: v2.0 Beta
+      </div>
+
+      <h1 class="mb-6 text-5xl font-bold leading-[1.1] tracking-tighter md:text-7xl">
+        The Future of Dev <br />
+        <span class="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">is Generated.</span>
+      </h1>
+
+      <p class="mx-auto mb-12 max-w-2xl text-lg font-light leading-relaxed text-slate-400 md:text-xl">
+        Go from idea to production in minutes with our AI-powered Creator Studio.
+        The end-to-end platform designed for the next generation of engineers.
+      </p>
+
+      <div class="flex flex-col items-center justify-center gap-6 md:flex-row">
+        <button id="launchCreatorStudio" class="studio-btn-glow group relative flex items-center gap-3 overflow-hidden rounded-xl bg-primary px-8 py-5 text-lg font-bold text-white transition-all" type="button">
+          <span class="absolute inset-0 -translate-x-full bg-gradient-to-r from-white/0 via-white/10 to-white/0 transition-transform duration-700 group-hover:translate-x-full"></span>
+          <span class="material-icons-round">bolt</span>
+          Launch Creator Studio
+          <span class="material-icons-round opacity-70">auto_awesome</span>
+        </button>
+
+        <a class="flex items-center gap-2 px-6 py-3 font-medium text-slate-300 transition-colors hover:text-white" href="#">
+          <span class="material-icons-round text-xl">menu_book</span>
+          Read the Docs
+        </a>
+      </div>
+    </div>
+
+    <div class="relative z-10 mt-20 mx-auto w-full max-w-6xl px-4">
+      <div class="group relative overflow-hidden rounded-xl border border-primary/20 bg-background-dark/80 p-2 shadow-2xl">
+        <div class="absolute inset-0 bg-primary/5 transition-colors group-hover:bg-primary/10"></div>
+        <img
+          alt="Futuristic dark code editor interface with blue accents"
+          class="h-auto w-full rounded-lg opacity-60 grayscale-[0.2] transition-all duration-500 group-hover:grayscale-0"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCur6r7aNYNJP1zbyYzJ0paQy6qZEyPogEnfQ5H4TyhSfDMh6VlVl8kjFGlH9pDLYa4NkVt1F7o7qCCJJ8v2QoLgpW0Pf6f640apQesnh7BJ9IvYMMpk9lMX8WWszQF9C0tnlqrU3uGagkpfZRe5nBBFYqqo_o2mn0Pfdgpezy3rccdY9355LLQcoXCbUcFytjqpp3FHiz_dvvEBT5BqkOvi5_8loNw2SDpzILtmg_conChbewvB5gVghIaWEf-WFDxU2XPLaAbKAk"
+        />
+
+        <div class="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-wrap justify-center gap-4">
+          <div class="flex items-center gap-2 rounded-lg border border-primary/40 bg-background-dark/90 px-4 py-2 text-sm backdrop-blur-md">
+            <span class="material-icons-round text-sm text-primary">settings_input_component</span>
+            Instant Scaffolding
+          </div>
+          <div class="flex items-center gap-2 rounded-lg border border-primary/40 bg-background-dark/90 px-4 py-2 text-sm backdrop-blur-md">
+            <span class="material-icons-round text-sm text-primary">psychology</span>
+            AI Logic Engine
+          </div>
+          <div class="flex items-center gap-2 rounded-lg border border-primary/40 bg-background-dark/90 px-4 py-2 text-sm backdrop-blur-md">
+            <span class="material-icons-round text-sm text-primary">cloud_done</span>
+            One-Click Deploy
           </div>
         </div>
-        <div id="roleCard" class="rounded-xl bg-panelSoft border border-slate-600 p-4"></div>
-        <div id="skillsOverlayPanel" class="hidden rounded-xl bg-panelSoft border border-slate-600 p-3">
-          <div id="skillsOverlayContainer" class="h-72"></div>
-          <p id="skillsNodeDetail" class="text-xs text-cyan-300 mt-2">คลิก node เพื่อดูรายละเอียด</p>
-        </div>
-
-        <div class="rounded-xl bg-slate-900 border border-slate-700 p-3 space-y-2 text-sm">
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold">Resonance Fingerprint</h3>
-            <span>Score: <b id="resonanceScore">0.91</b></span>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <label class="text-xs text-slate-400">Speed <input id="responseSpeed" type="range" min="0.2" max="1" step="0.1" value="0.6" class="w-full" /></label>
-            <label class="text-xs text-slate-400">Depth
-              <select id="detailDepth" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="summary">summary</option><option value="deep" selected>deep</option></select>
-            </label>
-            <label class="text-xs text-slate-400">Format
-              <select id="responseFormat" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="numbers" selected>numbers</option><option value="story">story</option></select>
-            </label>
-            <label class="text-xs text-slate-400">Context Mode
-              <select id="contextMode" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="strategic" selected>strategic</option><option value="operational">operational</option></select>
-            </label>
-          </div>
-          <label class="text-xs text-slate-400">C-Level Mode
-            <select id="cLevelMode" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="visionary" selected>Visionary (3Y)</option><option value="crisis">Crisis (Daily)</option></select>
-          </label>
-          <p class="text-xs text-cyan-300">Freeze Trail: <b id="freezeCount">0</b> snapshots</p>
-          <p id="adaptiveHint" class="text-xs text-amber-300">Adaptive watch: ready</p>
-        </div>
-
-        <div class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm space-y-2">
-          <h3 class="font-semibold">LLM Role Generator</h3>
-          <div class="grid grid-cols-3 gap-2">
-            <input id="generatorIndustry" class="col-span-2 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm" value="Energy" />
-            <input id="generatorCount" type="number" min="4" max="24" value="8" class="bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm" />
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button id="generateRoles" class="px-3 py-2 rounded bg-accent text-slate-900 font-semibold text-sm">Generate Roles</button>
-            <button id="generateBatch" class="px-3 py-2 rounded bg-slate-700 text-sm">Generate Batch</button>
-            <button id="commitBatch" class="px-3 py-2 rounded bg-good text-slate-900 font-semibold text-sm">Commit Batch</button>
-            <button id="exportOrgPng" class="px-3 py-2 rounded bg-slate-700 text-sm">Export Org PNG</button>
-            <button id="exportOrgSvg" class="px-3 py-2 rounded bg-slate-700 text-sm">Export Org SVG</button>
-          </div>
-          <div id="generatorStatus" class="text-xs text-slate-300">พร้อมสำหรับการ generate</div>
-          <div id="batchPreview" class="hidden rounded-lg border border-slate-600 bg-slate-900 p-2 text-xs max-h-40 overflow-auto"></div>
-        </div>
-      </section>
-
-      <section class="xl:col-span-4 bg-panel rounded-xl border border-slate-700 p-4 flex flex-col min-h-[620px]">
-        <div class="flex items-center justify-between mb-3 gap-2">
-          <h2 class="font-semibold">Unified LLM Chat</h2>
-          <div class="flex bg-slate-900 rounded-lg p-1 text-xs">
-            <button id="modeGlobal" class="px-3 py-1 rounded bg-accent text-slate-900 font-semibold">Global</button>
-            <button id="modeRole" class="px-3 py-1 rounded text-slate-300">Per-role</button>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="text-xs text-slate-400">บทบาทสนทนา</label>
-          <select id="chatRoleSelect" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
-        </div>
-        <div id="chatWindow" class="flex-1 overflow-y-auto rounded-xl bg-slate-900 border border-slate-700 p-3 space-y-3"></div>
-        <div class="mt-3 flex gap-2">
-          <input id="chatInput" class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm" placeholder="เช่น สรุปแผนรับมือ supply shock" />
-          <button id="sendBtn" class="px-4 py-2 rounded bg-good text-slate-900 font-semibold">ส่ง</button>
-        </div>
-      </section>
-    </main>
-
-    <section class="bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
-      <div class="flex items-center justify-between">
-        <h2 class="font-semibold">Cross-Industry Crisis Tournament</h2>
-        <button id="exportPolicies" class="px-3 py-2 rounded bg-slate-700 text-xs">Export Policies JSON</button>
       </div>
-      <div class="flex flex-wrap gap-2 items-end">
-        <label class="text-xs text-slate-400">Scenario
-          <select id="tournamentScenario" class="mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
-        </label>
-        <button id="runTournament" class="px-4 py-2 rounded bg-accent text-slate-900 font-semibold">Run Industry Tournament</button>
-      </div>
-      <pre id="tournamentOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm whitespace-pre-wrap min-h-[120px]"></pre>
+    </div>
+  </main>
 
-      <div class="grid md:grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400">Company Types (Multi-select)</label>
-          <select id="companyTypeSelect" multiple class="w-full mt-1 h-28 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
+  <section class="relative z-10 bg-background-dark py-24">
+    <div class="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
+      <article class="rounded-2xl border border-primary/10 bg-primary/5 p-8 transition-all hover:border-primary/30">
+        <div class="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
+          <span class="material-icons-round">architecture</span>
         </div>
-        <div class="flex items-end">
-          <button id="runCrossTournament" class="px-4 py-2 rounded bg-good text-slate-900 font-semibold">Run Cross-Company Tournament</button>
+        <h3 class="mb-3 text-xl font-bold">Infinite Architecture</h3>
+        <p class="font-light leading-relaxed text-slate-400">
+          Define your schema in plain English. Our engine creates the database, API, and frontend boilerplate instantly.
+        </p>
+      </article>
+
+      <article class="rounded-2xl border border-primary/10 bg-primary/5 p-8 transition-all hover:border-primary/30">
+        <div class="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
+          <span class="material-icons-round">terminal</span>
         </div>
-      </div>
-      <pre id="crossTournamentOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm whitespace-pre-wrap min-h-[140px]"></pre>
-    </section>
+        <h3 class="mb-3 text-xl font-bold">Live Collaboration</h3>
+        <p class="font-light leading-relaxed text-slate-400">
+          Invite your team to the Studio. Real-time multi-player editing for rapid prototyping and pair programming.
+        </p>
+      </article>
 
-    <section class="bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
-      <div class="flex items-center justify-between">
-        <h2 class="font-semibold">Org Chart Preview</h2>
-        <div class="flex gap-2">
-          <button id="quickGenerateMissing" class="px-3 py-1 rounded bg-amber-400 text-slate-900 text-xs font-semibold">Generate Missing Roles</button>
-          <span class="text-xs px-2 py-1 rounded bg-slate-800">exportable SVG/PNG</span>
+      <article class="rounded-2xl border border-primary/10 bg-primary/5 p-8 transition-all hover:border-primary/30">
+        <div class="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
+          <span class="material-icons-round">rocket_launch</span>
         </div>
-      </div>
-      <div id="orgChartContainer" class="rounded-xl bg-slate-900 border border-slate-700 p-3 min-h-[180px]"></div>
-    </section>
+        <h3 class="mb-3 text-xl font-bold">Edge Optimization</h3>
+        <p class="font-light leading-relaxed text-slate-400">
+          Every app launched via Studio is automatically optimized for global edge delivery with zero config.
+        </p>
+      </article>
+    </div>
+  </section>
 
-    <section class="bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
-      <h2 class="font-semibold">Enterprise Software Hub</h2>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-2" id="hubGrid"></div>
-      <div class="flex flex-wrap items-end gap-2">
-        <label class="text-xs text-slate-400">Integration A <select id="integrationA" class="mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select></label>
-        <label class="text-xs text-slate-400">Integration B <select id="integrationB" class="mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select></label>
-        <button id="simulateIntegration" class="px-3 py-2 rounded bg-accent text-slate-900 text-sm font-semibold">Simulate Integration</button>
+  <footer class="relative z-10 border-t border-primary/10 bg-background-dark py-12">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-4 sm:px-6 lg:flex-row lg:px-8">
+      <div class="flex items-center gap-2 opacity-60">
+        <div class="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
+          <span class="material-icons-round text-[12px] text-white">auto_awesome</span>
+        </div>
+        <span class="text-sm font-bold tracking-tight">STUDIO.OS</span>
       </div>
-      <pre id="hubOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-xs whitespace-pre-wrap min-h-[80px]"></pre>
-      <canvas id="governanceChart" height="90"></canvas>
-    </section>
-  </div>
 
-  <script type="module" src="assets/js/role-studio/main.js"></script>
+      <div class="flex gap-8 text-sm text-slate-500">
+        <a class="transition-colors hover:text-primary" href="#">Privacy Policy</a>
+        <a class="transition-colors hover:text-primary" href="#">Terms of Service</a>
+        <a class="transition-colors hover:text-primary" href="#">Twitter</a>
+        <a class="transition-colors hover:text-primary" href="#">GitHub</a>
+      </div>
+
+      <div class="text-sm text-slate-500">© 2024 Studio Labs Inc. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    const launchButton = document.getElementById("launchCreatorStudio");
+    if (launchButton) {
+      launchButton.addEventListener("click", () => {
+        window.open("creator-studio.html", "_blank", "width=1400,height=900");
+      });
+    }
+  </script>
 </body>
 </html>

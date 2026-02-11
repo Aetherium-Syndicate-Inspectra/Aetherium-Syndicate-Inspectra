@@ -103,3 +103,43 @@ test('human override frequency aggregates by month', () => {
         { month: '2026-02', count: 1 }
     ]);
 });
+
+
+test('bid ledger deduplicates by canonical key and prefers newer schema on tie', () => {
+    const state = new AppState();
+    const eventBase = {
+        canonical_key: 'v1:BID-900:bid_created:1700000000000:ws/status',
+        event_time: 1700000000000,
+        source: 'ws/status',
+        event_type: 'bid_created',
+        payload: { bid_id: 'BID-900', symbol: 'AETH', amount: 1000, state: 'proposing' },
+        quality: { confidence: 0.9, freshness: 0.9, completeness: 1 }
+    };
+
+    state.ingestBidLedgerEvent({ ...eventBase, schema_version: 'v1', event_id: 'evt-v1' });
+    state.ingestBidLedgerEvent({ ...eventBase, schema_version: 'v2', event_id: 'evt-v2' });
+
+    const match = state.bidLedger.find((item) => item.canonical_key === eventBase.canonical_key);
+    assert.equal(match.schema_version, 'v2');
+});
+
+
+
+test('feature freshness score returns freshest module automatically', () => {
+    const state = new AppState();
+    const referenceTime = Date.parse('2026-02-01T00:20:00Z');
+    const freshest = state.getFreshestFeatureModule(referenceTime);
+
+    assert.equal(freshest.module, 'alerting');
+    assert.ok(freshest.freshnessScore >= 0);
+});
+
+test('synthetic stress dataset feeds stable stress risk ranking', () => {
+    const state = new AppState();
+    const ranking = state.getStressRiskRanking();
+
+    assert.ok(state.syntheticStressDataset.peakTraffic.length >= 100);
+    assert.ok(state.syntheticStressDataset.conflictingDirectives.length >= 10);
+    assert.ok(ranking[0].riskScore >= ranking[1].riskScore);
+    assert.equal(ranking[0].source, 'synthetic-stress');
+});

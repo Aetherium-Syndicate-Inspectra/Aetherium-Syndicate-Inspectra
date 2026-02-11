@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 import ast
+import hashlib
 import json
 import os
 import sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from typing import List, Set
 
 ROOT_DIR = "."
 IGNORE_DIRS = {".git", ".venv", "node_modules", "target", "__pycache__", ".lighthouseci"}
 REGISTRY_FILE = "canonical_registry.json"
 LINEAGE_LOG_FILE = "lineage_log.json"
+LINEAGE_HASH_CHAIN_FILE = "lineage_log.jsonl"
 
 
 def get_all_python_files(root_dir: str) -> List[str]:
@@ -44,25 +47,63 @@ def load_registry() -> Set[str]:
     return set(data.get("approved_functions", []))
 
 
-def append_lineage_log(violations: list[dict]) -> None:
-    existing = []
-    if os.path.exists(LINEAGE_LOG_FILE):
-        try:
-            with open(LINEAGE_LOG_FILE, "r", encoding="utf-8") as f:
-                existing = json.load(f)
-        except Exception:  # noqa: BLE001
-            existing = []
+def _load_existing_lineage() -> list[dict]:
+    if not os.path.exists(LINEAGE_LOG_FILE):
+        return []
+    try:
+        with open(LINEAGE_LOG_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:  # noqa: BLE001
+        return []
 
-    existing.append(
-        {
-            "event": "DUPLICATE_DETECTED",
-            "violations": violations,
-            "action": "BLOCK_DEPLOY",
-        }
-    )
+
+def _chain_hash(payload: dict, prev_hash: str) -> str:
+    canonical = json.dumps(payload, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(f"{prev_hash}:{canonical}".encode("utf-8")).hexdigest()
+
+
+def append_lineage_log(violations: list[dict]) -> None:
+    event = {
+        "event": "DUPLICATE_DETECTED",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "violations": violations,
+        "action": "BLOCK_DEPLOY",
+    }
+
+    existing = _load_existing_lineage()
+    existing.append(event)
 
     with open(LINEAGE_LOG_FILE, "w", encoding="utf-8") as f:
-        json.dump(existing, f, indent=2)
+        json.dump(existing, f, indent=2, ensure_ascii=False)
+
+    export_lineage_hash_chain(event)
+
+
+def export_lineage_hash_chain(event: dict) -> None:
+    prev_hash = "GENESIS"
+    sequence = 1
+
+    if os.path.exists(LINEAGE_HASH_CHAIN_FILE):
+        with open(LINEAGE_HASH_CHAIN_FILE, "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f if line.strip()]
+        if lines:
+            try:
+                last = json.loads(lines[-1])
+                prev_hash = last.get("hash", "GENESIS")
+                sequence = int(last.get("sequence", 0)) + 1
+            except Exception:  # noqa: BLE001
+                prev_hash = "GENESIS"
+                sequence = 1
+
+    record = {
+        "sequence": sequence,
+        "prev_hash": prev_hash,
+        "payload": event,
+    }
+    record["hash"] = _chain_hash(record["payload"], prev_hash)
+
+    with open(LINEAGE_HASH_CHAIN_FILE, "a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def main() -> int:

@@ -1,7 +1,7 @@
 import time
 from typing import Any
 
-from tools.contracts.canonical import build_canonical_key, quality_total
+from tools.contracts.canonical import build_canonical_key, parse_schema_version, quality_total
 
 
 class ContractChecker:
@@ -62,14 +62,33 @@ class ContractChecker:
             "completeness": round(completeness, 3),
         }
 
-    def canonicalize_event(self, payload: dict[str, Any], event_type: str, source: str) -> dict[str, Any]:
+    def canonicalize_event(
+        self,
+        payload: dict[str, Any],
+        event_type: str,
+        source: str,
+        schema_version: str = "v1",
+    ) -> dict[str, Any]:
         event_time = payload.get("timestamp", time.time())
-        canonical_key = build_canonical_key(event_type=event_type, event_time=float(event_time), source=source)
+        quality = payload.get("quality") if isinstance(payload.get("quality"), dict) else {
+            "confidence": 0.7,
+            "freshness": 0.7,
+            "completeness": 0.7,
+        }
+        canonical_key = build_canonical_key(
+            event_type=event_type,
+            event_time=float(event_time),
+            source=source,
+            entity_id=str(payload.get("entity_id") or payload.get("bid_id") or "global"),
+            schema_version=schema_version,
+        )
         return {
+            "schema_version": schema_version,
             "event_type": event_type,
             "event_time": event_time,
             "source": source,
             "canonical_key": canonical_key,
+            "quality": quality,
             "payload": payload,
         }
 
@@ -87,7 +106,13 @@ class ContractChecker:
                 continue
             previous_quality = previous.get("quality", {})
             previous_score = quality_total(previous_quality)
-            if current_score >= previous_score:
+            if current_score > previous_score:
+                dedup_map[key] = event
+                continue
+
+            if current_score == previous_score and parse_schema_version(event.get("schema_version")) >= parse_schema_version(
+                previous.get("schema_version")
+            ):
                 dedup_map[key] = event
         return list(dedup_map.values())
 

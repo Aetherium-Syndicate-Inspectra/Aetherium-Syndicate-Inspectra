@@ -66,11 +66,15 @@ Aetherium-Syndicate-Inspectra คือแดชบอร์ดต้นแบ�
 - Conflict monitor สำหรับติดตามเคสขัดแย้งที่กำลัง resolve
 - Bid ledger sidebar สำหรับดูสถานะเสนอราคา (proposing/countering/settled)
 
-### แนวทางต่อยอดเชิงประสิทธิภาพ
-- ผูกข้อมูล bid ledger กับ WebSocket/SSE จริง แล้วใช้ virtualized list เมื่อข้อมูล > 10k rows
-- เพิ่ม canonical event schema สำหรับ `bid_created`, `bid_countered`, `conflict_resolved` เพื่อรองรับ dedup เชิงระบบ
-- เพิ่ม regression tests สำหรับ logic dedup เมื่อมี schema เวอร์ชันใหม่
-- เพิ่ม quality rubric เดียวกันทุก event: `confidence`, `freshness`, `completeness`
+### Delivered in this iteration
+- Bid ledger ถูกผูกเข้ากับ stream จริงจาก WebSocket/SSE และมี virtualized rendering อัตโนมัติเมื่อจำนวนแถวเกิน 10,000 รายการ
+- เพิ่ม canonical event envelope สำหรับ `bid_created`, `bid_countered`, `conflict_resolved` (`schema_version`, `event_id`, `event_type`, `event_time`, `source`, `canonical_key`, `payload`, `quality`)
+- เพิ่ม regression tests สำหรับ dedup เมื่อเกิด schema version ใหม่ โดยให้ตัวที่คุณภาพเท่ากันเลือกเวอร์ชัน schema ล่าสุด
+- ใช้ quality rubric เดียวกันทั้งระบบใน event stream: `confidence`, `freshness`, `completeness`
+
+### ข้อเสนอแนะต่อยอด
+- เพิ่ม adaptive virtualization window ตาม FPS/CPU ของ client เพื่อคุมความลื่นของ UI เมื่อโหลดสูงมาก
+- เพิ่ม telemetry ของ dedup outcomes (replace-rate, tie-rate, stale-rate) เพื่อ monitor คุณภาพข้อมูลแบบต่อเนื่อง
 
 ## Current Repository Structure
 
@@ -230,12 +234,12 @@ node --test tests/*.test.mjs
 - หากพบฟังก์ชันซ้ำบทบาท ให้ยุบเหลือ implementation เดียว (single best function)
 - เพิ่ม regression tests สำหรับ logic dedup ทุกครั้งที่มี schema ใหม่
 
-## 💡 คำแนะนำต่อยอดเพื่อเพิ่มประสิทธิภาพและความท้าทายเชิงสร้างสรรค์
+## ✅ Creative Challenge Delivery (ล่าสุด)
 
-- เพิ่ม **feature freshness score** ต่อโมดูล (analytics / policy / alerting) เพื่อเลือกข้อมูลที่สดที่สุดโดยอัตโนมัติ
-- เพิ่ม **synthetic stress dataset** (peak traffic + conflicting directives) สำหรับทดสอบความทนทานของ risk ranking
-- เพิ่ม **semantic duplicate detector (AST-level)** เพื่อตรวจจับฟังก์ชันซ้ำเชิงพฤติกรรม ไม่ใช่แค่ชื่อ
-- ทำ **lineage hash-chain export** (JSONL + hash chain) เพื่อ audit ภายนอกแบบ tamper-evident
+- เพิ่ม **feature freshness score** ต่อโมดูล `analytics / policy / alerting` และเลือกโมดูลที่สดที่สุดอัตโนมัติผ่าน `getFreshestFeatureModule()`
+- เพิ่ม **synthetic stress dataset** (`peakTraffic`, `conflictingDirectives`) สำหรับประเมินความทนทานของ risk ranking ผ่าน `getStressRiskRanking()`
+- เพิ่ม **semantic duplicate detector (AST-level)** ผ่านสคริปต์ `scripts/semantic_duplicate_detector.py` เพื่อค้นหา duplicate เชิงพฤติกรรม
+- เพิ่ม **lineage hash-chain export** แบบ tamper-evident (`lineage_log.jsonl`) ควบคู่กับ `lineage_log.json`
 
 ## Aetherium Intent Vector V2 (Tachyon Core) — Draft Implementation
 
@@ -292,8 +296,7 @@ cargo test
 ## คำแนะนำต่อยอด/ประยุกต์ใช้ (รอบถัดไป)
 
 - เพิ่ม benchmark จริงด้วย `criterion` เพื่อวัดว่า SIMD path ลดเวลา `firma_check` ได้ตามเป้าหมาย 30–50% ใน workload production profile
-- เชื่อม `DeterministicReplayLog` ออกเป็นไฟล์ trace มาตรฐาน (เช่น JSONL + hash chain) สำหรับ audit ภายนอก
-- ขยาย duplicate-function gate ให้รู้จัก semantic duplicate (AST-level) ไม่ใช่ตรวจแค่ชื่อฟังก์ชัน
+- เชื่อมผล semantic duplicate detector เข้ากับ CI gating เพื่อบล็อก PR ที่มี duplicate เชิงพฤติกรรมความเสี่ยงสูง
 
 
 ## Unified Tachyon Python Test Suite (`test_tachyon.py`)

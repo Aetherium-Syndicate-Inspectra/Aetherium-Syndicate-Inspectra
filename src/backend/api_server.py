@@ -30,6 +30,7 @@ from src.backend.db import (
 )
 from src.backend.economy.gatekeeper import require_feature, write_audit_log
 from src.backend.economy.tiers import TierLevel, get_tier_config
+from tools.contracts.canonical import build_canonical_key
 
 try:
     import tachyon_core
@@ -114,6 +115,53 @@ MEETINGS: list[dict[str, Any]] = [
     {"id": "m2", "title": "Compute Cost Rebalancing", "duration": "17m", "participants": ["L", "S"]},
     {"id": "m3", "title": "Legal Compliance Delta", "duration": "24m", "participants": ["O", "H", "R"]},
 ]
+
+
+BID_EVENT_TYPES = ("bid_created", "bid_countered", "conflict_resolved")
+
+
+def _bid_stream_event(tick: int, source: str) -> dict[str, Any]:
+    event_type = BID_EVENT_TYPES[tick % len(BID_EVENT_TYPES)]
+    bid_id = f"BID-{1000 + (tick % 250)}"
+    event_time = int(datetime.now(tz=timezone.utc).timestamp() * 1000)
+    quality = {
+        "confidence": round(0.88 + ((tick % 7) * 0.01), 3),
+        "freshness": 1.0,
+        "completeness": 1.0,
+    }
+    payload = {
+        "bid_id": bid_id,
+        "symbol": "AETH" if tick % 2 == 0 else "NOVA",
+        "bidder": AGENTS[tick % len(AGENTS)]["name"],
+        "amount": 250000 + ((tick % 33) * 4500),
+        "state": "proposing" if event_type == "bid_created" else "countering" if event_type == "bid_countered" else "settled",
+    }
+    return {
+        "schema_version": "v1",
+        "event_id": f"{event_type}-{bid_id}-{event_time}",
+        "event_type": event_type,
+        "event_time": event_time,
+        "source": source,
+        "canonical_key": build_canonical_key(
+            event_type=event_type,
+            event_time=float(event_time),
+            source=source,
+            entity_id=bid_id,
+            schema_version="v1",
+        ),
+        "quality": quality,
+        "payload": payload,
+    }
+
+
+def _status_or_bid_event(tick: int, source: str) -> dict[str, Any]:
+    if tick % 2 == 0:
+        return {
+            "type": "metrics.updated",
+            "timestamp": int(datetime.now(tz=timezone.utc).timestamp() * 1000),
+            "data": {"latency": 0.7, "throughput": 10900, "load": 45},
+        }
+    return _bid_stream_event(tick=tick, source=source)
 
 
 class DirectiveCreate(BaseModel):
@@ -406,15 +454,11 @@ async def websocket_aetherbus(websocket: WebSocket) -> None:
 @app.websocket("/ws/status")
 async def websocket_status(websocket: WebSocket) -> None:
     await websocket.accept()
+    tick = 0
     try:
         while True:
-            await websocket.send_json(
-                {
-                    "type": "metrics.updated",
-                    "timestamp": int(datetime.now(tz=timezone.utc).timestamp() * 1000),
-                    "data": {"latency": 0.7, "throughput": 10900, "load": 45},
-                }
-            )
+            await websocket.send_json(_status_or_bid_event(tick=tick, source="ws/status"))
+            tick += 1
             await asyncio.sleep(2)
     except WebSocketDisconnect:
         return
@@ -423,13 +467,11 @@ async def websocket_status(websocket: WebSocket) -> None:
 @app.get("/api/events")
 async def sse_events() -> StreamingResponse:
     async def event_generator():
+        tick = 0
         while True:
-            payload = {
-                "type": "metrics.updated",
-                "timestamp": int(datetime.now(tz=timezone.utc).timestamp() * 1000),
-                "data": {"latency": 0.72, "throughput": 10780, "load": 44},
-            }
+            payload = _status_or_bid_event(tick=tick, source="sse/events")
             yield f"data: {json.dumps(payload)}\n\n"
+            tick += 1
             await asyncio.sleep(2)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

@@ -2,10 +2,12 @@ import json
 import logging
 
 import uvicorn
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from api_gateway.aetherbus_extreme import AetherBusExtreme
+from src.backend.causal_policy_lab import CausalPolicyLab
+from src.backend.policy_genome import PolicyGenomeEngine
 from tools.contracts.contract_checker import ContractChecker
 
 logger = logging.getLogger("AetherGateway")
@@ -24,6 +26,8 @@ except ImportError:
 app = FastAPI(title="Aetherium Syndicate Interface")
 bus = AetherBusExtreme()
 immune_system = ContractChecker()
+causal_lab = CausalPolicyLab()
+policy_genome_engine = PolicyGenomeEngine()
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,6 +45,37 @@ async def root():
 @app.get("/api/events/recent")
 async def recent_events(limit: int = 50):
     return {"events": bus.recent_events(limit=limit)}
+
+
+@app.post("/causal/estimate")
+async def causal_estimate(payload: dict = Body(...)):
+    treatment = payload.get("treatment")
+    outcome = payload.get("outcome")
+    common_causes = payload.get("common_causes")
+    method = payload.get("method", "propensity_score_matching")
+    if not treatment or not outcome:
+        return {"error": "treatment and outcome are required", "causal_effect": None}
+    return causal_lab.estimate_causal_effect(
+        treatment=treatment,
+        outcome=outcome,
+        common_causes=common_causes,
+        method=method,
+    )
+
+
+@app.get("/causal/recommend")
+async def causal_recommend(top_n: int = 3):
+    return {"recommendations": causal_lab.recommend_policies(top_n=top_n)}
+
+
+@app.post("/policy-genome/build")
+async def build_policy_genome(payload: dict = Body(default={})):
+    policies = payload.get("policies") or causal_lab.recommend_policies(top_n=payload.get("top_n", 5))
+    graph = policy_genome_engine.build_graph(policies)
+    output_path = payload.get("output_path")
+    if output_path:
+        policy_genome_engine.save_graph(graph, output_path)
+    return graph
 
 
 @app.post("/api/genesis/mint")

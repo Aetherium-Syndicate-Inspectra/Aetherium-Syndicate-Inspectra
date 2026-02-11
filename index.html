@@ -22,6 +22,7 @@
           <h2 class="font-semibold">Canonical Role Registry</h2>
           <span id="roleCount" class="text-xs px-2 py-1 rounded bg-slate-800"></span>
         </div>
+        <div class="text-xs text-slate-400">Meta-Schema: Focus / KPI / Horizon / Capability</div>
         <div id="roleGroups" class="space-y-3"></div>
       </section>
 
@@ -51,6 +52,7 @@
           </label>
           <p class="text-xs text-cyan-300">Freeze Trail: <b id="freezeCount">0</b> snapshots</p>
         </div>
+        <div class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm" id="modeExplain"></div>
       </section>
 
       <section class="xl:col-span-4 bg-panel rounded-xl border border-slate-700 p-4 flex flex-col min-h-[620px]">
@@ -61,10 +63,27 @@
             <button id="modeRole" class="px-3 py-1 rounded text-slate-300">Per-role</button>
           </div>
         </div>
-        <div class="mb-3">
-          <label class="text-xs text-slate-400">บทบาทที่สนทนา</label>
-          <select id="chatRoleSelect" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
+
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <div>
+            <label class="text-xs text-slate-400">บทบาทสนทนา</label>
+            <select id="chatRoleSelect" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">C-Level Mode Switch (&lt;1s)</label>
+            <select id="contextMode" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm">
+              <option value="visionary">Visionary (3Y)</option>
+              <option value="crisis">Crisis Manager (Daily)</option>
+            </select>
+          </div>
         </div>
+
+        <div class="grid grid-cols-3 gap-2 mb-3 text-xs">
+          <div><label class="text-slate-400">ความเร็ว</label><select id="freqSpeed" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-1"><option value="fast">เร็ว</option><option value="balanced" selected>สมดุล</option><option value="deliberate">ละเอียด</option></select></div>
+          <div><label class="text-slate-400">ระดับรายละเอียด</label><select id="detailDepth" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-1"><option value="summary">ภาพรวม</option><option value="standard" selected>มาตรฐาน</option><option value="deep">เชิงลึก</option></select></div>
+          <div><label class="text-slate-400">รูปแบบคำตอบ</label><select id="responseFormat" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-1"><option value="numbers">ตัวเลข</option><option value="mixed" selected>ผสม</option><option value="story">เชิงเล่าเรื่อง</option></select></div>
+        </div>
+
         <div id="chatWindow" class="flex-1 overflow-y-auto rounded-xl bg-slate-900 border border-slate-700 p-3 space-y-3"></div>
         <div class="mt-3 flex gap-2">
           <input id="chatInput" class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm" placeholder="เช่น สรุปแผนรับมือ supply shock สำหรับอุตสาหกรรม Film" />

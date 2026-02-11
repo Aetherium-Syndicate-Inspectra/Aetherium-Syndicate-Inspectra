@@ -32,5 +32,21 @@ class ContractCheckerTests(unittest.TestCase):
         self.assertEqual(deduped[0]["quality"]["confidence"], 1.0)
 
 
+    def test_deduplicate_events_prefers_newer_schema_when_quality_ties(self):
+        now = time.time()
+        payload = {"entity_id": "BID-777", "timestamp": now}
+        v1 = self.checker.canonicalize_event(payload, event_type="bid_countered", source="ws", schema_version="v1")
+        v2 = self.checker.canonicalize_event(payload, event_type="bid_countered", source="ws", schema_version="v2")
+
+        v1["canonical_key"] = "stable-key"
+        v2["canonical_key"] = "stable-key"
+        v1["quality"] = {"confidence": 0.9, "freshness": 0.9, "completeness": 1.0}
+        v2["quality"] = {"confidence": 0.9, "freshness": 0.9, "completeness": 1.0}
+
+        deduped = self.checker.deduplicate_events([v1, v2])
+        self.assertEqual(len(deduped), 1)
+        self.assertEqual(deduped[0]["schema_version"], "v2")
+
+
 if __name__ == "__main__":
     unittest.main()

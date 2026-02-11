@@ -1,10 +1,13 @@
+const VIRTUAL_ROW_HEIGHT = 72;
+const VIRTUAL_VISIBLE_ROWS = 40;
+
 export default class DashboardView {
     constructor(state) {
         this.state = state;
         this.container = null;
     }
 
-    onStateChange(event, data) {
+    onStateChange(event) {
         if (!this.container) return;
 
         if (event === 'agentUpdated' || event === 'metricsUpdated') {
@@ -14,6 +17,14 @@ export default class DashboardView {
 
         if (event === 'directiveAdded' || event === 'directiveUpdated') {
             this.updateTasks();
+        }
+
+        if (event === 'bidLedgerUpdated') {
+            const bidRoot = this.container.querySelector('#bid-ledger-root');
+            if (bidRoot) {
+                bidRoot.innerHTML = this.renderBidLedger();
+                this.attachVirtualScrollHandlers();
+            }
         }
     }
 
@@ -69,31 +80,21 @@ export default class DashboardView {
                 </section>
 
                 <div class="space-y-8 dashboard-side-stack">
+                    <section class="card" id="bid-ledger-root">
+                        ${this.renderBidLedger()}
+                    </section>
+
                     <section class="card">
                         <h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">Recent AI Meetings</h3>
                         <div class="divide-y divide-slate-800">
                             ${this.renderMeetings()}
                         </div>
                     </section>
-
-                    <section class="card bg-gradient-to-br from-primary/10 to-transparent">
-                        <h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-2">Company Structure</h3>
-                        <div class="text-3xl font-black text-white metrics-value-locked">1,024</div>
-                        <div class="text-xs text-slate-400 mt-1">Active Autonomous Agents</div>
-                        <div class="mt-4 p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-                            <div class="text-[10px] text-primary font-bold uppercase mb-1">Node Distribution</div>
-                            <div class="flex h-1.5 rounded-full overflow-hidden gap-0.5">
-                                <div class="bg-primary w-1/4"></div>
-                                <div class="bg-emerald-500 w-1/3"></div>
-                                <div class="bg-amber-500 w-1/6"></div>
-                                <div class="bg-slate-700 w-1/4"></div>
-                            </div>
-                        </div>
-                    </section>
                 </div>
             </div>
         `;
 
+        this.attachVirtualScrollHandlers();
         return this.container;
     }
 
@@ -113,15 +114,6 @@ export default class DashboardView {
                         <p class="text-xs text-slate-400">${agent.role}</p>
                     </div>
                 </div>
-                <div class="mt-4 space-y-2 relative z-10">
-                    <div class="flex justify-between text-[10px] text-slate-500">
-                        <span class="truncate pr-4">${agent.task}</span>
-                        <span>${agent.cpu.toFixed(0)}%</span>
-                    </div>
-                    <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-primary shadow-[0_0_8px_rgba(19,55,236,0.6)] transition-all duration-500" style="width: ${agent.cpu}%"></div>
-                    </div>
-                </div>
             </div>
         `).join('');
     }
@@ -137,15 +129,6 @@ export default class DashboardView {
                     <span class="material-symbols-outlined text-xs text-slate-600">more_horiz</span>
                 </div>
                 <h5 class="text-sm font-bold text-white mb-1">${task.title}</h5>
-                <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-800/50">
-                    <div class="flex items-center gap-1 text-[9px] text-slate-500">
-                        <span class="material-symbols-outlined text-[12px]">schedule</span>
-                        <span>${task.time}</span>
-                    </div>
-                    <div class="size-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary font-bold border border-primary/20">
-                        ${task.author}
-                    </div>
-                </div>
             </div>
         `).join('');
     }
@@ -157,10 +140,65 @@ export default class DashboardView {
                     <h4 class="text-sm font-medium text-slate-200 group-hover:text-primary transition-colors">${m.title}</h4>
                     <span class="text-[10px] text-slate-500 font-mono">${m.duration}</span>
                 </div>
-                <div class="flex -space-x-2">
-                    ${m.participants.map(p => `<div class="size-5 rounded-full bg-slate-800 border border-slate-900 flex items-center justify-center text-[8px] font-bold">${p}</div>`).join('')}
-                </div>
             </div>
         `).join('');
+    }
+
+    renderBidLedger() {
+        const rows = this.state.bidLedger;
+        const useVirtual = rows.length > 10000;
+        const title = `Bid Ledger (${rows.length.toLocaleString()})`;
+
+        if (!useVirtual) {
+            return `
+                <h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">${title}</h3>
+                <div class="space-y-2 max-h-80 overflow-auto">
+                    ${rows.map((row) => this.renderBidLedgerRow(row)).join('')}
+                </div>
+            `;
+        }
+
+        const windowedRows = rows.slice(0, VIRTUAL_VISIBLE_ROWS);
+        return `
+            <h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">${title} (Virtualized)</h3>
+            <div class="text-[10px] text-slate-500 mb-3">Realtime WebSocket/SSE stream with virtualized rendering enabled for >10k rows.</div>
+            <div id="bid-ledger-virtual-scroll" class="max-h-80 overflow-auto rounded border border-slate-800" data-total="${rows.length}">
+                <div id="bid-ledger-virtual-spacer" style="height:${rows.length * VIRTUAL_ROW_HEIGHT}px; position:relative;">
+                    <div id="bid-ledger-virtual-window" style="position:absolute; top:0; left:0; right:0;">
+                        ${windowedRows.map((row) => this.renderBidLedgerRow(row)).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    attachVirtualScrollHandlers() {
+        const scroller = this.container?.querySelector('#bid-ledger-virtual-scroll');
+        const windowEl = this.container?.querySelector('#bid-ledger-virtual-window');
+        if (!scroller || !windowEl) return;
+
+        const renderWindow = () => {
+            const start = Math.floor(scroller.scrollTop / VIRTUAL_ROW_HEIGHT);
+            const rows = this.state.bidLedger.slice(start, start + VIRTUAL_VISIBLE_ROWS);
+            windowEl.style.transform = `translateY(${start * VIRTUAL_ROW_HEIGHT}px)`;
+            windowEl.innerHTML = rows.map((row) => this.renderBidLedgerRow(row)).join('');
+        };
+
+        renderWindow();
+        scroller.onscroll = renderWindow;
+    }
+
+    renderBidLedgerRow(row) {
+        const stateColor = row.payload.state === 'settled' ? 'text-emerald-400' : row.payload.state === 'countering' ? 'text-amber-400' : 'text-sky-400';
+        return `
+            <article class="p-2 border border-slate-800 rounded bg-slate-900/40 mb-2" style="height:${VIRTUAL_ROW_HEIGHT - 8}px;">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold text-slate-200">${row.payload.bid_id}</p>
+                    <span class="text-[10px] ${stateColor} uppercase">${row.payload.state}</span>
+                </div>
+                <div class="text-[11px] text-slate-400">${row.event_type} · ${row.payload.symbol} · ${row.payload.amount?.toLocaleString?.() ?? '-'}</div>
+                <div class="text-[10px] text-slate-500">quality c:${row.quality.confidence} f:${row.quality.freshness} cp:${row.quality.completeness}</div>
+            </article>
+        `;
     }
 }

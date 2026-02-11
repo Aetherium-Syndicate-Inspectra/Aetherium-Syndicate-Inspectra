@@ -1,0 +1,14 @@
+Aetherium High-Level Summary (Custom)
+=====================================
+
+Delivered now:
+- Feature freshness score by module (analytics/policy/alerting) with auto-pick of freshest module.
+- Synthetic stress dataset (peak traffic + conflicting directives) for risk-ranking resilience tests.
+- AST-level semantic duplicate detector for behavior-level duplicate function detection.
+- Lineage hash-chain JSONL export for tamper-evident external audit.
+
+Governance invariants maintained:
+- Canonical event key strategy remains unified.
+- Quality rubric remains consistent: confidence, freshness, completeness.
+- Single-best-function direction reinforced through duplicate detectors.
+- Dedup regression tests extended for evolving schema logic.

@@ -114,18 +114,21 @@ export const industryTemplates = [
   {
     id: 'tech_saas',
     name: 'Tech SaaS',
+    weight: 1,
     cLevelProfile: ['CEO', 'CTO', 'CPO', 'CISO', 'Chief AI Officer'],
     focus: 'product velocity + platform reliability',
   },
   {
     id: 'traditional_bank',
     name: 'Traditional Bank',
+    weight: 1,
     cLevelProfile: ['CEO', 'COO', 'CFO', 'CIO', 'Chief Compliance Officer'],
     focus: 'risk governance + regulatory resilience',
   },
   {
     id: 'manufacturing_giant',
     name: 'Manufacturing Giant',
+    weight: 1,
     cLevelProfile: ['CEO', 'COO', 'CFO', 'CTO', 'Chief Sustainability Officer'],
     focus: 'supply chain optimization + quality assurance',
   },
@@ -182,4 +185,20 @@ export function addGeneratedRoles(newRoles = []) {
   deduped.forEach((role) => existingIds.add(role.id));
   roleData.push(...deduped);
   return deduped;
+}
+
+export function archiveRole(roleId) {
+  const index = roleData.findIndex((role) => role.id === roleId);
+  if (index < 0) return null;
+  const [archived] = roleData.splice(index, 1);
+  return archived;
+}
+
+export function promoteRoleIndustryWeight(roleId, boost = 0.15) {
+  const role = roleData.find((item) => item.id === roleId);
+  if (!role) return null;
+  const template = industryTemplates.find((item) => item.name === role.industry);
+  if (!template) return null;
+  template.weight = Number(((template.weight || 1) + boost).toFixed(2));
+  return template;
 }

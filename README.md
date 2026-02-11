@@ -303,3 +303,27 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ### Future Creative Challenges
 1. **Interactive Window Bridge:** ให้แต่ละไอคอนส่ง context ไปที่ Unified LLM Chat อัตโนมัติ (preload prompt + role + crisis mode) เพื่อรัน simulation แบบ one-click
 2. **Multi-Window Stress Lab:** เพิ่มโหมดเปิดหลาย software windows พร้อมกัน แล้ววัด cross-system drift/resonance ใน scenario เดียวแบบเรียลไทม์
+
+## 🆕 Adaptive Registry + Enterprise Hub Update (Latest)
+
+### สิ่งที่ปรับปรุง
+- เพิ่ม **Adaptive Registry behavior** ใน `assets/js/role-studio/main.js`:
+  - ตรวจจับ role ที่มี resonance ต่ำซ้ำใน Crisis mode (`<0.7`) แล้ว auto-suggest/auto-regenerate ผ่าน prompt แบบ adaptive
+  - รองรับ **Promote Role** (เพิ่มน้ำหนัก `industryTemplates.weight`) และ **Archive Role** จาก Role Intelligence Card
+  - เพิ่ม **Workspace Presets** (All / Executive / Ops / Engineering) เพื่อ filter registry อัตโนมัติ
+- เพิ่ม **Skills-First Overlay** ด้วย Cytoscape (`assets/js/role-studio/views/skillsOverlayView.js`) และแท็บ Skills View ใน Role Card
+- ปรับปรุง **LLM Role Generator**:
+  - แยก prompt library ที่ `assets/js/role-studio/templates/roleGenPrompts.js` (basic / advanced / adaptive)
+  - เพิ่ม validation guard ด้วย drift threshold ก่อน append generated roles
+  - เพิ่ม Generate Batch + Preview + Commit flow
+- ขยาย **Crisis Scenario Library** (`assets/js/role-studio/models/crisisScenario.js`) ด้วย AI Ethics Breach, Talent Shortage, Pay Equity Crisis
+- ขยาย **Cross-Company Tournament** (`assets/js/role-studio/utils/crossCompanySimulation.js`) ให้ export transferable policies เป็น JSON
+- เพิ่ม section **Enterprise Software Hub** และ **Governance Dashboard (Chart.js)** ใน `index.html`
+- เพิ่ม **Resonance Heatmap** ที่ role list (สีตาม score) และปุ่ม **Generate Missing Roles** ใน Org Chart Preview
+
+### เหตุผลการเลือกฟังก์ชันเดียว (Single Best Function)
+- ใช้ศูนย์กลางการ infer ผ่าน `llmRespond()` เพียงจุดเดียวทั้ง adaptive regenerate, integration simulation และ role generation เพื่อลด duplicate logic และคุม behavior consistency ระหว่างฟีเจอร์
+
+### Future Creative Challenges
+1. **Collaborative Tournament Mode (WebSocket):** ให้หลาย agent โหวต proposal แบบ real-time พร้อม consensus trace และ conflict heatmap
+2. **Policy Transfer Lab:** สร้างระบบ cross-industry policy mutation เพื่อทดสอบว่า policy ใด transferable จริงภายใต้ scenario ที่ไม่เคยเห็นมาก่อน

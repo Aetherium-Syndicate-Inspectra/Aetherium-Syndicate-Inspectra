@@ -394,3 +394,24 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ### Future Creative Challenges
 1. **Collaborative Tournament Mode (WebSocket):** ให้หลาย agent โหวต proposal แบบ real-time พร้อม consensus trace และ conflict heatmap
 2. **Policy Transfer Lab:** สร้างระบบ cross-industry policy mutation เพื่อทดสอบว่า policy ใด transferable จริงภายใต้ scenario ที่ไม่เคยเห็นมาก่อน
+
+## 🆕 Backend Update: Cogitator-X Reasoning Core (System-2 Prototype)
+
+### What was implemented
+- Added `src/backend/cogitator_x.py` as an internal reasoning engine prototype in English, aligned with Cogitator-X concepts:
+  - **Generator:** `LanguageMixedThoughtGenerator` for mixed-language hidden reasoning traces.
+  - **Verifier:** `ProcessRewardModel` for step-level process supervision.
+  - **Search:** lightweight MCTS-style orchestration in `CogitatorXEngine` with adaptive branching.
+  - **Outcome supervision:** `RuleBasedOutcomeReward` for deterministic correctness signals.
+  - **Tool bridge:** `PythonToolExecutor.safe_eval_addition()` for safe arithmetic execution.
+  - **RSI memory:** `PangenesAgent` + `WisdomGemStore` for failure-to-lesson crystallization.
+- Added tests in `tests/test_cogitator_x.py` for safe tool execution, successful mixed-language solving, and gem crystallization under failure conditions.
+
+### Why these specific functions were selected
+- Chose **one canonical search orchestrator** (`CogitatorXEngine`) instead of multiple overlapping orchestrators to avoid duplicate control logic.
+- Chose **one verifier primitive** (`ProcessRewardModel`) and **one outcome reward wrapper** (`RuleBasedOutcomeReward`) to keep reward pathways explicit and non-redundant.
+- Kept RSI memory writes deduplicated in `WisdomGemStore.add()` so repeated failure lessons do not bloat memory.
+
+### Creative next steps (challenging)
+1. Add a real GRPO-compatible sampling runner that evaluates grouped trajectories and logs normalized advantages for each prompt.
+2. Upgrade MCTS from single-depth candidate expansion to multi-depth Tree-of-Thought rollouts with pluggable verifiers (PRM + safety monitor).

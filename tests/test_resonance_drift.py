@@ -1,7 +1,12 @@
 from pathlib import Path
 
 from src.backend.freeze_light_events import FreezeLightEventStore
-from src.backend.resonance_drift import DriftDetector, InterventionEvaluator, ResonanceProfile
+from src.backend.resonance_drift import (
+    CohortAdaptiveThresholdLearner,
+    DriftDetector,
+    InterventionEvaluator,
+    ResonanceProfile,
+)
 
 
 def test_drift_detector_triggers_intervention_and_logs_event(tmp_path: Path):
@@ -47,3 +52,24 @@ def test_intervention_evaluator_reverts_after_failures_and_logs(tmp_path: Path):
     assert profile.preferred_format == profile.baseline_format
     events = store.read_all()
     assert any(evt["event_type"] == "resonance.intervention.evaluated" for evt in events)
+
+
+def test_cohort_threshold_learns_online_distribution():
+    learner = CohortAdaptiveThresholdLearner()
+    for value in [0.06, 0.08, 0.09, 0.07, 0.1, 0.11]:
+        learner.observe_drift(cohort_id="ops", drift_ratio=value)
+
+    learned = learner.get_threshold(cohort_id="ops", fallback=0.15)
+    assert 0.05 <= learned < 0.15
+
+
+def test_detector_emits_individual_explanation_and_bandit_metadata(tmp_path: Path):
+    store = FreezeLightEventStore(event_log_path=tmp_path / "events.jsonl")
+    detector = DriftDetector(event_store=store)
+    for score in [0.95, 0.92, 0.89, 0.5, 0.45, 0.42]:
+        detector.record_interaction("narin", "pricing", "draft", score)
+
+    profile = detector._get_profile("narin")
+    assert profile.last_intervention_explanation
+    assert profile.last_intervention_arm
+    assert "bandit selected" in (profile.last_intervention_explanation or "")

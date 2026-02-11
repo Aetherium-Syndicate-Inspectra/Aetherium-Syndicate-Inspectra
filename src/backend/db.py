@@ -45,6 +45,10 @@ def get_conn():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    # NOTE: SQLite foreign key checks are connection-scoped and disabled by default.
+    # Enforce it for every new connection so relational integrity is preserved
+    # beyond init_db() lifecycle.
+    conn.execute("PRAGMA foreign_keys = ON;")
     try:
         yield conn
     finally:

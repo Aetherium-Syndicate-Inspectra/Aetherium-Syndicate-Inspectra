@@ -13,6 +13,19 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 - **Latency:** Sub-microsecond (via RDMA/Zero-Copy architecture)
 - **Integrity:** 100% Drift-resistant (Strict Type Validation enforced)
 
+## 🆕 Database Integrity Fix (v4.3.1)
+
+### สิ่งที่ปรับปรุง
+- แก้บั๊กใน `src/backend/db.py` โดยบังคับ `PRAGMA foreign_keys = ON` ทุกครั้งที่เปิด connection ผ่าน `get_conn()` เพื่อให้กฎ Foreign Key ทำงานจริงในทุก transaction
+- เพิ่ม regression test `tests/test_db_foreign_keys.py` เพื่อยืนยันว่าไม่สามารถ insert subscription ที่อ้างอิง `user_id` ที่ไม่มีอยู่ได้
+
+### เหตุผลการเลือกฟังก์ชันเดียว
+- เลือกแก้ที่จุดเดียวคือ `get_conn()` ซึ่งเป็น single entry point ของทุก SQLite connection ทำให้แก้ครั้งเดียวครอบคลุมทุกโมดูล ลดความซ้ำซ้อนและลดความเสี่ยง behavior ไม่สอดคล้องกัน
+
+### Future Creative Challenges
+1. **Zero-Trust DB Session Guard:** เพิ่มชั้นตรวจสอบ session policy (PRAGMA baseline + schema hash) ทุกครั้งก่อน query สำคัญ
+2. **Temporal Integrity Replay:** สร้างระบบ replay transaction log เพื่อจำลอง incident และวัดความทนทานของ constraint ภายใต้โหลดสูง
+
 ## 🧠 Core Architecture: The AI Physiology Stack
 
 ระบบถูกออกแบบโดยแบ่งเป็น 3 เลเยอร์หลักที่ทำงานสอดประสานกัน:
@@ -417,3 +430,59 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ### Creative next steps (challenging)
 1. Add a real GRPO-compatible sampling runner that evaluates grouped trajectories and logs normalized advantages for each prompt.
 2. Upgrade MCTS from single-depth candidate expansion to multi-depth Tree-of-Thought rollouts with pluggable verifiers (PRM + safety monitor).
+
+## 🆕 Resonance Drift Detector API Spec + Feedback Loop Stub (v4.3.1)
+
+### สิ่งที่ปรับปรุง
+- เพิ่มสเปก API สำหรับ Resonance Drift Detector ที่ `docs/resonance_drift_detector_api_spec.md` โดยกำหนด contract หลักสำหรับ feedback ingestion, profile tuning, action pull, และ outcome submission เพื่อต่อกับผู้ใช้จริงได้เร็ว
+- เพิ่ม class stub `ResonanceFeedbackLoopOrchestrator` ที่ `src/backend/resonance_feedback_loop.py` เพื่อเชื่อม `DriftDetector` + `InterventionEvaluator` เข้ากับ feedback loop แบบ in-memory (พร้อมจุดต่อยอดไป Redis/DB)
+- เพิ่ม API router `src/backend/resonance_drift_api.py` และผูกเข้ากับ FastAPI server ผ่าน `src/backend/api_server.py`
+- เพิ่มชุดทดสอบ `tests/test_resonance_drift_api.py` สำหรับตรวจ flow ของ orchestrator และการ revert preference เมื่อผู้ใช้ reject intervention
+
+### Data Cleaning / Duplicate Handling
+- เลือกใช้ orchestrator กลางเพียงจุดเดียว (`ResonanceFeedbackLoopOrchestrator`) แทนการกระจาย logic feedback loop หลายที่ เพื่อลดความซ้ำซ้อนและทำให้ behavior คงที่
+- ยืนยันขอบเขตงานชัดเจน: **ไม่ขยาย Crisis Tournament API** เพื่อหลีกเลี่ยงการปะปน domain และลด drift ของสัญญา API เดิม
+
+### Future Creative Challenges
+1. **Cohort Adaptive Drift Policy:** สร้างชั้นเรียนรู้ระดับ cohort ที่ปรับ drift threshold แบบออนไลน์ตามกลุ่มผู้ใช้ โดยยังรักษา per-user explainability
+2. **Intervention Multi-Armed Bandit:** เปลี่ยนจาก opposite-rule แบบคงที่เป็น bandit policy ที่เลือก format/tone/evidence ตาม reward จริงแบบ near real-time
+
+## 🆕 Adaptive Intelligence Update: Cohort Drift + Contextual Bandit Interventions (v4.3.1-preview)
+
+### สิ่งที่เพิ่มเข้าระบบ
+- อัปเกรด `src/backend/resonance_drift.py` ให้รองรับ **cohort-adaptive online thresholding** โดยเรียนรู้ค่า drift threshold จาก segment (cohort) แบบ real-time ด้วยสถิติออนไลน์ (mean/std) แทนการใช้ threshold คงที่อย่างเดียว
+- เพิ่ม **Contextual Bandit Intervention Policy (UCB-style)** เพื่อเลือกชุด intervention (`format`, `tone`, `evidence`) จาก reward จริง แทน opposite mapping แบบ static
+- เก็บ **individual explanation** ต่อการสลับแต่ละครั้ง (drift ratio, adaptive threshold, arm ที่เลือก, reward เฉลี่ย) เพื่อคงความสามารถในการอธิบายระดับผู้ใช้รายบุคคล
+- ขยาย `src/backend/resonance_feedback_loop.py` ให้ส่งข้อมูล action เพิ่มเติม ได้แก่ `cohort`, `drift_ratio_hint`, และ `explanation` กลับไปยัง client loop
+- ขยาย `src/backend/resonance_drift_api.py` ให้ profile endpoint แสดงสถานะ cohort ปัจจุบันและ drift ratio ล่าสุด
+
+### เหตุผลเชิงการออกแบบ (เลือกฟังก์ชันที่ดีที่สุดเมื่อมีแนวทางซ้ำ)
+- เลือกใช้ **single adaptive learner + single bandit policy** เป็นแกนกลางเพื่อลดตรรกะซ้ำซ้อนระหว่าง detector/evaluator และให้ทุก intervention อัปเดตผ่านกลไกเดียวที่ตรวจสอบย้อนกลับได้
+- ใช้ online statistics และ reward feedback ใน memory เพื่อให้เริ่ม deploy ได้ทันทีโดยไม่ต้องพึ่งพา dependency เพิ่มหรือ data pipeline ใหม่
+
+### Future Creative Challenges
+1. **Counterfactual Bandit Replay Arena:** บันทึก context/action/reward แล้วรัน offline replay เปรียบเทียบ UCB vs Thompson Sampling vs LinUCB ต่อ cohort จริง
+2. **Hierarchical Cohort Meta-Learner:** เรียนรู้ threshold แบบหลายชั้น (global → industry → role → user) และทำ Bayesian shrinkage เพื่อลด overfit ใน cohort ที่ข้อมูลน้อย
+
+## 🆕 Internal System Update: vLLM-style Paged KV Cache Manager
+
+### สิ่งที่เพิ่มเข้าระบบ
+- เพิ่มโมดูล `src/backend/paged_kv_cache.py` สำหรับจัดการ KV Cache แบบ **PagedAttention-inspired** โดยแยก Logical Block ออกจาก Physical Block และแมปผ่าน `BlockTable`
+- รองรับ **On-demand allocation**: จัดสรรบล็อกเพิ่มเฉพาะเมื่อบล็อกล่าสุดเต็ม ลดการจองหน่วยความจำล่วงหน้า
+- รองรับ **Memory sharing + Copy-on-Write (CoW)** ผ่าน `fork_request()` เพื่อให้ request ลูกแชร์ prefix เดียวกันได้อย่างปลอดภัย
+- เพิ่ม `memory_report()` เพื่อสรุปสถานะหน่วยความจำ (used/free blocks, token utilization, last-block waste)
+
+### เหตุผลเชิงสถาปัตยกรรม (Data Cleaning + Duplicate Removal)
+- เลือกใช้ `PagedKVBlockManager` เป็นแกนกลางเพียงตัวเดียวในการจัดการ KV block lifecycle (allocate / append / fork / release) เพื่อลดตรรกะซ้ำซ้อน
+- แยก concern ชัดเจนระหว่าง logical sequence (`BlockTable`) และ physical capacity (`free_blocks`, `ref_count`) ทำให้ตรวจสอบย้อนกลับได้ง่ายและลดความซับซ้อนของสถานะ
+
+### การตรวจสอบความถูกต้อง
+- เพิ่มชุดทดสอบ `tests/test_paged_kv_cache.py` ครอบคลุมกรณีสำคัญ:
+  - การเติบโตแบบ on-demand
+  - copy-on-write เมื่อ append บนบล็อกที่แชร์
+  - การคืนบล็อกเมื่อ request จบ
+  - การแจ้งเตือนเมื่อ block หมด
+
+### Future Creative Challenges
+1. **KV Heat Rebalancer:** สร้างตัวจัดลำดับ block ตาม “hotness” แล้ว migrate บล็อกที่เข้าถึงสูงไปยัง memory tier ที่เร็วกว่าเพื่อลด tail latency
+2. **Adaptive Block Sizing:** พัฒนา policy ที่ปรับ `block_size` แบบไดนามิกตามรูปแบบทราฟฟิก (short-form chat vs long-context analysis) เพื่อเพิ่ม token utilization

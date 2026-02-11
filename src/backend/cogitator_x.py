@@ -121,7 +121,7 @@ class WisdomGemStore:
     def __init__(self) -> None:
         self._gems: list[str] = []
 
-    def add(self, lesson: str) -> None:
+    def append_gem(self, lesson: str) -> None:
         if lesson not in self._gems:
             self._gems.append(lesson)
 
@@ -143,7 +143,7 @@ class PangenesAgent:
             f"prompt={prompt[:80]} | prm={prm_score:.2f} | "
             f"steps={len(trace.steps)} | action=add more verification and tool-use"
         )
-        self.store.add(lesson)
+        self.store.append_gem(lesson)
 
 
 class CogitatorXEngine:

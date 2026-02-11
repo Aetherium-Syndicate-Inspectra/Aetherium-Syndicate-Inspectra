@@ -48,7 +48,7 @@ class AdaptiveContractBudgeting:
     def intensity(self) -> str:
         return self._intensity
 
-    def observe(self, *, latency_ms: float, valid: bool, healing_applied: bool, observed_rps: float | None = None) -> BudgetSnapshot:
+    def record_observation(self, *, latency_ms: float, valid: bool, healing_applied: bool, observed_rps: float | None = None) -> BudgetSnapshot:
         self._latencies_ms.append(max(0.0, latency_ms))
         self._valid_flags.append(1.0 if valid else 0.0)
         self._healing_flags.append(1.0 if healing_applied else 0.0)

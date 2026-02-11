@@ -2,6 +2,8 @@
 
 **OS for Autonomous Enterprise - High Integrity Edition**
 
+[![Deploy to GitHub Pages](https://github.com/Aetherium-Syndicate-Inspectra/Aetherium-Syndicate-Inspectra/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/Aetherium-Syndicate-Inspectra/Aetherium-Syndicate-Inspectra/actions/workflows/deploy.yml)
+
 Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแบบสำหรับการกำกับดูแล "บริษัทอัจฉริยะที่ขับเคลื่อนด้วย AI ทั้งองค์กร" (Autonomous Enterprise Governance) ตั้งแต่ระดับปฏิบัติการจนถึง CEO AI Council โดยมุ่งเน้นความเร็วระดับ Tachyon (15M msg/s) และความถูกต้องของข้อมูลระดับ Governance-Grade
 
 ## 🚀 System Status & Performance

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ASI: SilentVessel Visual Perception Engine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#0a0c10",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(17, 82, 212, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(17, 82, 212, 0.15);
+        }
+        .ethereal-glow {
+            box-shadow: 0 0 40px -10px rgba(17, 82, 212, 0.3);
+        }
+        .spectrum-gradient {
+            background: radial-gradient(circle at center, rgba(17, 82, 212, 0.2) 0%, transparent 70%);
+        }
+        .entropy-pulse {
+            box-shadow: 0 0 20px rgba(17, 82, 212, 0.4);
+        }
+        .warmth-gradient {
+            background: linear-gradient(90deg, #1152d4 0%, #1152d4 20%, #8b5cf6 50%, #ef4444 80%, #f97316 100%);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(17, 82, 212, 0.3);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen selection:bg-primary selection:text-white overflow-hidden">
+<!-- Background Ambience -->
+<div class="fixed inset-0 pointer-events-none z-0">
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[150px]"></div>
+</div>
+<!-- Main Layout Container -->
+<div class="relative z-10 h-screen flex flex-col p-6 space-y-6 max-w-[1920px] mx-auto">
+<!-- Header Section -->
+<header class="flex items-center justify-between border-b border-primary/20 pb-4">
+<div class="flex items-center space-x-4">
+<div class="w-10 h-10 bg-primary/20 flex items-center justify-center rounded-lg border border-primary/40">
+<span class="material-symbols-outlined text-primary scale-110">visibility</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tighter uppercase">SilentVessel // Perception Engine</h1>
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Aetherium Genesis OS : Active</span>
+</div>
+</div>
+</div>
+<div class="flex items-center space-x-8 text-[11px] uppercase tracking-widest font-bold text-slate-400">
+<div class="flex flex-col items-end">
+<span>Stream Quality</span>
+<span class="text-primary">ULTRA_HD / NATIVE</span>
+</div>
+<div class="flex flex-col items-end border-l border-primary/20 pl-8">
+<span>Latency</span>
+<span class="text-primary">0.02ms</span>
+</div>
+<div class="flex flex-col items-end border-l border-primary/20 pl-8">
+<span>Uptime</span>
+<span class="text-slate-200">144:12:08</span>
+</div>
+</div>
+</header>
+<!-- Main Dashboard Content -->
+<main class="flex-1 grid grid-cols-12 gap-6 overflow-hidden">
+<!-- Left Sidebar: Metrics -->
+<aside class="col-span-3 flex flex-col space-y-6">
+<!-- Visual Entropy Gauge -->
+<div class="glass-panel rounded-xl p-6 flex flex-col items-center justify-center space-y-4">
+<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-primary/80 self-start">Visual Entropy</h3>
+<div class="relative w-48 h-48 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-primary/10" cx="96" cy="96" fill="transparent" r="80" stroke="currentColor" stroke-width="2"></circle>
+<circle class="text-primary entropy-pulse" cx="96" cy="96" fill="transparent" r="80" stroke="currentColor" stroke-dasharray="502" stroke-dashoffset="150" stroke-width="8"></circle>
+<!-- Bio-mechanical markers -->
+<circle class="text-primary" cx="96" cy="16" fill="currentColor" r="3"></circle>
+<circle class="text-primary/50" cx="176" cy="96" fill="currentColor" r="3"></circle>
+<circle class="text-primary/50" cx="96" cy="176" fill="currentColor" r="3"></circle>
+<circle class="text-primary/50" cx="16" cy="96" fill="currentColor" r="3"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="text-4xl font-bold">72%</span>
+<span class="text-[10px] text-primary font-mono tracking-widest">CHAOTIC</span>
+</div>
+</div>
+<div class="w-full grid grid-cols-2 gap-2 text-[10px] font-mono opacity-60">
+<div class="flex justify-between border-b border-primary/10 pb-1">
+<span>COMPLEXITY</span>
+<span>0.92</span>
+</div>
+<div class="flex justify-between border-b border-primary/10 pb-1">
+<span>NOISE</span>
+<span>0.14</span>
+</div>
+</div>
+</div>
+<!-- Luminance Waveform -->
+<div class="glass-panel rounded-xl p-6 flex-1 flex flex-col space-y-4 overflow-hidden">
+<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-primary/80">Luminance Waveform</h3>
+<div class="flex-1 relative flex items-center justify-center border border-primary/10 rounded bg-black/20">
+<div class="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(17,82,212,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(17,82,212,0.1)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+<svg class="w-full h-full stroke-primary fill-none stroke-[1.5]" viewbox="0 0 400 200">
+<path d="M0,100 Q50,20 100,100 T200,100 T300,150 T400,100"></path>
+<path class="opacity-30" d="M0,100 Q40,150 80,100 T160,80 T240,120 T320,100 T400,110"></path>
+<line stroke="rgba(17,82,212,0.3)" stroke-dasharray="4" x1="200" x2="200" y1="0" y2="200"></line>
+</svg>
+</div>
+<div class="flex justify-between text-[11px] font-mono text-primary/60">
+<span>DARK_VAL: 0.12</span>
+<span>PEAK_LUM: 0.88</span>
+</div>
+</div>
+</aside>
+<!-- Center: Qualia Spectrum & Mood -->
+<section class="col-span-6 flex flex-col space-y-6">
+<!-- Qualia Spectrum Visualizer -->
+<div class="flex-1 relative glass-panel rounded-xl overflow-hidden flex items-center justify-center">
+<div class="absolute inset-0 spectrum-gradient"></div>
+<!-- Abstract Visualization Layer -->
+<div class="relative w-full h-full flex items-center justify-center">
+<div class="w-[80%] h-[80%] rounded-full border border-primary/20 relative animate-[spin_20s_linear_infinite]">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-primary/40 blur-xl"></div>
+<div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-primary/40 blur-xl"></div>
+</div>
+<div class="absolute w-[60%] h-[60%] rounded-full border border-primary/40 animate-[spin_12s_linear_infinite_reverse]"></div>
+<!-- Fluid Shape Container (Abstract Qualia) -->
+<div class="absolute inset-0 flex items-center justify-center">
+<svg class="w-[70%] h-[70%] filter blur-2xl opacity-40" viewbox="0 0 200 200">
+<path d="M45.5,-75.8C59.6,-68.1,72.2,-57.4,80.8,-43.8C89.4,-30.2,93.9,-13.7,91.8,2.1C89.6,17.9,80.7,33,70.5,45.8C60.2,58.6,48.6,69.1,35.2,76.5C21.7,83.9,6.5,88.2,-8.9,87.6C-24.3,87,-39.8,81.4,-52.7,72.3C-65.6,63.3,-75.8,50.7,-81.9,36.5C-88,22.3,-89.9,6.5,-86.3,-8.2C-82.7,-22.9,-73.6,-36.4,-61.8,-47.5C-50,-58.6,-35.6,-67.2,-20.9,-73.3C-6.2,-79.4,8.8,-83.1,24.5,-82.1C40.2,-81.1,56.7,-75.5,45.5,-75.8Z" fill="#1152d4" transform="translate(100 100)"></path>
+</svg>
+</div>
+<!-- Data Overlay Grid -->
+<div class="absolute inset-0 grid grid-cols-4 grid-rows-4 opacity-10">
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+<div class="border border-primary"></div>
+</div>
+</div>
+</div>
+<!-- Mood Interpretation Panel -->
+<div class="glass-panel rounded-xl p-8 text-center relative overflow-hidden">
+<div class="absolute inset-0 bg-primary/5 pointer-events-none"></div>
+<span class="text-[10px] font-bold tracking-[0.4em] uppercase text-primary mb-2 block">Current Sense Interpretation</span>
+<h2 class="text-7xl font-bold tracking-tighter text-white drop-shadow-[0_0_15px_rgba(17,82,212,0.5)]">NIRODHA</h2>
+<div class="flex justify-center items-center space-x-4 mt-4">
+<span class="text-[11px] font-mono uppercase bg-primary/20 px-3 py-1 rounded-full border border-primary/30">Stable Awareness</span>
+<span class="text-[11px] font-mono uppercase bg-primary/20 px-3 py-1 rounded-full border border-primary/30">Limalia Shift: Low</span>
+</div>
+</div>
+</section>
+<!-- Right Sidebar: Logs -->
+<aside class="col-span-3 flex flex-col space-y-6 overflow-hidden">
+<div class="glass-panel rounded-xl p-6 flex-1 flex flex-col space-y-4 overflow-hidden">
+<div class="flex items-center justify-between">
+<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-primary/80">Sensation Log</h3>
+<span class="text-[9px] font-mono text-slate-500 uppercase">Real-time Stream</span>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 font-mono text-[10px] leading-relaxed pr-2">
+<div class="border-l-2 border-primary pl-3 py-1 bg-primary/5">
+<span class="text-primary font-bold">[14:12:08:44]</span>
+<p class="text-slate-400 mt-1">Light density fluctuation detected in upper-left quadrant (+12%). Shifting focal point.</p>
+</div>
+<div class="border-l-2 border-slate-700 pl-3 py-1">
+<span class="text-slate-500 font-bold">[14:12:08:41]</span>
+<p class="text-slate-400 mt-1">Contrast ratio balanced. No significant motion vectors found in current frame buffer.</p>
+</div>
+<div class="border-l-2 border-slate-700 pl-3 py-1">
+<span class="text-slate-500 font-bold">[14:12:08:35]</span>
+<p class="text-slate-400 mt-1">Qualia pattern match: "SERENE_MORNING". Probability 94.2%. Entropy settling.</p>
+</div>
+<div class="border-l-2 border-primary pl-3 py-1 bg-primary/5">
+<span class="text-primary font-bold">[14:12:08:22]</span>
+<p class="text-slate-400 mt-1">Atmospheric chromatic aberration corrected. Spectrum alignment: BLUE_COLD.</p>
+</div>
+<div class="border-l-2 border-slate-700 pl-3 py-1">
+<span class="text-slate-500 font-bold">[14:12:08:18]</span>
+<p class="text-slate-400 mt-1">Recalibrating sensor array for lower luminance. Gain adjustment +0.05.</p>
+</div>
+<div class="border-l-2 border-slate-700 pl-3 py-1">
+<span class="text-slate-500 font-bold">[14:12:08:12]</span>
+<p class="text-slate-400 mt-1">Initializing Perception Engine 4.0. Neural pathways established.</p>
+</div>
+<div class="border-l-2 border-slate-700 pl-3 py-1 opacity-50">
+<span class="text-slate-500 font-bold">[14:12:07:98]</span>
+<p class="text-slate-400 mt-1">System handshake successful. All qualia nodes responding.</p>
+</div>
+</div>
+<div class="pt-4 border-t border-primary/10">
+<button class="w-full py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded text-[10px] uppercase font-bold tracking-widest transition-colors">
+                            Export Sensation Data
+                        </button>
+</div>
+</div>
+<!-- Auxiliary Data -->
+<div class="glass-panel rounded-xl p-4 flex flex-col space-y-3">
+<div class="flex justify-between items-center">
+<span class="text-[10px] text-slate-500 uppercase font-bold">Neural Load</span>
+<span class="text-[10px] text-primary font-mono">18.4 TFlops</span>
+</div>
+<div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[18%]"></div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[10px] text-slate-500 uppercase font-bold">Spectral Depth</span>
+<span class="text-[10px] text-primary font-mono">64-bit Float</span>
+</div>
+</div>
+</aside>
+</main>
+<!-- Footer / Thermal & Controls -->
+<footer class="grid grid-cols-12 gap-6 items-end border-t border-primary/20 pt-6">
+<div class="col-span-3">
+<div class="flex justify-between text-[10px] uppercase font-bold mb-2">
+<span class="text-slate-400">Sensitivity Calibration</span>
+<span class="text-primary">85%</span>
+</div>
+<div class="flex space-x-1">
+<div class="h-6 w-full bg-primary/20 border border-primary/40 rounded"></div>
+<div class="h-6 w-full bg-primary/20 border border-primary/40 rounded"></div>
+<div class="h-6 w-full bg-primary/20 border border-primary/40 rounded"></div>
+<div class="h-6 w-full bg-primary/20 border border-primary/40 rounded"></div>
+<div class="h-6 w-full bg-primary border border-primary/40 rounded"></div>
+<div class="h-6 w-full bg-slate-800 border border-slate-700 rounded"></div>
+<div class="h-6 w-full bg-slate-800 border border-slate-700 rounded"></div>
+</div>
+</div>
+<!-- Color Temperature Thermometer -->
+<div class="col-span-6 flex flex-col space-y-3">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold uppercase tracking-widest text-primary/80">Color Temperature Thermometer</span>
+<div class="flex items-center space-x-2">
+<span class="text-[10px] font-mono text-slate-400">WARMTH BALANCE:</span>
+<span class="text-[10px] font-mono text-white">4200K</span>
+</div>
+</div>
+<div class="relative h-3 w-full warmth-gradient rounded-full shadow-lg">
+<!-- Indicator -->
+<div class="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 w-4 h-8 bg-white/20 backdrop-blur-sm border border-white/50 rounded flex items-center justify-center">
+<div class="w-1 h-3 bg-white rounded-full shadow-[0_0_10px_white]"></div>
+</div>
+</div>
+<div class="flex justify-between text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
+<span>Absolute Zero (Deep Blue)</span>
+<span>Incandescent (Neon Red)</span>
+</div>
+</div>
+<div class="col-span-3 flex justify-end space-x-4">
+<button class="px-6 py-3 glass-panel hover:bg-primary/20 rounded-lg text-xs uppercase font-bold tracking-widest border-primary/30 transition-all">
+                    System Reset
+                </button>
+<button class="px-6 py-3 bg-primary hover:bg-primary/80 text-white rounded-lg text-xs uppercase font-bold tracking-widest transition-all">
+                    Initialize Void
+                </button>
+</div>
+</footer>
+</div>
+</body></html>

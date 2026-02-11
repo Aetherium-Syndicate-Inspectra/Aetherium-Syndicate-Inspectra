@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ASI: Causal Policy Lab &amp; SLA Optimizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0df2cc",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#10221f",
+                        "background-panel": "#162e2a", // Slightly lighter than dark bg for panels
+                        "background-input": "#0c1a17", // Darker for inputs
+                        "risk-amber": "#ffb02e",
+                        "risk-red": "#ff4d4d",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #1f3d37 1px, transparent 1px), linear-gradient(to bottom, #1f3d37 1px, transparent 1px)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for lab aesthetic */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #10221f; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f3d37; 
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0df2cc; 
+        }
+        .text-glow {
+            text-shadow: 0 0 10px rgba(13, 242, 204, 0.3);
+        }
+        .border-glow {
+            box-shadow: 0 0 5px rgba(13, 242, 204, 0.2);
+        }
+        /* Grid background size */
+        .bg-grid {
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-gray-300 font-display min-h-screen flex flex-col overflow-hidden">
+<!-- Header -->
+<header class="h-16 border-b border-primary/20 bg-background-light dark:bg-background-dark flex items-center justify-between px-6 z-20 shrink-0">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 bg-primary/20 rounded flex items-center justify-center border border-primary/50">
+<span class="material-icons text-primary text-sm">hub</span>
+</div>
+<div>
+<h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white uppercase leading-none">ASI v4.2.2</h1>
+<p class="text-[10px] text-primary uppercase tracking-widest opacity-80 font-mono">Aetherium-Syndicate-Inspectra</p>
+</div>
+<div class="h-6 w-px bg-primary/20 mx-2"></div>
+<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary text-xs font-mono">CAUSAL_LAB_ACTIVE</span>
+</div>
+<nav class="hidden md:flex items-center gap-1 bg-background-panel p-1 rounded">
+<button class="px-4 py-1.5 rounded bg-primary text-background-dark text-sm font-semibold shadow-lg shadow-primary/20">Lab</button>
+<button class="px-4 py-1.5 rounded hover:bg-white/5 text-gray-400 text-sm font-medium transition-colors">Monitor</button>
+<button class="px-4 py-1.5 rounded hover:bg-white/5 text-gray-400 text-sm font-medium transition-colors">Settings</button>
+</nav>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end">
+<span class="text-xs text-gray-400 font-mono">SYS_STATUS</span>
+<div class="flex items-center gap-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(13,242,204,0.8)]"></div>
+<span class="text-xs font-bold text-primary">ONLINE</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded border border-gray-700 flex items-center justify-center hover:border-primary/50 hover:text-primary transition-colors">
+<span class="material-icons text-lg">notifications</span>
+</button>
+<div class="w-8 h-8 rounded bg-gradient-to-br from-primary to-blue-600 relative overflow-hidden" data-alt="User avatar gradient">
+<!-- Abstract avatar -->
+</div>
+</div>
+</header>
+<!-- Main Content Grid -->
+<main class="flex-1 grid grid-cols-12 gap-0 overflow-hidden relative">
+<!-- Left Panel: Counterfactual Simulator -->
+<aside class="col-span-12 lg:col-span-3 border-r border-primary/10 bg-background-panel/50 backdrop-blur-sm flex flex-col h-full overflow-hidden">
+<div class="p-4 border-b border-primary/10 flex justify-between items-center bg-background-dark/80">
+<h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+<span class="material-icons text-primary text-base">tune</span>
+                    Simulator
+                </h2>
+<button class="text-xs text-primary hover:text-white underline">Reset Defaults</button>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-6">
+<!-- Variable Group 1 -->
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<label class="text-xs font-mono text-gray-400 uppercase">Tachyon Bandwidth Cap</label>
+<span class="text-xs font-mono text-primary font-bold">20%</span>
+</div>
+<div class="relative w-full h-1 bg-gray-700 rounded-full">
+<div class="absolute h-full bg-primary rounded-full" style="width: 20%"></div>
+<div class="absolute h-3 w-3 bg-primary rounded-full top-1/2 -translate-y-1/2 shadow-[0_0_10px_rgba(13,242,204,0.8)] border border-white cursor-pointer" style="left: 20%"></div>
+</div>
+</div>
+<!-- Variable Group 2 -->
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<label class="text-xs font-mono text-gray-400 uppercase">A2A Bidding Freq (ms)</label>
+<span class="text-xs font-mono text-risk-amber font-bold">HIGH RISK</span>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-full bg-background-input border border-gray-700 rounded px-3 py-2 text-sm text-white font-mono focus:border-primary focus:ring-0 focus:outline-none" type="number" value="450"/>
+<span class="text-xs text-gray-500 font-mono">ms</span>
+</div>
+<p class="text-[10px] text-gray-500 leading-tight">Lower frequency may increase throughput but risks compliance drift.</p>
+</div>
+<!-- Toggle Groups -->
+<div class="p-3 bg-background-input rounded border border-white/5 space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-xs text-gray-300">Allow Burst Scaling</span>
+<div class="relative inline-block w-8 h-4 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-3 h-3 rounded-full bg-background-dark border-4 appearance-none cursor-pointer left-0.5 top-0.5 checked:right-0.5 checked:left-auto checked:bg-primary" id="toggle1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-4 rounded-full bg-gray-700 cursor-pointer checked:bg-primary/50" for="toggle1"></label>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-gray-300">Force Protocol V3</span>
+<div class="relative inline-block w-8 h-4 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-3 h-3 rounded-full bg-background-dark border-4 appearance-none cursor-pointer right-0.5 top-0.5 bg-primary" id="toggle2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-4 rounded-full bg-primary/30 cursor-pointer" for="toggle2"></label>
+</div>
+</div>
+</div>
+<!-- Shadow Chart -->
+<div class="pt-4 border-t border-white/5">
+<div class="flex justify-between items-center mb-2">
+<h3 class="text-xs font-bold text-gray-300 uppercase">Projected Latency Impact</h3>
+<span class="text-xs font-mono text-primary">-12ms</span>
+</div>
+<div class="h-32 w-full bg-background-input rounded border border-white/5 relative overflow-hidden p-2" data-alt="Line chart showing actual vs projected latency">
+<!-- Simulated Chart Grid -->
+<div class="absolute inset-0 bg-grid opacity-10"></div>
+<!-- Trend Lines -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<!-- Baseline -->
+<path d="M0,50 Q25,45 50,55 T100,50" fill="none" stroke="#4b5563" stroke-dasharray="2,2" stroke-width="1"></path>
+<!-- Projected (Primary) -->
+<path d="M0,50 Q25,55 50,40 T100,30" fill="none" stroke="#0df2cc" stroke-width="2"></path>
+<!-- Fill -->
+<path d="M0,50 Q25,55 50,40 T100,30 V100 H0 Z" fill="url(#gradient)" opacity="0.1"></path>
+<defs>
+<lineargradient id="gradient" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#0df2cc;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#0df2cc;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+<div class="flex justify-between text-[10px] text-gray-500 font-mono mt-1">
+<span>T-0</span>
+<span>T+10m</span>
+<span>T+30m</span>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-primary/10 bg-background-dark">
+<button class="w-full py-2.5 bg-primary hover:bg-primary/90 text-background-dark font-bold rounded uppercase tracking-wide text-xs transition-all shadow-[0_0_15px_rgba(13,242,204,0.3)] hover:shadow-[0_0_20px_rgba(13,242,204,0.5)]">
+                    Run Simulation
+                </button>
+</div>
+</aside>
+<!-- Center Stage: Causal Graph -->
+<section class="col-span-12 lg:col-span-6 bg-background-dark relative flex flex-col h-full">
+<!-- Graph Toolbar -->
+<div class="absolute top-4 left-4 right-4 z-10 flex justify-between items-start pointer-events-none">
+<div class="bg-background-panel/90 backdrop-blur rounded border border-white/10 p-2 pointer-events-auto flex gap-2">
+<button class="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white" title="Zoom In"><span class="material-icons text-sm">add</span></button>
+<button class="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white" title="Zoom Out"><span class="material-icons text-sm">remove</span></button>
+<div class="w-px h-6 bg-white/10 mx-1"></div>
+<button class="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white" title="Reset"><span class="material-icons text-sm">center_focus_strong</span></button>
+</div>
+<div class="bg-background-panel/90 backdrop-blur rounded border border-white/10 px-3 py-1.5 pointer-events-auto">
+<span class="text-[10px] uppercase text-gray-400 block">Causal Inference Confidence</span>
+<span class="text-lg font-bold text-white font-mono">94.2%</span>
+</div>
+</div>
+<!-- Visualization Area -->
+<div class="flex-1 bg-background-dark bg-grid relative overflow-hidden" data-alt="Interactive node graph visualization showing connections between agents and metrics">
+<!-- SVG Graph Container -->
+<svg class="w-full h-full absolute inset-0 pointer-events-none">
+<defs>
+<marker id="arrowhead" markerheight="7" markerwidth="10" orient="auto" refx="28" refy="3.5">
+<polygon fill="#334155" points="0 0, 10 3.5, 0 7"></polygon>
+</marker>
+<marker id="arrowhead-active" markerheight="7" markerwidth="10" orient="auto" refx="28" refy="3.5">
+<polygon fill="#0df2cc" points="0 0, 10 3.5, 0 7"></polygon>
+</marker>
+</defs>
+<!-- Edges (Background) -->
+<line marker-end="url(#arrowhead)" stroke="#334155" stroke-width="1" x1="30%" x2="50%" y1="30%" y2="50%"></line>
+<line marker-end="url(#arrowhead)" stroke="#334155" stroke-width="1" x1="70%" x2="50%" y1="30%" y2="50%"></line>
+<!-- Active Edge -->
+<line marker-end="url(#arrowhead-active)" stroke="#0df2cc" stroke-dasharray="5,5" stroke-width="2" x1="50%" x2="50%" y1="50%" y2="80%">
+<animate attributename="stroke-dashoffset" dur="2s" from="100" repeatcount="indefinite" to="0"></animate>
+</line>
+<!-- Edge Labels -->
+<rect fill="#10221f" height="16" rx="2" stroke="#334155" width="40" x="40%" y="40%"></rect>
+<text dx="20" dy="11" fill="#94a3b8" font-family="JetBrains Mono" font-size="9" text-anchor="middle" x="40%" y="40%">r=0.4</text>
+<rect fill="#10221f" height="16" rx="2" stroke="#0df2cc" width="40" x="50%" y="65%"></rect>
+<text dx="20" dy="11" fill="#0df2cc" font-family="JetBrains Mono" font-size="9" text-anchor="middle" x="50%" y="65%">r=0.85</text>
+</svg>
+<!-- Nodes (HTML Overlay for interaction simulation) -->
+<!-- Node 1: Input -->
+<div class="absolute top-[30%] left-[30%] -translate-x-1/2 -translate-y-1/2 w-32 bg-background-panel border border-gray-600 rounded p-3 shadow-lg group hover:border-primary transition-colors cursor-pointer z-10">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-2 h-2 rounded-full bg-blue-500"></div>
+<span class="text-xs font-bold text-gray-200">Bidding Freq</span>
+</div>
+<div class="h-1 w-full bg-gray-700 rounded-full overflow-hidden">
+<div class="h-full bg-blue-500 w-3/4"></div>
+</div>
+</div>
+<!-- Node 2: Input -->
+<div class="absolute top-[30%] left-[70%] -translate-x-1/2 -translate-y-1/2 w-32 bg-background-panel border border-gray-600 rounded p-3 shadow-lg group hover:border-primary transition-colors cursor-pointer z-10">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-2 h-2 rounded-full bg-purple-500"></div>
+<span class="text-xs font-bold text-gray-200">Server Load</span>
+</div>
+<div class="h-1 w-full bg-gray-700 rounded-full overflow-hidden">
+<div class="h-full bg-purple-500 w-1/2"></div>
+</div>
+</div>
+<!-- Node 3: Center Hub -->
+<div class="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-40 bg-background-panel border border-primary rounded p-4 shadow-[0_0_20px_rgba(13,242,204,0.1)] z-20">
+<div class="flex justify-between items-center mb-2">
+<span class="text-xs font-bold text-white">SLA: Latency</span>
+<span class="text-[10px] text-primary font-mono border border-primary/30 px-1 rounded">CORE</span>
+</div>
+<div class="text-2xl font-mono text-white mb-1">24<span class="text-sm text-gray-500">ms</span></div>
+<div class="text-[10px] text-risk-amber flex items-center gap-1">
+<span class="material-icons text-[10px]">trending_up</span> +2.4% Drift
+                    </div>
+</div>
+<!-- Node 4: Output -->
+<div class="absolute top-[80%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-32 bg-background-panel border border-dashed border-gray-500 rounded p-3 shadow-lg opacity-80 z-10">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-2 h-2 rounded-full bg-gray-500"></div>
+<span class="text-xs font-bold text-gray-200">User Churn</span>
+</div>
+<span class="text-[10px] text-gray-400 block mt-1">Predicted Consequence</span>
+</div>
+</div>
+<!-- Bottom: Drift Detector -->
+<div class="h-48 border-t border-primary/20 bg-background-panel/80 backdrop-blur-md flex flex-col">
+<div class="px-4 py-2 border-b border-white/5 flex justify-between items-center bg-background-input/50">
+<div class="flex items-center gap-2">
+<span class="material-icons text-risk-amber text-sm animate-pulse">warning</span>
+<h3 class="text-xs font-bold text-white uppercase tracking-wider">SLA Drift Detector</h3>
+</div>
+<span class="text-[10px] font-mono text-gray-500">Live Log • T-Minus 0s</span>
+</div>
+<div class="flex-1 overflow-y-auto p-2 font-mono text-xs space-y-1">
+<div class="flex gap-2 text-gray-400 hover:bg-white/5 p-1 rounded cursor-pointer">
+<span class="text-gray-600">[14:02:44]</span>
+<span class="text-primary">INFO</span>
+<span>Schema validation passed for Node #2441.</span>
+</div>
+<div class="flex gap-2 text-gray-300 hover:bg-white/5 p-1 rounded bg-risk-amber/10 border-l-2 border-risk-amber cursor-pointer">
+<span class="text-gray-500">[14:02:41]</span>
+<span class="text-risk-amber font-bold">WARN</span>
+<span>Schema Drift detected in Node 4. Mapping adjusted automatically.</span>
+</div>
+<div class="flex gap-2 text-gray-400 hover:bg-white/5 p-1 rounded cursor-pointer">
+<span class="text-gray-600">[14:02:38]</span>
+<span class="text-primary">INFO</span>
+<span>Re-calculating edge weights for "Latency" -&gt; "Churn".</span>
+</div>
+<div class="flex gap-2 text-gray-400 hover:bg-white/5 p-1 rounded cursor-pointer">
+<span class="text-gray-600">[14:02:35]</span>
+<span class="text-primary">INFO</span>
+<span>Simulation batch #882 completed successfully.</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Panel: Multi-Objective Optimizer -->
+<aside class="col-span-12 lg:col-span-3 border-l border-primary/10 bg-background-panel/50 backdrop-blur-sm flex flex-col h-full overflow-hidden">
+<div class="p-4 border-b border-primary/10 flex justify-between items-center bg-background-dark/80">
+<h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+<span class="material-icons text-primary text-base">analytics</span>
+                    Optimizer
+                </h2>
+<div class="flex items-center gap-1">
+<div class="w-2 h-2 rounded-full bg-primary animate-ping absolute"></div>
+<div class="w-2 h-2 rounded-full bg-primary relative"></div>
+</div>
+</div>
+<div class="p-6 flex flex-col items-center border-b border-white/5">
+<!-- Radar Chart Container -->
+<div class="relative w-48 h-48 flex items-center justify-center" data-alt="Radar chart showing Efficiency, Compliance, and Capacity metrics">
+<!-- Radar Axis (SVG) -->
+<svg class="w-full h-full drop-shadow-[0_0_10px_rgba(13,242,204,0.15)]" viewbox="0 0 100 100">
+<!-- Background Pentagons -->
+<polygon fill="none" points="50,10 90,40 75,90 25,90 10,40" stroke="#334155" stroke-width="0.5"></polygon>
+<polygon fill="none" points="50,25 75,45 65,75 35,75 25,45" stroke="#334155" stroke-width="0.5"></polygon>
+<!-- Axis Lines -->
+<line stroke="#334155" stroke-width="0.5" x1="50" x2="50" y1="50" y2="10"></line>
+<line stroke="#334155" stroke-width="0.5" x1="50" x2="90" y1="50" y2="40"></line>
+<line stroke="#334155" stroke-width="0.5" x1="50" x2="75" y1="50" y2="90"></line>
+<line stroke="#334155" stroke-width="0.5" x1="50" x2="25" y1="50" y2="90"></line>
+<line stroke="#334155" stroke-width="0.5" x1="50" x2="10" y1="50" y2="40"></line>
+<!-- Data Shape -->
+<polygon fill="rgba(13, 242, 204, 0.2)" points="50,15 85,45 60,80 35,85 20,50" stroke="#0df2cc" stroke-width="1.5"></polygon>
+</svg>
+<!-- Labels -->
+<span class="absolute top-0 text-[9px] text-gray-400 font-bold tracking-wider uppercase bg-background-dark px-1">Eff</span>
+<span class="absolute top-[35%] right-0 translate-x-1/2 text-[9px] text-gray-400 font-bold tracking-wider uppercase bg-background-dark px-1">Comp</span>
+<span class="absolute bottom-4 right-2 text-[9px] text-gray-400 font-bold tracking-wider uppercase bg-background-dark px-1">Cap</span>
+<span class="absolute bottom-4 left-2 text-[9px] text-gray-400 font-bold tracking-wider uppercase bg-background-dark px-1">Cost</span>
+<span class="absolute top-[35%] left-0 -translate-x-1/2 text-[9px] text-gray-400 font-bold tracking-wider uppercase bg-background-dark px-1">Sec</span>
+</div>
+<div class="mt-4 text-center">
+<span class="text-[10px] text-gray-500 uppercase tracking-widest block mb-1">Global Optimization Score</span>
+<div class="text-3xl font-display font-bold text-white">87<span class="text-lg text-gray-500 font-normal">/100</span></div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-6">
+<!-- Optimization Goals -->
+<div>
+<h3 class="text-xs font-bold text-gray-300 uppercase mb-3">Optimization Priority</h3>
+<div class="space-y-2">
+<label class="flex items-center gap-3 p-2 rounded bg-background-input border border-primary/30 cursor-pointer transition-colors hover:bg-primary/5 group">
+<div class="relative flex items-center">
+<input checked="" class="peer h-4 w-4 border-gray-600 bg-background-dark text-primary focus:ring-offset-background-dark focus:ring-primary" name="opt-goal" type="radio"/>
+</div>
+<div class="flex-1">
+<span class="text-sm font-medium text-white group-hover:text-primary transition-colors">Balanced</span>
+<p class="text-[10px] text-gray-500">Equal weight to all metrics.</p>
+</div>
+<span class="text-xs font-mono text-primary">87%</span>
+</label>
+<label class="flex items-center gap-3 p-2 rounded bg-background-input border border-transparent border-b-white/5 cursor-pointer transition-colors hover:bg-white/5 group">
+<div class="relative flex items-center">
+<input class="peer h-4 w-4 border-gray-600 bg-background-dark text-primary focus:ring-offset-background-dark focus:ring-primary" name="opt-goal" type="radio"/>
+</div>
+<div class="flex-1">
+<span class="text-sm font-medium text-gray-400 group-hover:text-white transition-colors">Max Throughput</span>
+<p class="text-[10px] text-gray-600">Sacrifices latency for volume.</p>
+</div>
+<span class="text-xs font-mono text-gray-500">92%</span>
+</label>
+<label class="flex items-center gap-3 p-2 rounded bg-background-input border border-transparent border-b-white/5 cursor-pointer transition-colors hover:bg-white/5 group">
+<div class="relative flex items-center">
+<input class="peer h-4 w-4 border-gray-600 bg-background-dark text-primary focus:ring-offset-background-dark focus:ring-primary" name="opt-goal" type="radio"/>
+</div>
+<div class="flex-1">
+<span class="text-sm font-medium text-gray-400 group-hover:text-white transition-colors">Min Risk</span>
+<p class="text-[10px] text-gray-600">Prioritizes compliance &amp; security.</p>
+</div>
+<span class="text-xs font-mono text-gray-500">74%</span>
+</label>
+</div>
+</div>
+<!-- Recommendation Engine (Skeleton Loader) -->
+<div>
+<h3 class="text-xs font-bold text-gray-300 uppercase mb-3 flex justify-between">
+                         AI Recommendations
+                         <span class="text-[10px] bg-primary/20 text-primary px-1.5 rounded">NEW</span>
+</h3>
+<div class="space-y-3 animate-pulse">
+<div class="h-16 bg-white/5 rounded w-full border border-white/5 p-2">
+<div class="h-2 bg-white/10 rounded w-1/3 mb-2"></div>
+<div class="h-2 bg-white/10 rounded w-3/4"></div>
+</div>
+<div class="h-16 bg-white/5 rounded w-full border border-white/5 p-2">
+<div class="h-2 bg-white/10 rounded w-1/4 mb-2"></div>
+<div class="h-2 bg-white/10 rounded w-2/3"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-3 border-t border-primary/10 bg-background-dark text-center">
+<button class="text-xs text-gray-500 hover:text-primary transition-colors flex items-center justify-center gap-1 w-full">
+<span class="material-icons text-sm">download</span> Export Optimization Report
+                </button>
+</div>
+</aside>
+</main>
+</body></html>

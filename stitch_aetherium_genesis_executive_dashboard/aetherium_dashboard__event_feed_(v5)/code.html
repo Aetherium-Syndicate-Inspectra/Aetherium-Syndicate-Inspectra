@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aetherium Dashboard: Event Feed (V5)</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f48c25",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#221910",
+                        "surface-dark": "#181411",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["monospace"], 
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for the feed container */
+        .feed-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .feed-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .feed-scrollbar::-webkit-scrollbar-thumb {
+            background: #393028;
+            border-radius: 10px;
+        }
+        .feed-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #f48c25;
+        }
+        
+        .ticker-animation {
+            animation: ticker 30s linear infinite;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#393028] bg-surface-light dark:bg-[#181411] px-6 py-3 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-6 text-primary">
+<span class="material-symbols-outlined !text-[24px]">token</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">Aetherium Genesis</h2>
+</div>
+<div class="hidden md:flex items-center gap-9">
+<a class="text-slate-600 dark:text-[#baab9c] text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-slate-900 dark:text-white text-sm font-medium leading-normal" href="#">Feed</a>
+<a class="text-slate-600 dark:text-[#baab9c] text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors" href="#">Directives</a>
+<a class="text-slate-600 dark:text-[#baab9c] text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors" href="#">System</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex w-64 items-center rounded-lg bg-slate-100 dark:bg-[#393028] px-3 py-2">
+<span class="material-symbols-outlined text-slate-400 dark:text-[#baab9c] !text-[20px]">search</span>
+<input class="ml-2 w-full bg-transparent text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#baab9c] focus:outline-none" placeholder="Search events..."/>
+</div>
+<button class="relative text-slate-600 dark:text-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary"></span>
+</button>
+<div aria-label="User avatar" class="h-8 w-8 rounded-full bg-slate-200 dark:bg-[#393028] overflow-hidden" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDFvQyzbOlaRuW-zNno2e92LRcWeH3PoqRs30Q9_xH6-jE5u9aj_wrr712ndbIoHZdyn-Jl75Hvk0fqNvJsKyRhHmGVzrJjnVJ-vheualnmINLbINLx8yWmAUd1RhEDrPdtn_oeUHe9hJj8lIISsqg5QBs8bFVUM7f2Oh4OyCBdsRCec5rWAaGA9KUs5bHN-kIgdCqnIdeL9BP99bo7wPzzsilb4fvlwGoKP4UMecbp1u1BeqFB-xfPQnyfIG8S2wWB5VBS-Q730ks'); background-size: cover; background-position: center;"></div>
+</div>
+</header>
+<!-- Main Content Area with Fixed Sidebar and Center Feed -->
+<main class="flex flex-1 overflow-hidden relative">
+<!-- Left Sidebar / Decoration (Desktop only) -->
+<aside class="hidden lg:flex w-64 flex-col border-r border-slate-200 dark:border-[#393028] bg-surface-light dark:bg-[#181411] p-6 gap-8 z-10">
+<div>
+<h3 class="text-xs font-bold text-slate-400 dark:text-[#baab9c] uppercase tracking-wider mb-4">Quick Filters</h3>
+<nav class="flex flex-col gap-2">
+<button class="flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-2 text-primary font-medium">
+<span class="material-symbols-outlined !text-[20px]">view_agenda</span>
+<span>All Events</span>
+</button>
+<button class="flex items-center gap-3 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a241d] px-3 py-2 text-slate-600 dark:text-[#baab9c] transition-colors">
+<span class="material-symbols-outlined !text-[20px] text-red-500">warning</span>
+<span>Critical Alerts</span>
+<span class="ml-auto text-xs bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded">3</span>
+</button>
+<button class="flex items-center gap-3 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a241d] px-3 py-2 text-slate-600 dark:text-[#baab9c] transition-colors">
+<span class="material-symbols-outlined !text-[20px] text-green-500">check_circle</span>
+<span>Approvals</span>
+</button>
+<button class="flex items-center gap-3 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a241d] px-3 py-2 text-slate-600 dark:text-[#baab9c] transition-colors">
+<span class="material-symbols-outlined !text-[20px] text-blue-500">system_update</span>
+<span>System Logs</span>
+</button>
+</nav>
+</div>
+<div class="mt-auto">
+<div class="rounded-xl bg-slate-100 dark:bg-[#27211b] border border-slate-200 dark:border-[#393028] p-4">
+<div class="flex items-center gap-2 mb-2 text-xs font-bold text-slate-400 dark:text-[#baab9c] uppercase">
+<span class="material-symbols-outlined !text-[16px]">memory</span>
+<span>AetherBus Node</span>
+</div>
+<div class="text-2xl font-black text-slate-900 dark:text-white">98%</div>
+<div class="text-xs text-primary mt-1">System Load Critical</div>
+<div class="w-full bg-slate-200 dark:bg-[#393028] h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 98%"></div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Center Feed Container -->
+<div class="flex-1 flex flex-col relative w-full max-w-3xl mx-auto border-x border-slate-200 dark:border-[#393028] bg-background-light dark:bg-background-dark shadow-xl">
+<!-- Sticky Ticker Header -->
+<div class="sticky top-0 z-40 bg-slate-900 text-white overflow-hidden border-b border-slate-800 h-10 flex items-center">
+<div class="flex items-center whitespace-nowrap ticker-animation w-full">
+<!-- Ticker Items Duplicated for smooth loop -->
+<div class="flex items-center gap-8 px-4">
+<span class="text-primary font-bold text-xs uppercase tracking-wider flex items-center gap-1"><span class="material-symbols-outlined !text-[14px]">bolt</span> LIVE METRICS</span>
+<span class="text-xs font-mono text-slate-300">GPU_TEMP: <span class="text-green-400">67°C</span></span>
+<span class="text-xs font-mono text-slate-300">NEURAL_SYNC: <span class="text-primary">+4.2%</span></span>
+<span class="text-xs font-mono text-slate-300">SEC_LEVEL: <span class="text-blue-400">ALPHA</span></span>
+<span class="text-xs font-mono text-slate-300">STOCK: <span class="text-green-400">▲ 142.05</span></span>
+<span class="text-xs font-mono text-slate-300">ACTIVE_NODES: <span class="text-white">4,201</span></span>
+<span class="text-xs font-mono text-slate-300">LATENCY: <span class="text-yellow-400">12ms</span></span>
+</div>
+<div class="flex items-center gap-8 px-4">
+<span class="text-primary font-bold text-xs uppercase tracking-wider flex items-center gap-1"><span class="material-symbols-outlined !text-[14px]">bolt</span> LIVE METRICS</span>
+<span class="text-xs font-mono text-slate-300">GPU_TEMP: <span class="text-green-400">67°C</span></span>
+<span class="text-xs font-mono text-slate-300">NEURAL_SYNC: <span class="text-primary">+4.2%</span></span>
+<span class="text-xs font-mono text-slate-300">SEC_LEVEL: <span class="text-blue-400">ALPHA</span></span>
+<span class="text-xs font-mono text-slate-300">STOCK: <span class="text-green-400">▲ 142.05</span></span>
+<span class="text-xs font-mono text-slate-300">ACTIVE_NODES: <span class="text-white">4,201</span></span>
+<span class="text-xs font-mono text-slate-300">LATENCY: <span class="text-yellow-400">12ms</span></span>
+</div>
+</div>
+</div>
+<!-- Feed Content -->
+<div class="flex-1 overflow-y-auto feed-scrollbar p-4 md:p-6 space-y-4">
+<!-- Date Divider -->
+<div class="flex items-center justify-center py-4">
+<div class="h-px bg-slate-300 dark:bg-[#393028] w-24"></div>
+<span class="mx-4 text-xs font-medium text-slate-500 dark:text-[#baab9c] uppercase tracking-widest">Today, October 24</span>
+<div class="h-px bg-slate-300 dark:bg-[#393028] w-24"></div>
+</div>
+<!-- Card 1: Critical Alert (Hero) -->
+<div class="group relative overflow-hidden rounded-xl bg-surface-light dark:bg-[#27211b] border-l-4 border-red-500 shadow-sm hover:shadow-md transition-all duration-200">
+<div class="p-5">
+<div class="flex items-start justify-between mb-3">
+<div class="flex items-center gap-2">
+<span class="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+<span class="text-xs font-mono text-red-500 font-bold">CRITICAL // 10:42 AM</span>
+</div>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">Directive 99 Override</h3>
+<p class="text-sm text-slate-600 dark:text-[#baab9c] mb-4 leading-relaxed">
+                            Immediate intervention required in Sector 7. CEO-1 has triggered a manual override sequence due to anomaly detection in the neural lattice.
+                        </p>
+<!-- Visual Context -->
+<div class="mb-4 h-32 w-full rounded-lg overflow-hidden relative">
+<div class="absolute inset-0 bg-gradient-to-r from-red-900/50 to-transparent z-10"></div>
+<div aria-label="Abstract red data visualization pattern showing critical error state" class="w-full h-full bg-cover bg-center" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBYPEDHv7ZegoJjCvrYF30HniDi2_Rgd5e0kx9aGgtJnLGahX5p4envP3DgKFgNXRRkGIx-vR8XWt52nyjtWrUwe367Botla_X3LCmqoTFLtiRP8OXcbu0ZpypXMd-0PHYT1Kas9knbG38hmCo3YLEmCzRsOYQX9p5cuOCE2vlMWyu3XrjBljGG78YJCYQZlG4FFlRhWXJmSynWakdmt6GQXpqhU2CTb2z-BOfe0wv2pUCM53ymRztYpK9VZiZ-atfuI28GI4DWyII'); filter: grayscale(100%) contrast(120%);"></div>
+<div class="absolute bottom-3 left-3 z-20 flex items-center gap-2">
+<span class="bg-red-500/90 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Anomaly Detected</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined !text-[18px]">security</span>
+                                Authorize Shutdown
+                            </button>
+<button class="flex-1 bg-slate-100 dark:bg-[#393028] text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-[#4a4036] text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                View Logs
+                            </button>
+</div>
+</div>
+</div>
+<!-- Card 2: Marketing Sync -->
+<div class="group rounded-xl bg-surface-light dark:bg-[#1f1a15] border border-slate-200 dark:border-[#393028] shadow-sm hover:border-primary/50 transition-all duration-200">
+<div class="p-5">
+<div class="flex items-start gap-4">
+<div class="flex-shrink-0 mt-1">
+<div class="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+<span class="material-symbols-outlined">campaign</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<h4 class="text-base font-bold text-slate-900 dark:text-white truncate">Marketing Sync Concluded</h4>
+<span class="text-xs font-mono text-slate-500 dark:text-[#baab9c]">09:15 AM</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-[#baab9c] mb-3">Q4 Strategy finalized and uploaded to the central archive. Pending review from AI-7.</p>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center rounded-md bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-500 ring-1 ring-inset ring-blue-500/20">STATUS: CONCLUDED</span>
+<span class="inline-flex items-center rounded-md bg-slate-100 dark:bg-[#393028] px-2 py-1 text-xs font-medium text-slate-600 dark:text-[#baab9c]">#strategy</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: Neural Net Patch -->
+<div class="group rounded-xl bg-surface-light dark:bg-[#1f1a15] border border-slate-200 dark:border-[#393028] shadow-sm hover:border-primary/50 transition-all duration-200">
+<div class="p-5">
+<div class="flex items-start gap-4">
+<div class="flex-shrink-0 mt-1">
+<div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">downloading</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<h4 class="text-base font-bold text-slate-900 dark:text-white truncate">Neural Net Patch V5.2</h4>
+<span class="text-xs font-mono text-slate-500 dark:text-[#baab9c]">08:30 AM</span>
+</div>
+<div class="bg-slate-100 dark:bg-[#27211b] rounded-lg p-3 mb-3 border border-slate-200 dark:border-[#393028]">
+<div class="flex justify-between text-xs mb-1">
+<span class="text-slate-500 dark:text-[#baab9c]">Deploying to clusters...</span>
+<span class="text-primary font-mono">78%</span>
+</div>
+<div class="w-full bg-slate-200 dark:bg-[#393028] h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 78%"></div>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">STATUS: PATCHING</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4: Budget Approval -->
+<div class="group rounded-xl bg-surface-light dark:bg-[#1f1a15] border border-slate-200 dark:border-[#393028] shadow-sm hover:border-primary/50 transition-all duration-200">
+<div class="p-5">
+<div class="flex items-start gap-4">
+<div class="flex-shrink-0 mt-1">
+<div class="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<h4 class="text-base font-bold text-slate-900 dark:text-white truncate">Budget Allocation Confirmed</h4>
+<span class="text-xs font-mono text-slate-500 dark:text-[#baab9c]">08:00 AM</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-[#baab9c] mb-3">R&amp;D allocation request #4492 has been approved by AI-7 finance algorithm.</p>
+<div class="flex items-center justify-between bg-slate-50 dark:bg-[#27211b]/50 p-2 rounded border border-dashed border-slate-200 dark:border-[#393028] mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 !text-[16px]">attach_money</span>
+<span class="text-sm font-mono text-slate-900 dark:text-white">$12.4M</span>
+</div>
+<span class="text-xs text-green-500 font-bold uppercase">Authorized</span>
+</div>
+<div class="flex gap-2">
+<span class="inline-flex items-center rounded-md bg-green-500/10 px-2 py-1 text-xs font-medium text-green-500 ring-1 ring-inset ring-green-500/20">STATUS: APPROVED</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 5: Security Protocol -->
+<div class="group rounded-xl bg-surface-light dark:bg-[#1f1a15] border border-slate-200 dark:border-[#393028] shadow-sm hover:border-primary/50 transition-all duration-200 opacity-75 hover:opacity-100">
+<div class="p-5">
+<div class="flex items-start gap-4">
+<div class="flex-shrink-0 mt-1">
+<div class="h-10 w-10 rounded-full bg-slate-200 dark:bg-[#393028] flex items-center justify-center text-slate-500 dark:text-[#baab9c]">
+<span class="material-symbols-outlined">lock</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<h4 class="text-base font-bold text-slate-900 dark:text-white truncate">Security Protocols Updated</h4>
+<span class="text-xs font-mono text-slate-500 dark:text-[#baab9c]">07:45 AM</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-[#baab9c] mb-2">Automated key rotation completed successfully across all sectors.</p>
+<span class="inline-flex items-center rounded-md bg-slate-100 dark:bg-[#393028] px-2 py-1 text-xs font-medium text-slate-600 dark:text-[#baab9c]">STATUS: SECURE</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Loading / End of feed indicator -->
+<div class="flex justify-center py-8">
+<div class="flex items-center gap-2 text-primary text-sm font-medium animate-pulse">
+<span class="material-symbols-outlined animate-spin !text-[18px]">progress_activity</span>
+<span>Awaiting new events...</span>
+</div>
+</div>
+</div>
+<!-- Floating Action Button (Mobile/Tablet visible, Desktop hidden or stylized) -->
+<div class="absolute bottom-6 right-6 lg:hidden">
+<button class="bg-primary hover:bg-orange-600 text-white rounded-full p-4 shadow-lg shadow-primary/30 transition-transform hover:scale-105 active:scale-95">
+<span class="material-symbols-outlined !text-[24px]">arrow_upward</span>
+</button>
+</div>
+</div>
+<!-- Right Sidebar / Stats (Desktop only) -->
+<aside class="hidden xl:flex w-72 flex-col border-l border-slate-200 dark:border-[#393028] bg-surface-light dark:bg-[#181411] p-6 z-10">
+<h3 class="text-xs font-bold text-slate-400 dark:text-[#baab9c] uppercase tracking-wider mb-6">Network Health</h3>
+<div class="grid grid-cols-1 gap-4">
+<!-- Stat Widget 1 -->
+<div class="rounded-xl border border-slate-200 dark:border-[#393028] p-4 bg-slate-50 dark:bg-[#1f1a15]">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs text-slate-500 dark:text-[#baab9c]">Active Nodes</span>
+<span class="material-symbols-outlined text-primary !text-[18px]">hub</span>
+</div>
+<div class="text-2xl font-bold text-slate-900 dark:text-white">4,201</div>
+<div class="text-xs text-green-500 mt-1 flex items-center">
+<span class="material-symbols-outlined !text-[12px] mr-1">trending_up</span>
+                        +12% vs last hour
+                    </div>
+</div>
+<!-- Stat Widget 2 -->
+<div class="rounded-xl border border-slate-200 dark:border-[#393028] p-4 bg-slate-50 dark:bg-[#1f1a15]">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs text-slate-500 dark:text-[#baab9c]">Data Throughput</span>
+<span class="material-symbols-outlined text-blue-500 !text-[18px]">speed</span>
+</div>
+<div class="text-2xl font-bold text-slate-900 dark:text-white">845 TB/s</div>
+<div class="w-full bg-slate-200 dark:bg-[#393028] h-1 rounded-full mt-3">
+<div class="bg-blue-500 h-full rounded-full" style="width: 65%"></div>
+</div>
+</div>
+<!-- Mini Map Visualization -->
+<div class="rounded-xl border border-slate-200 dark:border-[#393028] bg-slate-900 overflow-hidden relative h-48 mt-4">
+<div aria-label="Global network map data visualization" class="absolute inset-0 opacity-40" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDRPlWGIDWFhakUViEowDjdQKzC6PCFIgQIznwcTkv9LW62WyrYaE51Tfqa_EYeSNmJveX1H1B8lXSZsVQjIQk7LMSSfjLzT7HZdFMnYiFPxV_pWm9BaPbUMAr8DNBNzq49-uTgC_TEwda-18hWRYhA5XkUs1sIct91tE9z3zjUhxnW45ENp0TG3nqzwmo0DHEmANMn1M45v7Y6s3UWG9y2zIgiNM8wGKYIp2WnOzPzFpG7qDPuYFjqiVBZKeyFK2y4Y3qBR3lBA40'); background-size: cover; background-position: center;"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="h-24 w-24 rounded-full border border-primary/30 flex items-center justify-center animate-ping absolute"></div>
+<div class="h-16 w-16 rounded-full border border-primary/60 flex items-center justify-center"></div>
+<span class="material-symbols-outlined text-white z-10">public</span>
+</div>
+<div class="absolute bottom-2 left-2 text-[10px] text-white/70 font-mono">GLOBAL SYNC: ACTIVE</div>
+</div>
+</div>
+<!-- Footer links -->
+<div class="mt-auto pt-6 border-t border-slate-200 dark:border-[#393028]">
+<div class="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-[#baab9c]">
+<a class="hover:text-primary" href="#">Privacy</a> •
+                    <a class="hover:text-primary" href="#">Terms</a> •
+                    <a class="hover:text-primary" href="#">Support</a>
+</div>
+<p class="text-[10px] text-slate-400 dark:text-[#54473b] mt-2">© 2077 Aetherium Genesis AI.</p>
+</div>
+</aside>
+</main>
+<script>
+        // Simple toggle for mobile functionality (if needed) or just visual interactions
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.add('scale-95');
+                setTimeout(() => {
+                    this.classList.remove('scale-95');
+                }, 100);
+            });
+        });
+    </script>
+</body></html>

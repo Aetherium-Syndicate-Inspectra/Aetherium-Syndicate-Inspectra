@@ -1,4 +1,4 @@
-import { roleData } from './models/roleRegistry.js';
+import { roleData, industryTemplates } from './models/roleRegistry.js';
 import { runTournament, crisisScenarios } from './models/crisisScenario.js';
 import { state, getRoomKey } from './core/state.js';
 import { buildResonanceFingerprint, DriftTracker, applyIntervention } from './core/resonance.js';
@@ -36,7 +36,8 @@ function selectedRole() {
 
 function renderRoles() {
   els.roleGroups.innerHTML = renderRoleNavigator({ roleData, selectedRoleId: state.selectedRoleId });
-  els.roleCount.textContent = `${roleData.length} roles / 7 industries`;
+  const industryCount = new Set(roleData.map((r) => r.industry)).size;
+  els.roleCount.textContent = `${roleData.length} roles / ${industryCount} industries (${industryTemplates.length} templates)`;
   els.roleCard.innerHTML = renderRoleCard(selectedRole());
   document.querySelectorAll('.role-btn').forEach((btn) => {
     btn.addEventListener('click', () => {

@@ -13,6 +13,93 @@
       "path": "src/backend/crisis_tournament.py",
       "purpose": "AI CEO decision strategy core",
       "duplicate_allowed": false
+    },
+    "llmRespond": {
+      "path": "assets/js/role-studio/core/llm.js",
+      "purpose": "single frontend inference entrypoint for global + role rooms",
+      "duplicate_allowed": false
+    }
+  },
+  "role_registry": {
+    "hierarchy": [
+      "Company Type",
+      "Department",
+      "Role Level",
+      "Specific Title"
+    ],
+    "role_levels": {
+      "c_suite": {
+        "typical_range": "20-40",
+        "examples": [
+          "CEO",
+          "COO",
+          "CFO",
+          "CTO",
+          "CIO",
+          "CMO",
+          "CHRO",
+          "CISO",
+          "CPO",
+          "Chief AI Officer",
+          "Chief Sustainability Officer",
+          "Chief Compliance Officer"
+        ]
+      },
+      "vp_director_head": {
+        "typical_range": "10-20 departments",
+        "examples": [
+          "VP of Engineering",
+          "VP of Product",
+          "VP of Data & AI",
+          "Head of DevOps",
+          "Head of Cybersecurity"
+        ]
+      },
+      "manager_lead": {
+        "examples": [
+          "Engineering Manager",
+          "Product Manager",
+          "Sales Manager",
+          "QA Manager"
+        ]
+      },
+      "individual_contributor": {
+        "examples": [
+          "Software Engineer",
+          "Data Scientist",
+          "Financial Analyst",
+          "Customer Support Specialist"
+        ]
+      }
+    },
+    "industry_templates": {
+      "tech_saas": {
+        "company_type": "tech-startup",
+        "priority_cxos": [
+          "CEO",
+          "CTO",
+          "CPO",
+          "Chief AI Officer"
+        ]
+      },
+      "traditional_bank": {
+        "company_type": "traditional-corp",
+        "priority_cxos": [
+          "CEO",
+          "COO",
+          "CFO",
+          "Chief Compliance Officer"
+        ]
+      },
+      "manufacturing_giant": {
+        "company_type": "enterprise-network",
+        "priority_cxos": [
+          "CEO",
+          "COO",
+          "CTO",
+          "Chief Sustainability Officer"
+        ]
+      }
     }
   }
 }

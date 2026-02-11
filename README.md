@@ -232,3 +232,21 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ### Future Creative Challenges
 1. **Canonical Import Verifier:** เพิ่ม static check ที่ตรวจว่าทุก test ใช้ import จาก canonical path เท่านั้น (fail-fast ก่อนเข้า CI stage ถัดไป)
 2. **Governance Heatmap Dashboard:** สร้าง dashboard แสดงแนวโน้ม duplicate violations ตามโฟลเดอร์/ทีม เพื่อคาดการณ์จุดเสี่ยงและวางแผน refactor เชิงรุก
+
+## 🆕 Role Registry Expansion Update: Executive-to-IC Company Simulation
+
+### สิ่งที่ปรับปรุง
+- ขยาย `assets/js/role-studio/models/roleRegistry.js` จาก role list แบบแบน ไปเป็นโครงสร้าง registry ที่มีลำดับชั้นชัดเจน:
+  - `registryHierarchy` (C-Suite → VP/Director → Manager/Lead → IC)
+  - `companyTypeTemplates` (Tech Startup / Traditional Corporation / Large Enterprise Network)
+  - `industryTemplates` (Tech SaaS / Traditional Bank / Manufacturing Giant)
+- เพิ่ม curated roles ครอบคลุมหลายอุตสาหกรรมและหลายระดับ โดยเน้นบทบาทที่สอดคล้องกับการจำลองบริษัทขนาดเล็ก-ใหญ่
+- ปรับ `assets/js/role-studio/main.js` ให้คำนวณจำนวน industries แบบ dynamic และแสดงจำนวน template ที่ระบบรองรับ
+- อัปเดต `canonical_registry.json` ให้มี `role_registry` hierarchy + industry templates และเพิ่ม `llmRespond` เป็น canonical frontend function
+
+### เหตุผลการเลือกฟังก์ชันเดียว (Single Best Function)
+- ยังคงใช้ `llmRespond` เป็นจุดเดียวสำหรับ inference ทั้งหมด เพื่อลด duplicate behavior ระหว่าง Global/Role rooms และลดความซับซ้อนตอนเชื่อม backend LLM จริง
+
+### Future Creative Challenges
+1. **AI Board Dynamics Simulator:** จำลองการโหวต/ต่อรองของ AI Board (CEO-COO-CFO-CTO) ภายใต้ข้อจำกัดทรัพยากรจริง แล้ววัดผลกระทบต่อ KPI ระยะสั้นและระยะยาว
+2. **Cross-Company Negotiation Arena:** เปิดโหมดเจรจาข้ามบริษัท (supplier-bank-saas) ให้ agent แต่ละฝั่ง optimize คนละ objective แล้วใช้ mechanism design หา policy equilibrium อัตโนมัติ

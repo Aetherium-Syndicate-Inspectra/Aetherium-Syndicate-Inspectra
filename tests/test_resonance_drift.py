@@ -57,7 +57,7 @@ def test_intervention_evaluator_reverts_after_failures_and_logs(tmp_path: Path):
 def test_cohort_threshold_learns_online_distribution():
     learner = CohortAdaptiveThresholdLearner()
     for value in [0.06, 0.08, 0.09, 0.07, 0.1, 0.11]:
-        learner.observe(cohort_id="ops", drift_ratio=value)
+        learner.observe_drift(cohort_id="ops", drift_ratio=value)
 
     learned = learner.get_threshold(cohort_id="ops", fallback=0.15)
     assert 0.05 <= learned < 0.15

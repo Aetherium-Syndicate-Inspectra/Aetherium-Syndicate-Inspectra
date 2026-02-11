@@ -219,7 +219,7 @@ class ContractChecker:
             validation_intensity=intensity,
         )
         latency_ms = (time.perf_counter() - start) * 1000.0
-        snapshot = self.adaptive_budget.observe(
+        snapshot = self.adaptive_budget.record_observation(
             latency_ms=latency_ms,
             valid=is_valid,
             healing_applied=bool(result.get("schema_healing", {}).get("applied")) if isinstance(result, dict) else False,

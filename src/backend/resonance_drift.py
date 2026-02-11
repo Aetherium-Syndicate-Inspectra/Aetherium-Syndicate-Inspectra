@@ -118,7 +118,7 @@ class DriftDetector:
         profile.last_drift_ratio = drift_ratio
         if drift_ratio > adaptive_threshold:
             self._trigger_intervention(profile, drift_ratio=drift_ratio, older_avg=older_avg)
-        self.threshold_learner.observe(cohort_id=cohort_id, drift_ratio=drift_ratio)
+        self.threshold_learner.observe_drift(cohort_id=cohort_id, drift_ratio=drift_ratio)
 
     @staticmethod
     def _cohort_id(profile: ResonanceProfile) -> str:
@@ -195,7 +195,7 @@ class CohortStats:
     mean: float = 0.0
     m2: float = 0.0
 
-    def add(self, value: float) -> None:
+    def update_stats(self, value: float) -> None:
         self.count += 1
         delta = value - self.mean
         self.mean += delta / self.count
@@ -215,9 +215,9 @@ class CohortAdaptiveThresholdLearner:
         self.sigma_factor = sigma_factor
         self._stats: dict[str, CohortStats] = {}
 
-    def observe(self, *, cohort_id: str, drift_ratio: float) -> None:
+    def observe_drift(self, *, cohort_id: str, drift_ratio: float) -> None:
         stats = self._stats.setdefault(cohort_id, CohortStats())
-        stats.add(drift_ratio)
+        stats.update_stats(drift_ratio)
 
     def get_threshold(self, cohort_id: str, fallback: float) -> float:
         stats = self._stats.get(cohort_id)

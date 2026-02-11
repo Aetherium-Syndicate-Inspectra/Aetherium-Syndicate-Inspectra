@@ -1,20 +1,20 @@
 import random
 import struct
-import sys
 import time
 
-# พยายาม Import โมดูลที่ Compile มา
-try:
-    import tachyon_core
-except ImportError:
-    print("❌ Critical Error: ไม่พบโมดูล 'tachyon_core'")
-    print("คำแนะนำ: ตรวจสอบว่าได้รัน 'cargo build --release' และ copy ไฟล์ .so/.pyd มาที่นี่แล้วหรือยัง")
-    sys.exit(1)
+
+def _load_tachyon_core():
+    # พยายาม Import โมดูลที่ Compile มา และคืนค่า None หากยังไม่พร้อมใช้งาน
+    try:
+        import tachyon_core
+    except ImportError:
+        return None
+    return tachyon_core
 
 
-def create_mock_payload_v2(user_id, vector_data, turbulence=0.1, ghost=1, seed=12345):
+def create_mock_payload_v2(user_id, vector_data, ghost=1, seed=12345):
     """
-    สร้าง Payload จำลองที่ตรงกับ IntentVectorWireV2 / payload ทดสอบ
+    สร้าง Payload จำลองที่ตรงกับ IntentVectorWireV2 สำหรับทดสอบ
     Layout: SyncID(8) + EntityID(8) + Vector(1024*4) + Seed(8) + Ghost(1) + Pad(7)
     """
     vec = vector_data[:1024] + [0.0] * (1024 - len(vector_data))
@@ -40,6 +40,12 @@ def parse_wire_payload(payload):
 
 
 def run_tests():
+    tachyon_core = _load_tachyon_core()
+    if tachyon_core is None:
+        print("❌ Critical Error: ไม่พบโมดูล 'tachyon_core'")
+        print("คำแนะนำ: ตรวจสอบว่าได้รัน 'cargo build --release' และ copy ไฟล์ .so/.pyd มาที่นี่แล้วหรือยัง")
+        return
+
     print(f"{'=' * 60}")
     print("🚀 TACHYON CORE: UNIFIED TEST SUITE")
     print(f"{'=' * 60}\n")
@@ -65,7 +71,7 @@ def run_tests():
     print(f"   🧾 sync_id={sync_id}, entity_id={entity_id}, seed={entropy_seed}, ghost={ghost_flag}")
 
     print("\n🔮 [TEST 2] Ghost Worker Speculation (Normal Condition)")
-    payload_normal = create_mock_payload_v2(user_id, mock_vector, turbulence=0.1, ghost=1)
+    payload_normal = create_mock_payload_v2(user_id, mock_vector, ghost=1)
     if supports_speculate:
         result = engine.speculate_futures(payload_normal)
         print(f"   📝 Action Code: {result.action_code}")
@@ -74,7 +80,7 @@ def run_tests():
 
     print("\n🛑 [TEST 3] Nirodha Protocol (High Turbulence > 0.9)")
     if supports_speculate:
-        payload_panic = create_mock_payload_v2(user_id, mock_vector, turbulence=0.95, ghost=1)
+        payload_panic = create_mock_payload_v2(user_id, mock_vector, ghost=1)
         result_panic = engine.speculate_futures(payload_panic)
         print(f"   📝 Action Code: {result_panic.action_code}")
     else:
@@ -82,7 +88,7 @@ def run_tests():
 
     print("\n⚙️  [TEST 4] Real Execution Mode (Ghost Flag = 0)")
     if supports_speculate:
-        payload_real = create_mock_payload_v2(user_id, mock_vector, turbulence=0.1, ghost=0)
+        payload_real = create_mock_payload_v2(user_id, mock_vector, ghost=0)
         result_real = engine.speculate_futures(payload_real)
         print(f"   📝 Action Code: {result_real.action_code}")
     else:

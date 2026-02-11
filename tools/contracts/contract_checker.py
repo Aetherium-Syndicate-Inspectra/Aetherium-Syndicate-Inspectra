@@ -1,4 +1,5 @@
 import time
+from math import isfinite
 from typing import Any
 
 from tools.contracts.canonical import build_canonical_key, parse_schema_version, quality_total
@@ -42,8 +43,11 @@ class ContractChecker:
             value = payload[field]
             if expected_type == "string" and not isinstance(value, str):
                 return False, f"Field '{field}' must be string"
-            if expected_type == "number" and not isinstance(value, (int, float)):
-                return False, f"Field '{field}' must be number"
+            if expected_type == "number":
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    return False, f"Field '{field}' must be number"
+                if not isfinite(float(value)):
+                    return False, f"Field '{field}' must be finite number"
             if expected_type == "array" and not isinstance(value, list):
                 return False, f"Field '{field}' must be array"
         return True, None

@@ -157,3 +157,59 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 จากการวิเคราะห์สถานะล่าสุด ผมขอแนะนำให้มุ่งเน้นไปที่ **Causal Policy Lab** เป็นลำดับถัดไปครับ
 
 **เหตุผล:** ในเมื่อเรามีข้อมูลที่ "สะอาด" (Clean & Healed Data) และระบบ Audit (Freeze Light) ที่แข็งแกร่งแล้ว ข้อมูลเหล่านี้คือ "ขุมทรัพย์" ที่ยังไม่ได้ถูกแปรรูป การสร้าง Causal Inference Model จะเปลี่ยนข้อมูล Log ธรรมดา ให้กลายเป็น "Intelligence" ที่ผู้บริหารสามารถใช้ตัดสินใจทางธุรกิจได้ทันที ซึ่งจะเพิ่มมูลค่าให้กับแพลตฟอร์มในระดับ Enterprise อย่างมหาศาลครับ
+
+## 🆕 Sprint Update: Resonance Drift Detector + Crisis Tournament (v4.2.6-preview)
+
+### สิ่งที่เพิ่มเข้าระบบ
+- เพิ่มโมดูล `src/backend/resonance_drift.py` สำหรับติดตาม Intent Resonance Score แบบ time-series, ตรวจจับ drift, auto-switch รูปแบบคำตอบ, และประเมินผลหลังสลับ
+- เพิ่มโมดูล `src/backend/crisis_tournament.py` สำหรับรัน Cross-Industry Crisis Tournament (Film/Aerospace/Medical), คำนวณ Universal KPI, จัดอันดับผลลัพธ์, และสกัด transferable policies
+- เพิ่ม `src/backend/freeze_light_events.py` เป็น event sink แบบ append-only (`storage/frozen_lights/events.jsonl`) เพื่อเก็บ audit event ใหม่:
+  - `resonance.drift.intervention`
+  - `resonance.intervention.evaluated`
+  - `crisis.tournament.completed`
+
+### เหตุผลเชิงสถาปัตยกรรม (Data Cleaning + Duplicate Removal)
+- เลือกใช้ event sink กลางเพียงตัวเดียวสำหรับ event เชิงวิเคราะห์ใหม่ทั้งหมด เพื่อลด logic ซ้ำซ้อนในการเขียน Freeze Light event
+- ใน Policy Transfer Engine ใช้การ deduplicate ตาม `principle` และเก็บเฉพาะนโยบายที่ดีที่สุดหนึ่งรายการต่อ principle เพื่อให้ knowledge base ชัดเจนและไม่ซ้ำ
+
+### ค่าตั้งต้นที่เลือก (เพื่อเริ่มใช้งานได้ทันที)
+- Drift threshold: **คงที่ 0.15** ก่อน (ง่ายต่อการตรวจสอบย้อนกลับ)
+- Auto-switch dimensions: **summary ↔ deep**, **numbers ↔ story/analogy**, และ **strategic ↔ operational**
+- Tournament industries: เริ่มที่ **Film, Aerospace, Medical**
+- Universal KPI: ใช้ **resilience, adaptability, resource_efficiency, stakeholder_trust, long_term_viability**
+
+### Recommended Next Integration Priority
+1. ทำ API Spec + Class Stub สำหรับ **Resonance Drift Detector** ก่อน (เชื่อมกับ feedback loop ผู้ใช้จริงได้เร็ว)
+2. จากนั้นขยาย **Crisis Tournament API** เพื่อรองรับ replay batch และ comparative analytics ข้าม scenario
+
+### Future Creative Challenges (1-2 ideas)
+1. **Meta-Drift Lab:** สร้างระบบ auto-tune drift threshold ต่อ user segment โดยใช้ Bayesian change-point detection เพื่อแยก “drift จริง” ออกจาก noise
+2. **Policy Genome Engine:** แปลง transferable policy เป็น graph embeddings แล้วทำ stress-test ข้าม 20+ อุตสาหกรรมเพื่อหา “policy DNA” ที่ robust ที่สุด
+
+## 🆕 Frontend Refactor Update: Universal Role Navigator Control Plane
+
+### สิ่งที่ปรับปรุง
+- ปรับ `index.html` เป็นหน้า Control Plane ใหม่ที่รวม:
+  - Canonical Role Registry (7 industries x 4 tiers)
+  - Resonance Fingerprint controls (`speed`, `depth`, `format`, `contextMode`)
+  - Dual Chat Mode (`Global` / `Per-role`)
+  - C-Level Mode Switch (`Visionary` ↔ `Crisis`)
+  - Cross-Industry Crisis Tournament board
+- แยกโค้ดจาก inline script ออกเป็นโมดูลตาม responsibility ที่ดูแลง่าย:
+  - `assets/js/role-studio/core/*`
+  - `assets/js/role-studio/models/*`
+  - `assets/js/role-studio/services/*`
+  - `assets/js/role-studio/views/*`
+
+### Data Cleaning / Duplicate Handling
+- เลือกใช้ `llmRespond()` เพียงจุดเดียวใน `core/llm.js` แล้ว fallback ไป deterministic mock เมื่อ backend ยังไม่พร้อม เพื่อลดตรรกะซ้ำ
+- รวมการบันทึก Freeze Light ฝั่ง frontend ไว้ที่ `services/freezeLight.js` เพียงทางเดียว (single writer) และจำกัด trail ล่าสุด 50 รายการ
+- รวม crisis scenario source ไว้ที่ `models/crisisScenario.js` และ deduplicate policy output ให้อ่านง่ายใน Impact Board
+
+### Integration Readiness
+- เตรียม `services/llmProxy.js` ให้ payload ตรงแนวทาง canonical contract (`role_id`, `industry`, `user_message`, `resonance_fingerprint`, `governance_context`)
+- เพิ่ม DriftTracker ฝั่ง frontend สำหรับ detect resonance drop และ auto-switch (`summary ↔ deep`, `numbers ↔ story`, `strategic ↔ operational`) พร้อม freeze snapshot
+
+### Future Creative Challenges
+1. **Adversarial Resonance Chaos Test:** สร้างโหมด simulation ที่ยิง intent สลับเร็ว/ขัดแย้ง เพื่อตรวจความเสถียรของ drift intervention policy
+2. **Tournament Policy Compiler:** แปลงผล ranking/policy ให้เป็น machine-readable playbook (JSON policy graph) เพื่อส่งต่อเข้า PRGX3 orchestration โดยตรง

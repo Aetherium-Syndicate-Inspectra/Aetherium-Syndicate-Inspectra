@@ -3,6 +3,7 @@ from math import isfinite
 from typing import Any
 
 from tools.contracts.canonical import build_canonical_key, parse_schema_version, quality_total
+from tools.contracts.adaptive_budgeting import AdaptiveContractBudgeting
 from tools.contracts.schema_healer import heal_payload
 
 
@@ -15,6 +16,7 @@ class ContractChecker:
     def __init__(self, schema_path: str = "docs/schemas/"):
         self.schemas: dict[str, dict[str, Any]] = {}
         self.schema_path = schema_path
+        self.adaptive_budget = AdaptiveContractBudgeting()
         self._load_schemas()
 
     def _load_schemas(self):
@@ -50,6 +52,31 @@ class ContractChecker:
                     return False, f"Field '{field}' must be finite number"
             if expected_type == "array" and not isinstance(value, list):
                 return False, f"Field '{field}' must be array"
+        return True, None
+
+
+    def _vector_index_step(self, validation_intensity: str, vector_length: int) -> int:
+        if vector_length <= 1:
+            return 1
+        if validation_intensity == "strict":
+            return 1
+        if validation_intensity == "balanced":
+            return max(1, vector_length // 64)
+        return max(1, vector_length // 16)
+
+    def _check_vector_numbers(self, payload: dict[str, Any], validation_intensity: str) -> tuple[bool, str | None]:
+        vector = payload.get("vector")
+        if not isinstance(vector, list):
+            return True, None
+
+        step = self._vector_index_step(validation_intensity, len(vector))
+        for index, value in enumerate(vector):
+            if step > 1 and index % step != 0 and index != len(vector) - 1:
+                continue
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                return False, f"Field 'vector[{index}]' must be number"
+            if not isfinite(float(value)):
+                return False, f"Field 'vector[{index}]' must be finite number"
         return True, None
 
     def _compute_quality(self, payload: dict[str, Any], schema: dict[str, Any]) -> dict[str, float]:
@@ -126,7 +153,12 @@ class ContractChecker:
                 dedup_map[key] = event
         return list(dedup_map.values())
 
-    def validate(self, payload: dict[str, Any], contract_type: str) -> tuple[bool, dict[str, Any]]:
+    def validate(
+        self,
+        payload: dict[str, Any],
+        contract_type: str,
+        validation_intensity: str = "strict",
+    ) -> tuple[bool, dict[str, Any]]:
         """
         ตรวจจับเชื้อโรค (Invalid Data)
         True = ข้อมูลบริสุทธิ์ (Pass)
@@ -147,6 +179,10 @@ class ContractChecker:
         if not type_ok:
             return False, {"error": type_error, "contract_type": contract_type}
 
+        vector_ok, vector_error = self._check_vector_numbers(healed_payload, validation_intensity)
+        if not vector_ok:
+            return False, {"error": vector_error, "contract_type": contract_type}
+
         quality = self._compute_quality(healed_payload, schema)
         return True, {
             "contract_type": contract_type,
@@ -156,4 +192,36 @@ class ContractChecker:
                 "applied": bool(healing.remapped_fields),
                 "remapped_fields": healing.remapped_fields,
             },
+            "validation_intensity": validation_intensity,
         }
+
+    def validate_adaptive(
+        self,
+        payload: dict[str, Any],
+        contract_type: str,
+        observed_rps: float | None = None,
+    ) -> tuple[bool, dict[str, Any]]:
+        start = time.perf_counter()
+        intensity = self.adaptive_budget.intensity
+        is_valid, result = self.validate(
+            payload=payload,
+            contract_type=contract_type,
+            validation_intensity=intensity,
+        )
+        latency_ms = (time.perf_counter() - start) * 1000.0
+        snapshot = self.adaptive_budget.observe(
+            latency_ms=latency_ms,
+            valid=is_valid,
+            healing_applied=bool(result.get("schema_healing", {}).get("applied")) if isinstance(result, dict) else False,
+            observed_rps=observed_rps,
+        )
+
+        if isinstance(result, dict):
+            result["adaptive_budget"] = {
+                "intensity": snapshot.intensity,
+                "governance_risk": snapshot.governance_risk,
+                "avg_latency_ms": snapshot.avg_latency_ms,
+                "load_rps": snapshot.load_rps,
+                "risk_threshold": self.adaptive_budget.risk_threshold,
+            }
+        return is_valid, result

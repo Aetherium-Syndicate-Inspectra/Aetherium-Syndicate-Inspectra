@@ -56,6 +56,27 @@ class ContractCheckerTests(unittest.TestCase):
         self.assertEqual(result["error"], "Field 'timestamp' must be finite number")
 
 
+    def test_validate_rejects_non_numeric_vector_item(self):
+        payload = {"intent": "optimize", "vector": [0.1, "x"], "timestamp": time.time()}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertFalse(ok)
+        self.assertEqual(result["error"], "Field 'vector[1]' must be number")
+
+    def test_validate_adaptive_includes_budget_snapshot(self):
+        payload = {"intent": "optimize", "vector": [0.1, 0.2], "timestamp": time.time()}
+        ok, result = self.checker.validate_adaptive(payload, "ipw_v1", observed_rps=300)
+        self.assertTrue(ok)
+        self.assertIn("adaptive_budget", result)
+        self.assertIn(result["adaptive_budget"]["intensity"], {"strict", "balanced", "fast"})
+
+    def test_validate_adaptive_keeps_strict_when_governance_risk_spikes(self):
+        bad_payload = {"intent": "optimize", "vector": [0.1], "timestamp": "bad"}
+        for _ in range(6):
+            self.checker.validate_adaptive(bad_payload, "ipw_v1", observed_rps=600)
+
+        snapshot = self.checker.adaptive_budget.snapshot()
+        self.assertEqual(snapshot.intensity, "strict")
+
     def test_deduplicate_events_prefers_better_quality(self):
         now = time.time()
         base_payload = {"intent": "optimize", "vector": [1.0], "timestamp": now}

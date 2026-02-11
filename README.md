@@ -417,3 +417,19 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ### Creative next steps (challenging)
 1. Add a real GRPO-compatible sampling runner that evaluates grouped trajectories and logs normalized advantages for each prompt.
 2. Upgrade MCTS from single-depth candidate expansion to multi-depth Tree-of-Thought rollouts with pluggable verifiers (PRM + safety monitor).
+
+## 🆕 Resonance Drift Detector API Spec + Feedback Loop Stub (v4.3.1)
+
+### สิ่งที่ปรับปรุง
+- เพิ่มสเปก API สำหรับ Resonance Drift Detector ที่ `docs/resonance_drift_detector_api_spec.md` โดยกำหนด contract หลักสำหรับ feedback ingestion, profile tuning, action pull, และ outcome submission เพื่อต่อกับผู้ใช้จริงได้เร็ว
+- เพิ่ม class stub `ResonanceFeedbackLoopOrchestrator` ที่ `src/backend/resonance_feedback_loop.py` เพื่อเชื่อม `DriftDetector` + `InterventionEvaluator` เข้ากับ feedback loop แบบ in-memory (พร้อมจุดต่อยอดไป Redis/DB)
+- เพิ่ม API router `src/backend/resonance_drift_api.py` และผูกเข้ากับ FastAPI server ผ่าน `src/backend/api_server.py`
+- เพิ่มชุดทดสอบ `tests/test_resonance_drift_api.py` สำหรับตรวจ flow ของ orchestrator และการ revert preference เมื่อผู้ใช้ reject intervention
+
+### Data Cleaning / Duplicate Handling
+- เลือกใช้ orchestrator กลางเพียงจุดเดียว (`ResonanceFeedbackLoopOrchestrator`) แทนการกระจาย logic feedback loop หลายที่ เพื่อลดความซ้ำซ้อนและทำให้ behavior คงที่
+- ยืนยันขอบเขตงานชัดเจน: **ไม่ขยาย Crisis Tournament API** เพื่อหลีกเลี่ยงการปะปน domain และลด drift ของสัญญา API เดิม
+
+### Future Creative Challenges
+1. **Cohort Adaptive Drift Policy:** สร้างชั้นเรียนรู้ระดับ cohort ที่ปรับ drift threshold แบบออนไลน์ตามกลุ่มผู้ใช้ โดยยังรักษา per-user explainability
+2. **Intervention Multi-Armed Bandit:** เปลี่ยนจาก opposite-rule แบบคงที่เป็น bandit policy ที่เลือก format/tone/evidence ตาม reward จริงแบบ near real-time

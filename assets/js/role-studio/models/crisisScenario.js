@@ -12,6 +12,10 @@ export const crisisScenarios = [
       AI: 'GPU allocation freeze',
       'Cross-Industry': 'Multi-region logistics halt',
       Film: 'Post-production pipeline delay',
+      'Tech SaaS': 'Cloud region instability and API rate cap pressure',
+      'Traditional Bank': 'Payment rail congestion and fraud spike',
+      'Manufacturing Giant': 'Raw material and shipping volatility',
+      Healthcare: 'Critical device and medicine allocation constraints',
     },
   },
 ];
@@ -36,7 +40,7 @@ export function runTournament({ scenarioId, industries, roleData }) {
     return {
       industry,
       ceoId: role.id,
-      decision: `Mitigate: ${scenario.industry_effects[industry]}. Prioritize supplier diversification + strategic buffer.`,
+      decision: `Mitigate: ${scenario.industry_effects[industry] || 'cross-functional disruption pressure'}. Prioritize supplier diversification + strategic buffer.`,
       kpi: { resilience, adaptability, efficiency, trust, viability },
       universalScore,
     };

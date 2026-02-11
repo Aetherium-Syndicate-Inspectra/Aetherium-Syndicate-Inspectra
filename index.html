@@ -3,32 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Entertainment AI Role Studio</title>
+  <title>Universal Role Navigator + Resonance Control Plane</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            bg: '#0b1020', panel: '#121a31', panelSoft: '#1a2544', accent: '#f59e0b', good: '#34d399'
-          }
-        }
-      }
-    };
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { bg: '#0b1020', panel: '#121a31', panelSoft: '#1a2544', accent: '#f59e0b', good: '#34d399' } } } };
   </script>
 </head>
 <body class="bg-bg text-slate-100 min-h-screen">
   <div class="max-w-7xl mx-auto px-4 py-5 space-y-4">
     <header class="rounded-xl bg-panel border border-slate-700 p-4">
-      <h1 class="text-2xl font-bold">Entertainment & Film AI Position Navigator</h1>
-      <p class="text-sm text-slate-300 mt-1">โครงสร้างตำแหน่งสายภาพยนตร์/บันเทิง + ตรรกะ LLM สำหรับแชทรายตำแหน่ง ห้องรวม และการจำลองเส้นทางอาชีพ PA → Producer</p>
+      <h1 class="text-2xl font-bold">Universal Role Navigator (7 Industries)</h1>
+      <p class="text-sm text-slate-300 mt-1">Role Registry + Resonance Fingerprint + Drift Detector + Crisis Tournament (Frontend Foundation)</p>
     </header>
 
     <main class="grid grid-cols-1 xl:grid-cols-12 gap-4">
       <section class="xl:col-span-3 bg-panel rounded-xl border border-slate-700 p-4">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="font-semibold">Entertainment Roles</h2>
+          <h2 class="font-semibold">Canonical Role Registry</h2>
           <span id="roleCount" class="text-xs px-2 py-1 rounded bg-slate-800"></span>
         </div>
         <div id="roleGroups" class="space-y-3"></div>
@@ -36,19 +27,38 @@
 
       <section class="xl:col-span-5 bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
         <h2 class="font-semibold">Role Intelligence Card</h2>
-        <div id="roleCard" class="rounded-xl bg-panelSoft border border-slate-600 p-4 space-y-4"></div>
-        <div class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm">
-          <h3 class="font-semibold mb-2">Chain of Command (Field)</h3>
-          <p class="text-slate-300">Producer → Line Producer / UPM → 1st AD → 2nd AD / 3rd AD / PA → Camera / G&E / Sound / Art / Location</p>
+        <div id="roleCard" class="rounded-xl bg-panelSoft border border-slate-600 p-4"></div>
+
+        <div class="rounded-xl bg-slate-900 border border-slate-700 p-3 space-y-2 text-sm">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold">Resonance Fingerprint</h3>
+            <span>Score: <b id="resonanceScore">0.91</b></span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="text-xs text-slate-400">Speed <input id="responseSpeed" type="range" min="0.2" max="1" step="0.1" value="0.6" class="w-full" /></label>
+            <label class="text-xs text-slate-400">Depth
+              <select id="detailDepth" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="summary">summary</option><option value="deep" selected>deep</option></select>
+            </label>
+            <label class="text-xs text-slate-400">Format
+              <select id="responseFormat" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="numbers" selected>numbers</option><option value="story">story</option></select>
+            </label>
+            <label class="text-xs text-slate-400">Context Mode
+              <select id="contextMode" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="strategic" selected>strategic</option><option value="operational">operational</option></select>
+            </label>
+          </div>
+          <label class="text-xs text-slate-400">C-Level Mode
+            <select id="cLevelMode" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="visionary" selected>Visionary (3Y)</option><option value="crisis">Crisis (Daily)</option></select>
+          </label>
+          <p class="text-xs text-cyan-300">Freeze Trail: <b id="freezeCount">0</b> snapshots</p>
         </div>
       </section>
 
-      <section class="xl:col-span-4 bg-panel rounded-xl border border-slate-700 p-4 flex flex-col min-h-[640px]">
+      <section class="xl:col-span-4 bg-panel rounded-xl border border-slate-700 p-4 flex flex-col min-h-[620px]">
         <div class="flex items-center justify-between mb-3 gap-2">
-          <h2 class="font-semibold">LLM Chat</h2>
+          <h2 class="font-semibold">Unified LLM Chat</h2>
           <div class="flex bg-slate-900 rounded-lg p-1 text-xs">
-            <button id="modeGlobal" class="px-3 py-1 rounded bg-accent text-slate-900 font-semibold">ห้องรวม</button>
-            <button id="modeRole" class="px-3 py-1 rounded text-slate-300">รายตำแหน่ง</button>
+            <button id="modeGlobal" class="px-3 py-1 rounded bg-accent text-slate-900 font-semibold">Global</button>
+            <button id="modeRole" class="px-3 py-1 rounded text-slate-300">Per-role</button>
           </div>
         </div>
         <div class="mb-3">
@@ -57,156 +67,27 @@
         </div>
         <div id="chatWindow" class="flex-1 overflow-y-auto rounded-xl bg-slate-900 border border-slate-700 p-3 space-y-3"></div>
         <div class="mt-3 flex gap-2">
-          <input id="chatInput" class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm" placeholder="เช่น วางแผนขึ้นจาก PA ไป Line Producer ใน 4 ปี" />
+          <input id="chatInput" class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm" placeholder="เช่น สรุปแผนรับมือ supply shock สำหรับอุตสาหกรรม Film" />
           <button id="sendBtn" class="px-4 py-2 rounded bg-good text-slate-900 font-semibold">ส่ง</button>
         </div>
       </section>
     </main>
 
-    <section class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      <div class="bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
-        <div class="flex items-center justify-between"><h2 class="font-semibold">Creative vs Production Debate</h2><span class="text-xs px-2 py-1 rounded bg-slate-800">impact/risk/cost/speed</span></div>
-        <div class="grid grid-cols-2 gap-2">
-          <div><label class="text-xs text-slate-400">Role A</label><select id="debateRoleA" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select></div>
-          <div><label class="text-xs text-slate-400">Role B</label><select id="debateRoleB" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select></div>
-          <div><label class="text-xs text-slate-400">Role C</label><select id="debateRoleC" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select></div>
-          <div><label class="text-xs text-slate-400">Weight: Speed (%)</label><input id="speedWeight" type="number" min="10" max="70" value="30" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm" /></div>
-        </div>
-        <textarea id="debatePrompt" rows="3" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm" placeholder="ควร greenlight ซีรีส์ใหม่แบบจำกัดงบหรือเร่ง scale ทันที?"></textarea>
-        <button id="runDebate" class="px-4 py-2 rounded bg-accent text-slate-900 font-semibold">Run Debate</button>
-        <div id="debateOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm whitespace-pre-line min-h-[170px]"></div>
+    <section class="bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold">Cross-Industry Crisis Tournament</h2>
+        <span class="text-xs px-2 py-1 rounded bg-slate-800">ranking + transferable policy</span>
       </div>
-
-      <div class="bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
-        <h2 class="font-semibold">Career Simulation Timeline (PA Ladder)</h2>
-        <div class="grid grid-cols-2 gap-2">
-          <div><label class="text-xs text-slate-400">Current Role</label><select id="currentRole" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select></div>
-          <div><label class="text-xs text-slate-400">Target Role</label><select id="targetRole" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select></div>
-        </div>
-        <button id="runTimeline" class="px-4 py-2 rounded bg-good text-slate-900 font-semibold">Generate Timeline</button>
-        <div id="timelineOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm whitespace-pre-line min-h-[220px]"></div>
+      <div class="flex flex-wrap gap-2 items-end">
+        <label class="text-xs text-slate-400">Scenario
+          <select id="tournamentScenario" class="mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
+        </label>
+        <button id="runTournament" class="px-4 py-2 rounded bg-accent text-slate-900 font-semibold">Run Tournament</button>
       </div>
+      <pre id="tournamentOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm whitespace-pre-wrap min-h-[180px]"></pre>
     </section>
   </div>
 
-  <script>
-    const roleData = [
-      { id: 'pa', title: 'Production Assistant (PA)', tier: 'Support Staff', stage: 'entry', ladder: 1, focus: 'Set logistics + reliability', kpi: 'On-time execution, handoff accuracy', horizon: 'รายวัน', domain: 'Production', capability: ['รับส่งเอกสาร/อุปกรณ์', 'support ทุกแผนก', 'รายงานปัญหาไว'], scoreBase: { impact: 25, risk: 62, cost: 20, speed: 75 } },
-      { id: 'coordinator', title: 'Production Coordinator (PC)', tier: 'Support Staff', stage: 'entry', ladder: 2, focus: 'Operational brain of production', kpi: 'Call sheet quality, vendor alignment', horizon: '1-2 สัปดาห์', domain: 'Production', capability: ['ประสานงาน HOD', 'เอกสารกองถ่าย', 'ควบคุม workflow'], scoreBase: { impact: 36, risk: 55, cost: 35, speed: 68 } },
-      { id: 'script_reader', title: 'Script Reader / Story Analyst', tier: 'Creative IC', stage: 'core', ladder: 2, focus: 'Script evaluation + coverage', kpi: 'Coverage quality, concept hit-rate', horizon: '2-4 สัปดาห์', domain: 'Creative', capability: ['วิเคราะห์บท', 'สรุป executive summary', 'เสนอความเสี่ยงด้านเนื้อหา'], scoreBase: { impact: 42, risk: 48, cost: 28, speed: 58 } },
-      { id: 'editor', title: 'Editor (Junior/Senior)', tier: 'Production IC', stage: 'core', ladder: 3, focus: 'Narrative structure + pacing', kpi: 'Revision cycle, story clarity', horizon: '1-2 ไตรมาส', domain: 'Post-production', capability: ['ลำดับภาพ', 'ควบคุม rhythm', 'รักษาความต่อเนื่อง'], scoreBase: { impact: 55, risk: 40, cost: 50, speed: 50 } },
-      { id: 'pm', title: 'Production Manager (PM)', tier: 'Management', stage: 'mgmt', ladder: 3, focus: 'Resource control + project governance', kpi: 'Budget burn, delivery reliability', horizon: '1 ไตรมาส', domain: 'Production', capability: ['คุมทีมผลิต', 'จัดซื้อและสัญญา', 'บริหารหน้างาน'], scoreBase: { impact: 62, risk: 34, cost: 58, speed: 46 } },
-      { id: 'line_producer', title: 'Line Producer (LP)', tier: 'Management', stage: 'mgmt', ladder: 4, focus: 'Budget ownership + set decisions', kpi: 'Cashflow control, schedule adherence', horizon: '1-2 ไตรมาส', domain: 'Production', capability: ['ตัดสินใจหน้างาน', 'บริหารเงินสด', 'จัดลำดับ trade-off'], scoreBase: { impact: 76, risk: 28, cost: 70, speed: 42 } },
-      { id: 'director', title: 'Director / Showrunner', tier: 'Creative Leadership', stage: 'exec', ladder: 4, focus: 'Creative vision + execution', kpi: 'Audience resonance, quality benchmark', horizon: '1 ปี', domain: 'Creative', capability: ['กำหนดทิศทางงานสร้าง', 'นำทีมครีเอทีฟ', 'ตัดสินใจโทนเรื่อง'], scoreBase: { impact: 80, risk: 25, cost: 74, speed: 38 } },
-      { id: 'exec_producer', title: 'Executive Producer', tier: 'Executive', stage: 'exec', ladder: 5, focus: 'Financing + portfolio decisions', kpi: 'ROI, slate performance', horizon: '1-3 ปี', domain: 'Business', capability: ['หาเงินทุน', 'greenlight project', 'คุมพอร์ตคอนเทนต์'], scoreBase: { impact: 87, risk: 20, cost: 82, speed: 35 } },
-      { id: 'vp_content', title: 'VP of Content / Originals', tier: 'Executive', stage: 'exec', ladder: 5, focus: 'Regional content strategy', kpi: 'Content portfolio growth', horizon: '1-3 ปี', domain: 'Content Strategy', capability: ['วางกลยุทธ์ภูมิภาค', 'คุม slate รายปี', 'align กับ marketing/distribution'], scoreBase: { impact: 90, risk: 16, cost: 86, speed: 32 } },
-      { id: 'cco', title: 'Chief Content Officer (CCO)', tier: 'C-Level', stage: 'exec', ladder: 5, focus: 'Enterprise content vision', kpi: 'Global content moat', horizon: '2-5 ปี', domain: 'Content Strategy', capability: ['กำกับภาพรวมเนื้อหา', 'เชื่อมบอร์ด/CEO', 'กำหนด creative thesis'], scoreBase: { impact: 94, risk: 14, cost: 90, speed: 28 } },
-      { id: 'ceo', title: 'CEO', tier: 'C-Level', stage: 'exec', ladder: 5, focus: 'Total company direction', kpi: 'Enterprise growth', horizon: '3-5 ปี', domain: 'Corporate', capability: ['กำกับทุกสายงาน', 'จัดสมดุลระยะสั้น/ยาว', 'อนุมัติ strategic bets'], scoreBase: { impact: 96, risk: 12, cost: 92, speed: 26 } },
-      { id: 'board', title: 'Board / Founder / Executive Chairman', tier: 'Ownership', stage: 'owner', ladder: 5, focus: 'Governance + capital allocation', kpi: 'Long-term shareholder value', horizon: '5+ ปี', domain: 'Governance', capability: ['กำกับ CEO', 'กำหนด guardrails', 'จัดสรรทุนระดับองค์กร'], scoreBase: { impact: 98, risk: 8, cost: 95, speed: 20 } }
-    ];
-
-    const stageStyle = { entry: 'bg-emerald-500/20 text-emerald-300', core: 'bg-cyan-500/20 text-cyan-300', mgmt: 'bg-amber-500/20 text-amber-300', exec: 'bg-rose-500/20 text-rose-300', owner: 'bg-fuchsia-500/20 text-fuchsia-300' };
-    const state = { selectedRoleId: 'script_reader', chatMode: 'global', chats: { global: [{ role: 'assistant', text: 'พร้อมวิเคราะห์เส้นทางสายบันเทิง/ภาพยนตร์ และแนะนำแผนขึ้นตำแหน่งแบบวัดผลได้' }] } };
-
-    const getRole = (id) => roleData.find((r) => r.id === id) || roleData[0];
-    const getRoleIndex = (id) => roleData.findIndex((r) => r.id === id);
-    const getRoomKey = () => state.chatMode === 'global' ? 'global' : state.selectedRoleId;
-
-    function llmRespond(role, input) {
-      const text = input.toLowerCase();
-      const hasCreative = /(script|story|creative|director|showrunner|บท|ครีเอทีฟ)/i.test(text);
-      const hasProduction = /(budget|schedule|shoot|line producer|call sheet|งบ|กองถ่าย)/i.test(text);
-      const urgency = /(ด่วน|urgent|วันนี้|critical|now)/i.test(text) ? 'สูง' : 'ปกติ';
-      const track = hasCreative ? 'Creative' : (hasProduction ? 'Production' : role.domain);
-      const playbook = {
-        entry: 'โฟกัสความน่าเชื่อถือหน้างาน + ส่งมอบตามเวลา + feedback รอบสั้น',
-        core: 'สร้างผลลัพธ์ที่วัดได้ต่อคุณภาพเนื้อหา/การผลิต + เอกสารตัดสินใจชัดเจน',
-        mgmt: 'วางแผนคน-งบ-เวลาแบบ portfolio และจัด risk register รายสัปดาห์',
-        exec: 'คุม creative-business trade-off และกำหนด guardrail สำหรับ greenlight',
-        owner: 'จัดสรรทุนระยะยาวบนสมมติฐานความเสี่ยงที่พิสูจน์ได้'
-      };
-      return `Persona: ${role.title} | Track: ${track} | Urgency: ${urgency}\n` +
-        `1) Focus: ${role.focus}\n2) Playbook: ${playbook[role.stage]}\n3) KPI: ${role.kpi}\n4) Horizon: ${role.horizon}\n5) Action: ทำ milestone 30-60-90 พร้อม owner, budget ceiling และ stop-loss point`;
-    }
-
-    function runDebateSimulation(prompt, roleIds, speedWeight) {
-      const selected = roleIds.map(getRole);
-      const speed = Math.max(10, Math.min(70, Number(speedWeight) || 30));
-      const weights = { impact: 0.35, risk: 0.25, cost: 0.40 - speed / 250, speed: speed / 100 };
-      const scored = selected.map((r) => {
-        const score = Math.round((r.scoreBase.impact * weights.impact) + ((100 - r.scoreBase.risk) * weights.risk) + ((100 - r.scoreBase.cost) * weights.cost) + (r.scoreBase.speed * weights.speed));
-        const stance = r.domain.includes('Creative') || r.id === 'director' ? 'เน้นคุณค่าคอนเทนต์และความแตกต่างเชิงศิลป์' : 'เน้นความเสี่ยงเชิงงบและการส่งมอบให้ตรงเวลา';
-        return { role: r.title, score, stance };
-      }).sort((a, b) => b.score - a.score);
-
-      const avg = Math.round(scored.reduce((a, b) => a + b.score, 0) / scored.length);
-      const consensus = avg >= 68 ? 'GREENLIGHT (Phased Rollout)' : avg >= 56 ? 'PILOT FIRST' : 'REWORK PITCH';
-      return `Debate Topic: ${prompt}\n\n${scored.map((x, i) => `${i + 1}) ${x.role}\n- Stance: ${x.stance}\n- Score: ${x.score}`).join('\n\n')}\n\nConsensus: ${consensus}\nMatrix: avg=${avg} | impact=${weights.impact.toFixed(2)} risk=${weights.risk.toFixed(2)} cost=${weights.cost.toFixed(2)} speed=${weights.speed.toFixed(2)}`;
-    }
-
-    function buildCareerTimeline(currentId, targetId) {
-      const current = getRole(currentId); const target = getRole(targetId);
-      const gap = Math.max(1, getRoleIndex(targetId) - getRoleIndex(currentId));
-      const success = Math.max(35, Math.min(92, Math.round(82 - gap * 6 + (current.id === 'pa' ? 3 : 0))));
-      const riskLevel = gap >= 5 ? 'สูง' : gap >= 3 ? 'กลาง' : 'ต่ำ';
-      const risk = gap >= 5 ? 'ยกระดับความรับผิดชอบเร็วเกินไปเมื่อเทียบเครดิตงานจริง' : gap >= 3 ? 'ช่องว่างด้านการคุมงบและ stakeholder management' : 'ยังขาดผลงานเชิงพอร์ตเล็กน้อย';
-
-      return `Current: ${current.title}\nTarget: ${target.title}\nSuccess Probability: ${success}%\nStrategic Risk: ${riskLevel}\nRisk Detail: ${risk}\n\nTimeline\n- 30 วัน: วาง skill-gap map + ส่งมอบ quick win 1 ชิ้น\n- 60 วัน: คุมงานข้ามแผนก 1 initiative พร้อม KPI\n- 90 วัน: นำเสนอผลต่อหัวหน้าระดับถัดไปด้วยข้อมูลงบ/คุณภาพ\n- 1 ปี: สะสมเครดิตงานอย่างน้อย 2-3 โปรเจกต์\n- 3 ปี: ยกระดับสู่บทบาท ${target.title} ด้วย portfolio ที่พิสูจน์แล้ว`;
-    }
-
-    function renderRoleGroups() {
-      const grouped = roleData.reduce((acc, role) => ((acc[role.tier] = acc[role.tier] || []).push(role), acc), {});
-      document.getElementById('roleGroups').innerHTML = Object.entries(grouped).map(([tier, list]) => `<div><h3 class="text-xs text-slate-400 mb-1 uppercase tracking-wider">${tier}</h3><div class="space-y-1">${list.map((r) => `<button data-role-id="${r.id}" class="role-btn w-full text-left rounded-lg border px-3 py-2 transition ${state.selectedRoleId === r.id ? 'bg-accent/20 border-accent' : 'bg-slate-900 border-slate-700 hover:border-slate-500'}"><div class="text-sm font-medium">${r.title}</div><div class="text-xs text-slate-400">${r.focus}</div></button>`).join('')}</div></div>`).join('');
-      document.querySelectorAll('.role-btn').forEach((btn) => btn.onclick = () => { state.selectedRoleId = btn.dataset.roleId; renderAll(); });
-      document.getElementById('roleCount').textContent = `${roleData.length} roles`;
-    }
-
-    function renderRoleCard() {
-      const r = getRole(state.selectedRoleId);
-      document.getElementById('roleCard').innerHTML = `<div class="flex items-center justify-between gap-3 flex-wrap"><h3 class="text-lg font-semibold">${r.title}</h3><span class="text-xs px-2 py-1 rounded ${stageStyle[r.stage]}">${r.tier}</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm"><div class="rounded-lg border border-slate-600 p-3 bg-slate-900/60"><div class="text-slate-400 text-xs mb-1">Primary Focus</div><div>${r.focus}</div></div><div class="rounded-lg border border-slate-600 p-3 bg-slate-900/60"><div class="text-slate-400 text-xs mb-1">Domain</div><div>${r.domain}</div></div><div class="rounded-lg border border-slate-600 p-3 bg-slate-900/60"><div class="text-slate-400 text-xs mb-1">KPI</div><div>${r.kpi}</div></div><div class="rounded-lg border border-slate-600 p-3 bg-slate-900/60"><div class="text-slate-400 text-xs mb-1">Decision Horizon</div><div>${r.horizon}</div></div></div><div><div class="text-sm font-medium mb-1">Core Capabilities</div><ul class="list-disc ml-5 text-sm space-y-1 text-slate-200">${r.capability.map((item) => `<li>${item}</li>`).join('')}</ul></div><div class="rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm">LLM ใช้ฟังก์ชันเดียว <b>llmRespond()</b> เพื่อคงความสม่ำเสมอและลดตรรกะซ้ำซ้อน</div>`;
-    }
-
-    function renderSelect(id, selected) { document.getElementById(id).innerHTML = roleData.map((r) => `<option value="${r.id}" ${r.id === selected ? 'selected' : ''}>${r.title}</option>`).join(''); }
-
-    function renderChatWindow() {
-      const room = getRoomKey(); if (!state.chats[room]) state.chats[room] = [];
-      document.getElementById('chatWindow').innerHTML = state.chats[room].map((m) => `<div class="${m.role === 'user' ? 'text-right' : 'text-left'}"><div class="inline-block max-w-[92%] rounded-xl px-3 py-2 text-sm whitespace-pre-line ${m.role === 'user' ? 'bg-accent text-slate-900' : 'bg-slate-800 text-slate-100 border border-slate-600'}">${m.text}</div></div>`).join('');
-      document.getElementById('modeGlobal').className = `px-3 py-1 rounded ${state.chatMode === 'global' ? 'bg-accent text-slate-900 font-semibold' : 'text-slate-300'}`;
-      document.getElementById('modeRole').className = `px-3 py-1 rounded ${state.chatMode === 'role' ? 'bg-accent text-slate-900 font-semibold' : 'text-slate-300'}`;
-    }
-
-    function sendMessage() {
-      const input = document.getElementById('chatInput'); const value = input.value.trim(); if (!value) return;
-      const room = getRoomKey(); if (!state.chats[room]) state.chats[room] = [];
-      const role = getRole(state.selectedRoleId);
-      state.chats[room].push({ role: 'user', text: value }); state.chats[room].push({ role: 'assistant', text: llmRespond(role, value) });
-      input.value = ''; renderChatWindow();
-    }
-
-    function renderAll() {
-      renderRoleGroups(); renderRoleCard();
-      renderSelect('chatRoleSelect', state.selectedRoleId);
-      renderSelect('debateRoleA', 'director'); renderSelect('debateRoleB', 'line_producer'); renderSelect('debateRoleC', 'vp_content');
-      renderSelect('currentRole', 'pa'); renderSelect('targetRole', 'line_producer');
-      renderChatWindow();
-    }
-
-    document.getElementById('chatRoleSelect').onchange = (e) => { state.selectedRoleId = e.target.value; renderAll(); };
-    document.getElementById('sendBtn').onclick = sendMessage;
-    document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
-    document.getElementById('modeGlobal').onclick = () => { state.chatMode = 'global'; renderChatWindow(); };
-    document.getElementById('modeRole').onclick = () => { state.chatMode = 'role'; renderChatWindow(); };
-    document.getElementById('runDebate').onclick = () => {
-      const prompt = document.getElementById('debatePrompt').value.trim() || 'ยังไม่ได้ระบุโจทย์';
-      const ids = ['debateRoleA', 'debateRoleB', 'debateRoleC'].map((id) => document.getElementById(id).value);
-      const speed = document.getElementById('speedWeight').value;
-      document.getElementById('debateOutput').textContent = runDebateSimulation(prompt, ids, speed);
-    };
-    document.getElementById('runTimeline').onclick = () => {
-      document.getElementById('timelineOutput').textContent = buildCareerTimeline(document.getElementById('currentRole').value, document.getElementById('targetRole').value);
-    };
-
-    renderAll();
-  </script>
+  <script type="module" src="assets/js/role-studio/main.js"></script>
 </body>
 </html>

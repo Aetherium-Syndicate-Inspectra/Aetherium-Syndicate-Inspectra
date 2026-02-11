@@ -250,3 +250,24 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ### Future Creative Challenges
 1. **AI Board Dynamics Simulator:** จำลองการโหวต/ต่อรองของ AI Board (CEO-COO-CFO-CTO) ภายใต้ข้อจำกัดทรัพยากรจริง แล้ววัดผลกระทบต่อ KPI ระยะสั้นและระยะยาว
 2. **Cross-Company Negotiation Arena:** เปิดโหมดเจรจาข้ามบริษัท (supplier-bank-saas) ให้ agent แต่ละฝั่ง optimize คนละ objective แล้วใช้ mechanism design หา policy equilibrium อัตโนมัติ
+
+## 🆕 Simulation Expansion Update: LLM Role Generation + Cross-Company Collaboration + Org Export
+
+### สิ่งที่ปรับปรุง
+- เพิ่ม `assets/js/role-studio/utils/roleGenerator.js` เพื่อ generate role อัตโนมัติจาก LLM (รองรับ JSON parse + fallback + level normalization + id dedupe)
+- เพิ่ม `loadCompanyTemplate()` และ `addGeneratedRoles()` ใน `roleRegistry.js` เพื่อให้ registry ขยายแบบ dynamic และคงแนว Data Cleaning (เพิ่มเฉพาะ role ที่ไม่ซ้ำ)
+- เพิ่ม `assets/js/role-studio/utils/crossCompanySimulation.js` สำหรับรัน Cross-Company Tournament โดยเลือกหลาย company types แล้วสรุป ranking + best transferable policy
+- เพิ่ม `assets/js/role-studio/utils/exportOrgChart.js` สำหรับ export โครงสร้าง org chart เป็น SVG/PNG จาก DOM เดียว (single export function)
+- ปรับ `index.html` และ `main.js` ให้มี:
+  - ปุ่ม Generate Roles (industry + count)
+  - Multi-select company types และปุ่ม Run Cross-Company Tournament
+  - Org Chart Preview + Export PNG/SVG
+- แก้ data inconsistency ใน `crisisScenario.js` โดยเพิ่ม industry effects สำหรับ Tech SaaS / Traditional Bank / Manufacturing Giant / Healthcare และมี fallback เมื่อไม่พบ key
+
+### เหตุผลการเลือกฟังก์ชันเดียว (Single Best Function)
+- ยังคง `llmRespond()` เป็น inference entrypoint เดียว และขยายให้รองรับทั้ง chat payload และ prompt-based utility call เพื่อหลีกเลี่ยง duplicate LLM paths
+- ใช้ `exportOrgChart()` เป็นจุดเดียวสำหรับทั้ง SVG/PNG เพื่อให้ logic export รวมศูนย์และดูแลง่าย
+
+### Future Creative Challenges
+1. **Self-Evolving Registry Governance:** เพิ่ม policy guard ที่ตรวจ generated roles เทียบ canonical KPI ontology อัตโนมัติ และ auto-reject role ที่ drift เกิน threshold
+2. **Multi-Board Crisis Protocol Game:** ให้หลายบริษัทตั้ง board-level negotiation constraints (risk budget / ESG cap / SLA) แล้วใช้ game-theoretic solver หา coalition policy ที่ stable ที่สุด

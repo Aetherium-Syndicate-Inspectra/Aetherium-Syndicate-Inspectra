@@ -18,6 +18,21 @@
       "path": "assets/js/role-studio/core/llm.js",
       "purpose": "single frontend inference entrypoint for global + role rooms",
       "duplicate_allowed": false
+    },
+    "generateRolesForIndustry": {
+      "path": "assets/js/role-studio/utils/roleGenerator.js",
+      "purpose": "single role generation entrypoint with LLM+fallback normalization",
+      "duplicate_allowed": false
+    },
+    "runCrossCompanyTournament": {
+      "path": "assets/js/role-studio/utils/crossCompanySimulation.js",
+      "purpose": "cross-company collaboration simulation engine",
+      "duplicate_allowed": false
+    },
+    "exportOrgChart": {
+      "path": "assets/js/role-studio/utils/exportOrgChart.js",
+      "purpose": "single org chart export function for PNG/SVG",
+      "duplicate_allowed": false
     }
   },
   "role_registry": {

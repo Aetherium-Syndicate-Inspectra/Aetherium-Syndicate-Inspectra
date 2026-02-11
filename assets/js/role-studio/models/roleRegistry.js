@@ -163,3 +163,23 @@ const curatedRoleData = [
 export const roleData = curatedRoleData;
 export const tierOrder = ['C-Level', 'Leadership', 'Manager/Lead', 'IC/Specialist'];
 export const registryHierarchy = roleHierarchy;
+
+
+const companyTypeIndustryMap = {
+  'tech-startup': ['Tech SaaS'],
+  'traditional-corp': ['Traditional Bank'],
+  'enterprise-network': ['Manufacturing Giant', 'Healthcare', 'Retail / E-commerce', 'Education'],
+};
+
+export function loadCompanyTemplate(companyTypeKey) {
+  const industries = companyTypeIndustryMap[companyTypeKey] || [];
+  return roleData.filter((role) => industries.includes(role.industry));
+}
+
+export function addGeneratedRoles(newRoles = []) {
+  const existingIds = new Set(roleData.map((role) => role.id));
+  const deduped = newRoles.filter((role) => role && role.id && !existingIds.has(role.id));
+  deduped.forEach((role) => existingIds.add(role.id));
+  roleData.push(...deduped);
+  return deduped;
+}

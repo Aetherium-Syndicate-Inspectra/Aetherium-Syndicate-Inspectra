@@ -12,8 +12,8 @@
 <body class="bg-bg text-slate-100 min-h-screen">
   <div class="max-w-7xl mx-auto px-4 py-5 space-y-4">
     <header class="rounded-xl bg-panel border border-slate-700 p-4">
-      <h1 class="text-2xl font-bold">Universal Role Navigator (7 Industries)</h1>
-      <p class="text-sm text-slate-300 mt-1">Role Registry + Resonance Fingerprint + Drift Detector + Crisis Tournament (Frontend Foundation)</p>
+      <h1 class="text-2xl font-bold">Universal Role Navigator (Adaptive Registry)</h1>
+      <p class="text-sm text-slate-300 mt-1">Role Registry + LLM Role Generator + Cross-Company Tournament + Org Chart Export</p>
     </header>
 
     <main class="grid grid-cols-1 xl:grid-cols-12 gap-4">
@@ -52,7 +52,20 @@
           </label>
           <p class="text-xs text-cyan-300">Freeze Trail: <b id="freezeCount">0</b> snapshots</p>
         </div>
-        <div class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm" id="modeExplain"></div>
+
+        <div class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm space-y-2">
+          <h3 class="font-semibold">LLM Role Generator</h3>
+          <div class="grid grid-cols-3 gap-2">
+            <input id="generatorIndustry" class="col-span-2 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm" value="Energy" />
+            <input id="generatorCount" type="number" min="4" max="24" value="8" class="bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm" />
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="generateRoles" class="px-3 py-2 rounded bg-accent text-slate-900 font-semibold text-sm">Generate Roles</button>
+            <button id="exportOrgPng" class="px-3 py-2 rounded bg-slate-700 text-sm">Export Org PNG</button>
+            <button id="exportOrgSvg" class="px-3 py-2 rounded bg-slate-700 text-sm">Export Org SVG</button>
+          </div>
+          <div id="generatorStatus" class="text-xs text-slate-300">พร้อมสำหรับการ generate</div>
+        </div>
       </section>
 
       <section class="xl:col-span-4 bg-panel rounded-xl border border-slate-700 p-4 flex flex-col min-h-[620px]">
@@ -64,29 +77,14 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 mb-3">
-          <div>
-            <label class="text-xs text-slate-400">บทบาทสนทนา</label>
-            <select id="chatRoleSelect" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
-          </div>
-          <div>
-            <label class="text-xs text-slate-400">C-Level Mode Switch (&lt;1s)</label>
-            <select id="contextMode" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm">
-              <option value="visionary">Visionary (3Y)</option>
-              <option value="crisis">Crisis Manager (Daily)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2 mb-3 text-xs">
-          <div><label class="text-slate-400">ความเร็ว</label><select id="freqSpeed" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-1"><option value="fast">เร็ว</option><option value="balanced" selected>สมดุล</option><option value="deliberate">ละเอียด</option></select></div>
-          <div><label class="text-slate-400">ระดับรายละเอียด</label><select id="detailDepth" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-1"><option value="summary">ภาพรวม</option><option value="standard" selected>มาตรฐาน</option><option value="deep">เชิงลึก</option></select></div>
-          <div><label class="text-slate-400">รูปแบบคำตอบ</label><select id="responseFormat" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-1"><option value="numbers">ตัวเลข</option><option value="mixed" selected>ผสม</option><option value="story">เชิงเล่าเรื่อง</option></select></div>
+        <div class="mb-3">
+          <label class="text-xs text-slate-400">บทบาทสนทนา</label>
+          <select id="chatRoleSelect" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
         </div>
 
         <div id="chatWindow" class="flex-1 overflow-y-auto rounded-xl bg-slate-900 border border-slate-700 p-3 space-y-3"></div>
         <div class="mt-3 flex gap-2">
-          <input id="chatInput" class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm" placeholder="เช่น สรุปแผนรับมือ supply shock สำหรับอุตสาหกรรม Film" />
+          <input id="chatInput" class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm" placeholder="เช่น สรุปแผนรับมือ supply shock สำหรับอุตสาหกรรม Energy" />
           <button id="sendBtn" class="px-4 py-2 rounded bg-good text-slate-900 font-semibold">ส่ง</button>
         </div>
       </section>
@@ -95,15 +93,34 @@
     <section class="bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
       <div class="flex items-center justify-between">
         <h2 class="font-semibold">Cross-Industry Crisis Tournament</h2>
-        <span class="text-xs px-2 py-1 rounded bg-slate-800">ranking + transferable policy</span>
+        <span class="text-xs px-2 py-1 rounded bg-slate-800">single-company + cross-company</span>
       </div>
       <div class="flex flex-wrap gap-2 items-end">
         <label class="text-xs text-slate-400">Scenario
           <select id="tournamentScenario" class="mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
         </label>
-        <button id="runTournament" class="px-4 py-2 rounded bg-accent text-slate-900 font-semibold">Run Tournament</button>
+        <button id="runTournament" class="px-4 py-2 rounded bg-accent text-slate-900 font-semibold">Run Industry Tournament</button>
       </div>
-      <pre id="tournamentOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm whitespace-pre-wrap min-h-[180px]"></pre>
+      <pre id="tournamentOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm whitespace-pre-wrap min-h-[120px]"></pre>
+
+      <div class="grid md:grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-slate-400">Company Types (Multi-select)</label>
+          <select id="companyTypeSelect" multiple class="w-full mt-1 h-28 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
+        </div>
+        <div class="flex items-end">
+          <button id="runCrossTournament" class="px-4 py-2 rounded bg-good text-slate-900 font-semibold">Run Cross-Company Tournament</button>
+        </div>
+      </div>
+      <pre id="crossTournamentOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm whitespace-pre-wrap min-h-[140px]"></pre>
+    </section>
+
+    <section class="bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold">Org Chart Preview</h2>
+        <span class="text-xs px-2 py-1 rounded bg-slate-800">exportable SVG/PNG</span>
+      </div>
+      <div id="orgChartContainer" class="rounded-xl bg-slate-900 border border-slate-700 p-3 min-h-[180px]"></div>
     </section>
   </div>
 

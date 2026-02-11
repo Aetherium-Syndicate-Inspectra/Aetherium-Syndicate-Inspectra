@@ -20,6 +20,29 @@ class ContractCheckerTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("Missing field", result["error"])
 
+    def test_validate_self_heals_schema_aliases(self):
+        payload = {"intent_name": "optimize", "intent_vector": [0.1, 0.2], "intent_ts": time.time()}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertTrue(ok)
+        self.assertTrue(result["schema_healing"]["applied"])
+        self.assertEqual(result["payload"]["intent"], "optimize")
+        self.assertIn("intent_vector", result["schema_healing"]["remapped_fields"])
+
+    def test_validate_self_heal_keeps_canonical_value_when_duplicate_keys(self):
+        payload = {
+            "intent": "canonical-intent",
+            "intent_name": "legacy-intent",
+            "vector": [0.3],
+            "intent_vector": [0.9],
+            "timestamp": time.time(),
+            "intent_ts": time.time() - 10,
+        }
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertTrue(ok)
+        self.assertEqual(result["payload"]["intent"], "canonical-intent")
+        self.assertEqual(result["payload"]["vector"], [0.3])
+
+
     def test_deduplicate_events_prefers_better_quality(self):
         now = time.time()
         base_payload = {"intent": "optimize", "vector": [1.0], "timestamp": now}

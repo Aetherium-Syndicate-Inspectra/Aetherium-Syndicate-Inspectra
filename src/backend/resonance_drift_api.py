@@ -62,6 +62,8 @@ def get_profile(user_id: str) -> dict[str, Any]:
         "user_id": profile.user_id,
         "current_resonance_score": round(profile.current_resonance_score, 4),
         "drift_threshold": profile.drift_threshold,
+        "active_cohort": profile.current_cohort,
+        "last_drift_ratio": round(profile.last_drift_ratio, 4),
         "detection_window": profile.detection_window,
         "switch_count": profile.switch_count,
         "switch_success_rate": round(profile.switch_success_rate, 4),

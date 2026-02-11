@@ -433,3 +433,20 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ### Future Creative Challenges
 1. **Cohort Adaptive Drift Policy:** สร้างชั้นเรียนรู้ระดับ cohort ที่ปรับ drift threshold แบบออนไลน์ตามกลุ่มผู้ใช้ โดยยังรักษา per-user explainability
 2. **Intervention Multi-Armed Bandit:** เปลี่ยนจาก opposite-rule แบบคงที่เป็น bandit policy ที่เลือก format/tone/evidence ตาม reward จริงแบบ near real-time
+
+## 🆕 Adaptive Intelligence Update: Cohort Drift + Contextual Bandit Interventions (v4.3.1-preview)
+
+### สิ่งที่เพิ่มเข้าระบบ
+- อัปเกรด `src/backend/resonance_drift.py` ให้รองรับ **cohort-adaptive online thresholding** โดยเรียนรู้ค่า drift threshold จาก segment (cohort) แบบ real-time ด้วยสถิติออนไลน์ (mean/std) แทนการใช้ threshold คงที่อย่างเดียว
+- เพิ่ม **Contextual Bandit Intervention Policy (UCB-style)** เพื่อเลือกชุด intervention (`format`, `tone`, `evidence`) จาก reward จริง แทน opposite mapping แบบ static
+- เก็บ **individual explanation** ต่อการสลับแต่ละครั้ง (drift ratio, adaptive threshold, arm ที่เลือก, reward เฉลี่ย) เพื่อคงความสามารถในการอธิบายระดับผู้ใช้รายบุคคล
+- ขยาย `src/backend/resonance_feedback_loop.py` ให้ส่งข้อมูล action เพิ่มเติม ได้แก่ `cohort`, `drift_ratio_hint`, และ `explanation` กลับไปยัง client loop
+- ขยาย `src/backend/resonance_drift_api.py` ให้ profile endpoint แสดงสถานะ cohort ปัจจุบันและ drift ratio ล่าสุด
+
+### เหตุผลเชิงการออกแบบ (เลือกฟังก์ชันที่ดีที่สุดเมื่อมีแนวทางซ้ำ)
+- เลือกใช้ **single adaptive learner + single bandit policy** เป็นแกนกลางเพื่อลดตรรกะซ้ำซ้อนระหว่าง detector/evaluator และให้ทุก intervention อัปเดตผ่านกลไกเดียวที่ตรวจสอบย้อนกลับได้
+- ใช้ online statistics และ reward feedback ใน memory เพื่อให้เริ่ม deploy ได้ทันทีโดยไม่ต้องพึ่งพา dependency เพิ่มหรือ data pipeline ใหม่
+
+### Future Creative Challenges
+1. **Counterfactual Bandit Replay Arena:** บันทึก context/action/reward แล้วรัน offline replay เปรียบเทียบ UCB vs Thompson Sampling vs LinUCB ต่อ cohort จริง
+2. **Hierarchical Cohort Meta-Learner:** เรียนรู้ threshold แบบหลายชั้น (global → industry → role → user) และทำ Bayesian shrinkage เพื่อลด overfit ใน cohort ที่ข้อมูลน้อย

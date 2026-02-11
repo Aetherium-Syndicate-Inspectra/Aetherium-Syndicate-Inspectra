@@ -23,6 +23,8 @@ class PendingIntervention:
     proposed_tone: str
     proposed_evidence: str
     drift_ratio_hint: float | None = None
+    cohort: str | None = None
+    explanation: str | None = None
 
 
 @dataclass
@@ -47,7 +49,7 @@ class ResonanceFeedbackLoopOrchestrator:
 
     def __init__(self, detector: DriftDetector | None = None, evaluator: InterventionEvaluator | None = None):
         self.detector = detector or DriftDetector()
-        self.evaluator = evaluator or InterventionEvaluator(event_store=self.detector.event_store)
+        self.evaluator = evaluator or InterventionEvaluator(event_store=self.detector.event_store, detector=self.detector)
         self._pending_actions: dict[str, list[PendingIntervention]] = {}
 
     def ingest_feedback(self, *, user_id: str, intent: str, response: str, feedback_score: float) -> FeedbackLoopSnapshot:
@@ -74,6 +76,9 @@ class ResonanceFeedbackLoopOrchestrator:
                 proposed_format=updated.preferred_format,
                 proposed_tone=updated.preferred_tone,
                 proposed_evidence=updated.preferred_evidence,
+                drift_ratio_hint=round(updated.last_drift_ratio, 4),
+                cohort=updated.current_cohort,
+                explanation=updated.last_intervention_explanation,
             )
             self._pending_actions.setdefault(user_id, []).append(action)
 

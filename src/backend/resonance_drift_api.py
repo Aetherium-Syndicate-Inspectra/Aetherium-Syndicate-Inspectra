@@ -34,7 +34,7 @@ service = ResonanceFeedbackLoopOrchestrator()
 
 
 @router.post("/feedback")
-def ingest_feedback(payload: FeedbackIngestRequest) -> dict[str, Any]:
+def api_ingest_resonance_feedback(payload: FeedbackIngestRequest) -> dict[str, Any]:
     snapshot = service.ingest_feedback(
         user_id=payload.user_id,
         intent=payload.intent,
@@ -56,7 +56,7 @@ def ingest_feedback(payload: FeedbackIngestRequest) -> dict[str, Any]:
 
 
 @router.get("/profiles/{user_id}")
-def get_profile(user_id: str) -> dict[str, Any]:
+def api_get_resonance_profile(user_id: str) -> dict[str, Any]:
     profile = service.get_profile(user_id)
     return {
         "user_id": profile.user_id,
@@ -96,7 +96,7 @@ def update_profile_config(user_id: str, payload: ProfileConfigRequest) -> dict[s
 
 
 @router.post("/profiles/{user_id}/actions/{action_id}/outcome")
-def submit_action_outcome(user_id: str, action_id: str, payload: ActionOutcomeRequest) -> dict[str, Any]:
+def api_submit_resonance_action_outcome(user_id: str, action_id: str, payload: ActionOutcomeRequest) -> dict[str, Any]:
     snapshot = service.submit_action_outcome(
         user_id=user_id,
         action_id=action_id,
@@ -117,7 +117,7 @@ def submit_action_outcome(user_id: str, action_id: str, payload: ActionOutcomeRe
 
 
 @router.post("/profiles/{user_id}/actions/pull")
-def pull_pending_actions(user_id: str, limit: int = 5) -> dict[str, Any]:
+def api_pull_resonance_pending_actions(user_id: str, limit: int = 5) -> dict[str, Any]:
     actions = service.pull_pending_actions(user_id, limit=limit)
     return {
         "user_id": user_id,

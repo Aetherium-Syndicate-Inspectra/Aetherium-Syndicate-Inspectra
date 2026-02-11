@@ -67,6 +67,7 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 - **Test Coverage:** เพิ่ม Regression Tests สำหรับ Schema Drift และ Timestamp Type Safety
 - **Replay + Profiling Tooling:** ยกระดับคู่มือการตรวจสอบเหตุการณ์ด้วยแนวทาง `Scenario Replay Workbench` และการวัดผล `Contract Impact Profiler` เพื่อประเมิน Governance vs Performance เชิงปริมาณ
 - **Adaptive Budget Control:** เพิ่มกลไกปรับความเข้ม validation แบบอัตโนมัติตามโหลดจริง โดยยึด governance risk threshold เป็นเงื่อนไขบังคับ
+- **GitHub Pages Deploy Hardening:** ปรับ workflow `JamesIves/github-pages-deploy-action@v4` ให้ใช้ token strategy แบบ fallback (`DEPLOY_TOKEN` ก่อน แล้วค่อย `github.token`) และปิด `persist-credentials` จาก checkout เพื่อลดความขัดแย้งของ credential ระหว่างขั้นตอน deploy
 
 ## 📦 Quick Start
 

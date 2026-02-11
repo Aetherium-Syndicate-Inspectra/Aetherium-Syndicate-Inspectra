@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aetherium Genesis AI - Command Center</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#0ddff2",
+              "secondary": "#f20dcf", 
+              "background-light": "#f5f8f8",
+              "background-dark": "#101617",
+              "surface-dark": "#1a2425",
+              "surface-darker": "#141c1d",
+            },
+            fontFamily: {
+              "display": ["Space Grotesk", "sans-serif"],
+              "mono": ["Noto Sans Mono", "monospace"], 
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            boxShadow: {
+                'glow': '0 0 10px rgba(13, 223, 242, 0.2)',
+                'glow-secondary': '0 0 10px rgba(242, 13, 207, 0.2)',
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        /* Custom Scrollbar for the terminal look */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #141c1d;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #283839;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #3b5254;
+        }
+
+        /* Scanline effect */
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 10;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(13, 223, 242, 0.03) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            animation: scanline 10s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+        
+        .pulse-dot {
+            animation: pulse-animation 2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0 rgba(13, 223, 242, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(13, 223, 242, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(13, 223, 242, 0); }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation / Global Status Header -->
+<header class="flex-none flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#283839] px-6 py-3 bg-white dark:bg-[#141c1d] z-20 shadow-md">
+<div class="flex items-center gap-4">
+<div class="size-8 text-primary animate-pulse">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
+</svg>
+</div>
+<div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-wider uppercase">Aetherium Genesis AI</h2>
+<div class="text-[10px] text-primary tracking-[0.2em] font-mono leading-none mt-1">COMMAND CENTER V1.0</div>
+</div>
+</div>
+<div class="flex gap-4 items-center">
+<!-- Ticker -->
+<div class="hidden lg:flex items-center gap-6 px-4 py-1.5 rounded bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-[#283839]">
+<div class="flex items-center gap-2">
+<span class="text-xs text-slate-500 dark:text-slate-400 font-mono">SERVER_TIME</span>
+<span class="text-sm font-bold font-mono text-primary">14:42:09 UTC</span>
+</div>
+<div class="w-px h-4 bg-slate-300 dark:bg-[#283839]"></div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-slate-500 dark:text-slate-400 font-mono">LATENCY</span>
+<span class="text-sm font-bold font-mono text-emerald-400">12ms</span>
+</div>
+<div class="w-px h-4 bg-slate-300 dark:bg-[#283839]"></div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Global_Health</span>
+<span class="text-sm font-bold text-primary">OPTIMAL</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg size-10 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications_active</span>
+</button>
+<button class="flex items-center justify-center rounded-lg size-10 bg-slate-100 dark:bg-[#283839] hover:bg-slate-200 dark:hover:bg-[#3b5254] text-slate-900 dark:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-primary text-[#111718] text-sm font-bold tracking-wide shadow-glow hover:shadow-lg transition-all">
+                    SYSTEM: ONLINE
+                </button>
+</div>
+</div>
+</header>
+<!-- Main Layout -->
+<main class="flex-1 flex overflow-hidden relative">
+<div class="scanline"></div>
+<!-- Left Sidebar: High Density Metrics -->
+<aside class="w-80 flex flex-col border-r border-slate-200 dark:border-[#283839] bg-white dark:bg-surface-darker overflow-y-auto custom-scrollbar z-10">
+<div class="p-5 border-b border-slate-200 dark:border-[#283839]">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-slate-900 dark:text-white tracking-widest text-xs font-bold uppercase">Neural Core Status</h3>
+<span class="material-symbols-outlined text-primary text-sm animate-spin">cyclone</span>
+</div>
+<!-- Vision Dept -->
+<div class="flex flex-col gap-2 mb-6 group">
+<div class="flex justify-between items-end">
+<p class="text-secondary text-xs font-mono font-bold uppercase group-hover:text-white transition-colors">Vision Dept // CPU</p>
+<p class="text-secondary text-xs font-mono">98%</p>
+</div>
+<div class="h-1.5 w-full bg-slate-200 dark:bg-[#283839] rounded-full overflow-hidden">
+<div class="h-full bg-secondary shadow-glow-secondary w-[98%]"></div>
+</div>
+<p class="text-[10px] text-secondary font-mono text-right mt-1">CRITICAL LOAD</p>
+</div>
+<!-- Language Dept -->
+<div class="flex flex-col gap-2 mb-6 group">
+<div class="flex justify-between items-end">
+<p class="text-primary text-xs font-mono font-bold uppercase group-hover:text-white transition-colors">Language Dept // MEM</p>
+<p class="text-primary text-xs font-mono">45%</p>
+</div>
+<div class="h-1.5 w-full bg-slate-200 dark:bg-[#283839] rounded-full overflow-hidden">
+<div class="h-full bg-primary shadow-glow w-[45%]"></div>
+</div>
+<p class="text-[10px] text-slate-500 dark:text-[#9cb7ba] font-mono text-right mt-1">STABLE</p>
+</div>
+<!-- Robotics Dept -->
+<div class="flex flex-col gap-2 mb-2 group">
+<div class="flex justify-between items-end">
+<p class="text-emerald-400 text-xs font-mono font-bold uppercase group-hover:text-white transition-colors">Robotics Dept // GPU</p>
+<p class="text-emerald-400 text-xs font-mono">12%</p>
+</div>
+<div class="h-1.5 w-full bg-slate-200 dark:bg-[#283839] rounded-full overflow-hidden">
+<div class="h-full bg-emerald-400 w-[12%]"></div>
+</div>
+<p class="text-[10px] text-slate-500 dark:text-[#9cb7ba] font-mono text-right mt-1">IDLE</p>
+</div>
+</div>
+<!-- Secondary Metrics Area -->
+<div class="p-5 flex-1">
+<h3 class="text-slate-500 dark:text-[#5f7476] tracking-widest text-[10px] font-bold uppercase mb-4">Cluster Health</h3>
+<div class="grid grid-cols-2 gap-3 mb-6">
+<div class="bg-slate-50 dark:bg-[#1a2425] border border-slate-200 dark:border-[#283839] p-3 rounded text-center">
+<span class="material-symbols-outlined text-primary text-xl mb-1">memory</span>
+<div class="text-xs text-slate-500 dark:text-gray-400 font-mono">NODES</div>
+<div class="text-lg font-bold text-white">42/42</div>
+</div>
+<div class="bg-slate-50 dark:bg-[#1a2425] border border-slate-200 dark:border-[#283839] p-3 rounded text-center relative overflow-hidden">
+<div class="absolute inset-0 bg-secondary/5"></div>
+<span class="material-symbols-outlined text-secondary text-xl mb-1">warning</span>
+<div class="text-xs text-slate-500 dark:text-gray-400 font-mono">ERRORS</div>
+<div class="text-lg font-bold text-secondary">03</div>
+</div>
+</div>
+<h3 class="text-slate-500 dark:text-[#5f7476] tracking-widest text-[10px] font-bold uppercase mb-4">Storage Allocation</h3>
+<div class="flex items-center gap-4 mb-2">
+<div class="relative size-16 flex-none">
+<svg class="size-full -rotate-90" viewbox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+<path class="text-[#283839]" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4"></path>
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="75, 100" stroke-width="4"></path>
+</svg>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-white">75%</div>
+</div>
+<div class="flex flex-col gap-1 text-xs font-mono">
+<div class="flex items-center gap-2"><span class="size-2 rounded-full bg-primary"></span> VECTOR_DB</div>
+<div class="flex items-center gap-2 text-gray-500"><span class="size-2 rounded-full bg-[#283839]"></span> FREE_SPACE</div>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-slate-200 dark:border-[#283839]">
+<div class="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded flex items-center gap-3">
+<span class="material-symbols-outlined text-emerald-400">shield</span>
+<div>
+<div class="text-xs font-bold text-emerald-400">SECURITY: ACTIVE</div>
+<div class="text-[10px] text-emerald-400/70">Zero intrusions detected</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Center: Terminal Event Stream -->
+<section class="flex-1 flex flex-col bg-slate-50 dark:bg-[#0b1011] relative overflow-hidden">
+<!-- Header for Terminal -->
+<div class="h-12 border-b border-slate-200 dark:border-[#283839] bg-white dark:bg-[#141c1d] flex items-center px-6 justify-between shrink-0">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-sm">terminal</span>
+<h3 class="text-slate-900 dark:text-white text-sm font-bold tracking-wider">LIVE NEURAL FEED</h3>
+<div class="flex gap-1 ml-2">
+<span class="size-2 bg-primary rounded-full pulse-dot"></span>
+<span class="text-[10px] text-primary font-mono self-center">STREAMING</span>
+</div>
+</div>
+<div class="flex gap-4 text-[10px] font-mono text-gray-500 uppercase">
+<button class="hover:text-primary transition-colors">Pause</button>
+<button class="hover:text-primary transition-colors">Filter</button>
+<button class="hover:text-primary transition-colors">Clear</button>
+<button class="hover:text-primary transition-colors">Export_Log</button>
+</div>
+</div>
+<!-- Terminal Content -->
+<div class="flex-1 p-6 font-mono text-sm overflow-y-auto custom-scrollbar relative">
+<!-- Log Entry -->
+<div class="mb-2 flex gap-4 opacity-40 hover:opacity-100 transition-opacity">
+<span class="text-slate-400 dark:text-gray-600 w-20 shrink-0">[14:01:55]</span>
+<span class="text-primary w-16 shrink-0">&lt;INFO&gt;</span>
+<span class="text-slate-600 dark:text-gray-400">init_sequence_alpha started. Nodes synchronizing...</span>
+</div>
+<!-- Log Entry -->
+<div class="mb-2 flex gap-4 opacity-50 hover:opacity-100 transition-opacity">
+<span class="text-slate-400 dark:text-gray-600 w-20 shrink-0">[14:02:01]</span>
+<span class="text-primary w-16 shrink-0">&lt;INFO&gt;</span>
+<span class="text-slate-600 dark:text-gray-400">optimizing_vector_db... Index rebuilt in 45ms.</span>
+</div>
+<!-- Log Entry -->
+<div class="mb-2 flex gap-4 opacity-60 hover:opacity-100 transition-opacity">
+<span class="text-slate-400 dark:text-gray-600 w-20 shrink-0">[14:02:04]</span>
+<span class="text-emerald-400 w-16 shrink-0">&lt;SUCCESS&gt;</span>
+<span class="text-slate-300 dark:text-gray-300">Natural Language Module v4.2 loaded successfully.</span>
+</div>
+<!-- Log Entry (Warning) -->
+<div class="mb-2 flex gap-4 opacity-90 hover:opacity-100 transition-opacity bg-secondary/5 -mx-2 px-2 py-1 rounded border-l-2 border-secondary">
+<span class="text-slate-400 dark:text-gray-600 w-20 shrink-0">[14:02:05]</span>
+<span class="text-secondary w-16 shrink-0">&lt;WARN&gt;</span>
+<span class="text-secondary">latency_spike_detected (node_4) - Rerouting traffic...</span>
+</div>
+<!-- Log Entry -->
+<div class="mb-2 flex gap-4 opacity-80 hover:opacity-100 transition-opacity">
+<span class="text-slate-400 dark:text-gray-600 w-20 shrink-0">[14:02:08]</span>
+<span class="text-primary w-16 shrink-0">&lt;INFO&gt;</span>
+<span class="text-slate-600 dark:text-gray-400">Traffic rerouted. Load balancing at 98% efficiency.</span>
+</div>
+<!-- Log Entry -->
+<div class="mb-2 flex gap-4 opacity-90 hover:opacity-100 transition-opacity">
+<span class="text-slate-400 dark:text-gray-600 w-20 shrink-0">[14:02:12]</span>
+<span class="text-primary w-16 shrink-0">&lt;INFO&gt;</span>
+<span class="text-slate-600 dark:text-gray-400">Generating predictive model for Q3 sales data...</span>
+</div>
+<!-- Log Entry -->
+<div class="mb-2 flex gap-4 hover:opacity-100 transition-opacity border-l-2 border-primary pl-2 bg-primary/5 -mx-2 py-1">
+<span class="text-slate-400 dark:text-gray-600 w-20 shrink-0">[14:02:15]</span>
+<span class="text-primary w-16 shrink-0">&lt;ACTIVE&gt;</span>
+<span class="text-white animate-pulse">Running inference on cluster_delta_9...</span>
+</div>
+<!-- Typing cursor -->
+<div class="mt-4 flex gap-4">
+<span class="text-slate-400 dark:text-gray-600 w-20 shrink-0">[14:02:16]</span>
+<span class="text-gray-500 w-16 shrink-0">&lt;PENDING&gt;</span>
+<span class="w-2 h-4 bg-primary animate-pulse"></span>
+</div>
+</div>
+<!-- Command Input -->
+<div class="h-12 border-t border-slate-200 dark:border-[#283839] bg-white dark:bg-[#141c1d] flex items-center px-4 shrink-0">
+<span class="text-primary mr-2">➜</span>
+<input class="bg-transparent border-none text-slate-900 dark:text-white font-mono w-full focus:ring-0 placeholder:text-gray-600" placeholder="Enter system command..." type="text"/>
+</div>
+</section>
+<!-- Right Panel: Executive & Utility -->
+<aside class="w-96 flex flex-col border-l border-slate-200 dark:border-[#283839] bg-white dark:bg-surface-darker z-10">
+<!-- Executive Cards (Top) -->
+<div class="p-5 border-b border-slate-200 dark:border-[#283839]">
+<h3 class="text-slate-500 dark:text-[#5f7476] tracking-widest text-xs font-bold uppercase mb-4">Executive Cognition</h3>
+<!-- CEO Card -->
+<div class="mb-3 bg-slate-50 dark:bg-[#1a2425] border border-slate-200 dark:border-[#283839] rounded-lg p-3 hover:border-primary/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-gradient-to-br from-primary to-blue-600 overflow-hidden" data-alt="Abstract gradient avatar">
+<!-- Abstract Avatar -->
+</div>
+<div>
+<div class="text-xs font-bold text-white leading-none mb-1">CEO // CORE</div>
+<div class="text-[10px] text-primary">STATUS: ONLINE</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-500 text-sm">more_horiz</span>
+</div>
+<!-- Sparkline (CSS Gradient Approximation) -->
+<div class="h-8 w-full flex items-end gap-[2px]">
+<div class="w-1 bg-primary/20 h-[30%]"></div>
+<div class="w-1 bg-primary/30 h-[40%]"></div>
+<div class="w-1 bg-primary/40 h-[35%]"></div>
+<div class="w-1 bg-primary/50 h-[60%]"></div>
+<div class="w-1 bg-primary/60 h-[50%]"></div>
+<div class="w-1 bg-primary/70 h-[70%]"></div>
+<div class="w-1 bg-primary/80 h-[65%]"></div>
+<div class="w-1 bg-primary/90 h-[80%]"></div>
+<div class="w-1 bg-primary h-[75%]"></div>
+<div class="w-1 bg-primary h-[85%]"></div> <!-- Current -->
+</div>
+<div class="flex justify-between mt-1">
+<span class="text-[9px] text-gray-500 font-mono">LOAD: STABLE</span>
+<span class="text-[9px] text-primary font-mono">85%</span>
+</div>
+</div>
+<!-- CTO Card -->
+<div class="bg-slate-50 dark:bg-[#1a2425] border border-slate-200 dark:border-[#283839] rounded-lg p-3 hover:border-secondary/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-gradient-to-br from-secondary to-purple-600 overflow-hidden" data-alt="Abstract gradient avatar">
+<!-- Abstract Avatar -->
+</div>
+<div>
+<div class="text-xs font-bold text-white leading-none mb-1">CTO // LOGIC</div>
+<div class="text-[10px] text-secondary">STATUS: BUSY</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-500 text-sm">more_horiz</span>
+</div>
+<!-- Sparkline (High Load) -->
+<div class="h-8 w-full flex items-end gap-[2px]">
+<div class="w-1 bg-secondary/20 h-[50%]"></div>
+<div class="w-1 bg-secondary/30 h-[60%]"></div>
+<div class="w-1 bg-secondary/40 h-[55%]"></div>
+<div class="w-1 bg-secondary/50 h-[80%]"></div>
+<div class="w-1 bg-secondary/60 h-[90%]"></div>
+<div class="w-1 bg-secondary/70 h-[85%]"></div>
+<div class="w-1 bg-secondary/80 h-[95%]"></div>
+<div class="w-1 bg-secondary/90 h-[100%]"></div>
+<div class="w-1 bg-secondary h-[98%]"></div>
+<div class="w-1 bg-secondary h-[95%]"></div> <!-- Current -->
+</div>
+<div class="flex justify-between mt-1">
+<span class="text-[9px] text-gray-500 font-mono">LOAD: SPIKING</span>
+<span class="text-[9px] text-secondary font-mono">98%</span>
+</div>
+</div>
+</div>
+<!-- Multi-Tab Utility Panel -->
+<div class="flex-1 flex flex-col min-h-0">
+<!-- Tabs -->
+<div class="flex border-b border-slate-200 dark:border-[#283839] bg-slate-50 dark:bg-[#1a2425]">
+<button class="flex-1 py-3 text-xs font-bold border-b-2 border-primary text-primary bg-primary/5 uppercase tracking-wide">Active Tasks</button>
+<button class="flex-1 py-3 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-white uppercase tracking-wide transition-colors">Analytics</button>
+</div>
+<!-- Tab Content (Kanban Compact) -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-4 bg-slate-100 dark:bg-[#101617]">
+<!-- Kanban Col: Processing -->
+<div class="mb-4">
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Processing (2)</h4>
+<span class="size-1.5 rounded-full bg-primary animate-pulse"></span>
+</div>
+<!-- Task Card -->
+<div class="bg-white dark:bg-[#1a2425] p-3 rounded border border-slate-200 dark:border-[#283839] mb-2 shadow-sm border-l-2 border-l-primary">
+<div class="flex justify-between mb-1">
+<span class="text-xs font-bold text-slate-900 dark:text-white">Refactor Cortex V2</span>
+<span class="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-mono">HIGH</span>
+</div>
+<p class="text-[10px] text-gray-500 mb-2">Optimizing neural pathways for lower latency.</p>
+<div class="w-full bg-[#283839] h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[60%]"></div>
+</div>
+</div>
+<!-- Task Card -->
+<div class="bg-white dark:bg-[#1a2425] p-3 rounded border border-slate-200 dark:border-[#283839] mb-2 shadow-sm border-l-2 border-l-primary">
+<div class="flex justify-between mb-1">
+<span class="text-xs font-bold text-slate-900 dark:text-white">Dataset Ingestion</span>
+<span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-700 text-gray-400 font-mono">MED</span>
+</div>
+<p class="text-[10px] text-gray-500 mb-2">Parsing 4TB of unstructured text data.</p>
+<div class="w-full bg-[#283839] h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[35%]"></div>
+</div>
+</div>
+</div>
+<!-- Kanban Col: Pending -->
+<div>
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Queue (3)</h4>
+</div>
+<div class="bg-white dark:bg-[#1a2425] p-3 rounded border border-slate-200 dark:border-[#283839] mb-2 shadow-sm opacity-60 hover:opacity-100 transition-opacity">
+<div class="flex justify-between mb-1">
+<span class="text-xs font-bold text-slate-900 dark:text-white">Security Audit</span>
+<span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-700 text-gray-400 font-mono">LOW</span>
+</div>
+<p class="text-[10px] text-gray-500">Scheduled routine check for Q4.</p>
+</div>
+<div class="bg-white dark:bg-[#1a2425] p-3 rounded border border-slate-200 dark:border-[#283839] mb-2 shadow-sm opacity-60 hover:opacity-100 transition-opacity">
+<div class="flex justify-between mb-1">
+<span class="text-xs font-bold text-slate-900 dark:text-white">UI Update Patch</span>
+<span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-700 text-gray-400 font-mono">LOW</span>
+</div>
+<p class="text-[10px] text-gray-500">Deploying V1.2.4 fixes.</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</body></html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ASI: Autonomous Enterprise OS Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#25c0f4",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#101e22",
+                        "obsidian": "#0a0f12", // Deeper background for panels
+                        "governance": "#f59e0b", // Amber for alerts
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["Space Grotesk", "monospace"] // Using Space Grotesk for mono feel as requested
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'scan': 'scan 4s linear infinite',
+                        'flow': 'flow 20s linear infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100%)' },
+                        },
+                        flow: {
+                            '0%': { backgroundPosition: '0% 50%' },
+                            '100%': { backgroundPosition: '100% 50%' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom Scrollbar for the technical look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #101e22; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #25c0f4; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1ea3d1; 
+        }
+
+        .glass-panel {
+            background: rgba(16, 30, 34, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(37, 192, 244, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .neon-border {
+            box-shadow: 0 0 5px rgba(37, 192, 244, 0.2), inset 0 0 10px rgba(37, 192, 244, 0.05);
+        }
+
+        .wave-grid {
+            background-image: linear-gradient(rgba(37, 192, 244, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(37, 192, 244, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .scanline {
+            background: linear-gradient(to bottom, transparent, rgba(37, 192, 244, 0.1), transparent);
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-300 antialiased h-screen overflow-hidden flex flex-col selection:bg-primary selection:text-background-dark">
+<!-- Top Navigation / Synapse Bar -->
+<header class="h-14 bg-obsidian border-b border-white/10 flex items-center justify-between px-6 shrink-0 relative z-20">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded bg-primary/20 flex items-center justify-center border border-primary/50 text-primary">
+<span class="material-icons text-sm">hub</span>
+</div>
+<div>
+<h1 class="text-sm font-bold text-white tracking-widest uppercase">ASI <span class="text-primary mx-1">///</span> Aetherium-Syndicate-Inspectra</h1>
+<div class="flex items-center gap-2 text-[10px] text-primary/70">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    SYSTEM ONLINE
+                    <span class="text-slate-600 mx-1">|</span>
+                    RUST-BACKED TACHYON CORE
+                </div>
+</div>
+</div>
+<div class="flex-1 max-w-xl mx-8 relative hidden md:block">
+<input class="w-full bg-background-dark border border-white/10 rounded-full py-1.5 px-4 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder-slate-600 font-mono" placeholder="QUERY NEURAL CNS..." type="text"/>
+<span class="material-icons absolute right-3 top-1.5 text-slate-500 text-sm">search</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-background-dark px-3 py-1 rounded border border-white/5">
+<span class="text-[10px] font-mono text-slate-400">UPTIME</span>
+<span class="text-xs font-mono text-primary">99.9999%</span>
+</div>
+<button class="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center text-primary transition-colors border border-primary/30">
+<span class="material-icons text-lg">notifications</span>
+<span class="absolute top-3 right-3 w-2 h-2 rounded-full bg-governance border border-background-dark"></span>
+</button>
+<div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-blue-600 border border-white/20 overflow-hidden relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="Profile avatar of a futuristic system admin" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIYD_u7JHk8zg-J1TAEsjS1tc8wqAOEAlvStYlk2Auf6tI09hmJ8CYPnxt12rWEm__594CnCyXtBtLEuAnOh759kxu4c72ZcQk5iy2S5J5BgNFEYkmSC31hAN8eaVyppeBMjQkdxxFC75zCWUbjeDgpkjPyRWRfxMSqLaAjKSrgyWHCWApJ1JqKcnZlcSUP5ilCCGsjfWGS17GLjBPl_9dB0pXUerkz-nVN1qOP_j9SI5Ltbpp20Az40cXvpTFXDfR1ZV3dXJGQOQ"/>
+</div>
+</div>
+</header>
+<!-- Main Dashboard Grid -->
+<main class="flex-1 grid grid-cols-12 grid-rows-12 gap-4 p-4 min-h-0 overflow-hidden relative">
+<!-- Background Grid Effect -->
+<div class="absolute inset-0 wave-grid pointer-events-none opacity-20 z-0"></div>
+<!-- 1. Tachyon Core RDMA Monitor (Top Left) -->
+<section class="col-span-12 md:col-span-3 row-span-4 glass-panel rounded-lg p-4 flex flex-col relative overflow-hidden group">
+<div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+<h2 class="text-xs font-bold text-primary tracking-widest uppercase flex items-center gap-2">
+<span class="material-icons text-sm">memory</span> Tachyon Core
+                </h2>
+<span class="text-[10px] text-slate-500 font-mono">v8.2 RDMA</span>
+</div>
+<div class="flex-1 flex flex-col justify-center items-center relative">
+<!-- Radial Gauge Visualization (CSS only representation) -->
+<div class="relative w-32 h-32 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90 transform" viewbox="0 0 100 100">
+<circle class="text-slate-800" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-primary drop-shadow-[0_0_8px_rgba(37,192,244,0.6)]" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="10" stroke-width="6"></circle>
+</svg>
+<div class="absolute text-center">
+<span class="block text-2xl font-bold text-white font-mono">99%</span>
+<span class="block text-[8px] text-primary uppercase tracking-wider">Zero-Copy</span>
+</div>
+</div>
+</div>
+<div class="mt-4 space-y-2">
+<div class="flex justify-between items-end">
+<span class="text-[10px] text-slate-400">THROUGHPUT</span>
+<span class="text-sm font-mono text-primary font-bold">15,402,110 <span class="text-[10px] font-normal text-slate-500">msg/sec</span></span>
+</div>
+<div class="w-full bg-background-dark h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[92%] shadow-[0_0_10px_currentColor]"></div>
+</div>
+<div class="flex justify-between text-[9px] font-mono text-slate-500 pt-1">
+<span>LATENCY: 12μs</span>
+<span class="text-green-400">OPTIMAL</span>
+</div>
+</div>
+<!-- Scanline overlay -->
+<div class="scanline animate-scan opacity-10"></div>
+</section>
+<!-- 2. Intent Probability Waves (IPW) (Center Stage) -->
+<section class="col-span-12 md:col-span-6 row-span-7 glass-panel rounded-lg relative overflow-hidden flex flex-col">
+<div class="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none"></div>
+<!-- Header Controls -->
+<div class="relative z-10 flex items-center justify-between p-4 border-b border-white/5">
+<div class="flex items-center gap-3">
+<h2 class="text-xs font-bold text-white tracking-widest uppercase">Intent Probability Waves</h2>
+<span class="px-1.5 py-0.5 rounded text-[9px] bg-primary/20 text-primary border border-primary/30">IPW-ACTIVE</span>
+</div>
+<!-- Toggle Switch -->
+<div class="flex bg-background-dark rounded p-0.5 border border-white/10">
+<button class="px-3 py-1 rounded text-[10px] font-mono text-slate-400 hover:text-white transition-colors">REACTIVE</button>
+<button class="px-3 py-1 rounded text-[10px] font-mono bg-primary/20 text-primary font-bold shadow-sm">PREDICTIVE</button>
+</div>
+</div>
+<!-- Visualization Area -->
+<div class="flex-1 relative w-full h-full overflow-hidden">
+<!-- Abstract Wave Art -->
+<div class="absolute inset-0 flex items-center justify-center opacity-60">
+<div class="w-[120%] h-full bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1200&amp;q=80')] bg-cover bg-center mix-blend-screen opacity-80" data-alt="Abstract flowing sine waves representing predictive data outcomes" style="filter: hue-rotate(180deg) saturate(200%) contrast(120%);"></div>
+</div>
+<!-- Overlay Data Points -->
+<div class="absolute top-1/4 left-1/4 group cursor-pointer">
+<div class="w-2 h-2 bg-white rounded-full shadow-[0_0_15px_white] animate-pulse"></div>
+<div class="absolute left-4 top-0 bg-background-dark/90 border border-primary/30 p-2 rounded text-[10px] w-32 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="text-primary block font-bold mb-1">PROBABILITY SPIKE</span>
+                        Acquisition Event: 94%
+                    </div>
+</div>
+<div class="absolute bottom-1/3 right-1/3 group cursor-pointer">
+<div class="w-2 h-2 bg-governance rounded-full shadow-[0_0_15px_#f59e0b] animate-pulse delay-700"></div>
+<div class="absolute right-4 bottom-0 bg-background-dark/90 border border-governance/30 p-2 rounded text-[10px] w-32 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity text-right">
+<span class="text-governance block font-bold mb-1">RISK VECTOR</span>
+                        Regulatory Drift: 12%
+                    </div>
+</div>
+<!-- Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20 px-6 py-8">
+<div class="border-b border-dashed border-primary/30 w-full"></div>
+<div class="border-b border-dashed border-primary/30 w-full"></div>
+<div class="border-b border-dashed border-primary/30 w-full"></div>
+<div class="border-b border-dashed border-primary/30 w-full"></div>
+</div>
+</div>
+<!-- Footer Stats -->
+<div class="p-3 bg-black/20 border-t border-white/5 flex justify-between items-center text-[10px] font-mono text-slate-500">
+<div>MODEL: <span class="text-slate-300">Transformer-XL-9</span></div>
+<div>CONFIDENCE: <span class="text-primary">98.2%</span></div>
+<div>HORIZON: <span class="text-slate-300">T+4h</span></div>
+</div>
+</section>
+<!-- 3. Strategic Roadmap V4.2.2 (Sidebar Right) -->
+<section class="col-span-12 md:col-span-3 row-span-12 glass-panel rounded-lg p-0 flex flex-col border-l border-primary/10">
+<div class="p-4 border-b border-white/5 bg-background-dark/50">
+<h2 class="text-xs font-bold text-white tracking-widest uppercase mb-1">Strategic Roadmap</h2>
+<div class="text-[10px] text-primary font-mono">Build: v4.2.2-stable</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
+<!-- Milestone Item 1 -->
+<div class="relative pl-4 border-l border-primary/30">
+<div class="absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_10px_#25c0f4]"></div>
+<h3 class="text-xs font-bold text-white mb-1">Digital Evolution</h3>
+<p class="text-[10px] text-slate-400 mb-2">Self-optimizing architecture implementation.</p>
+<div class="w-full h-1 bg-background-dark rounded-full overflow-hidden mb-1">
+<div class="bg-primary w-[75%] h-full"></div>
+</div>
+<span class="text-[9px] font-mono text-primary block text-right">75% COMPLETE</span>
+</div>
+<!-- Milestone Item 2 -->
+<div class="relative pl-4 border-l border-white/10">
+<div class="absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full bg-background-dark border border-white/30"></div>
+<h3 class="text-xs font-bold text-slate-300 mb-1">Governance Protocols</h3>
+<p class="text-[10px] text-slate-500 mb-2">Automated compliance checking &amp; reporting.</p>
+<div class="w-full h-1 bg-background-dark rounded-full overflow-hidden mb-1">
+<div class="bg-governance w-[40%] h-full"></div>
+</div>
+<span class="text-[9px] font-mono text-governance block text-right">IN PROGRESS</span>
+</div>
+<!-- Milestone Item 3 -->
+<div class="relative pl-4 border-l border-white/10 opacity-60">
+<div class="absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full bg-background-dark border border-white/10"></div>
+<h3 class="text-xs font-bold text-slate-400 mb-1">Singularity Interface</h3>
+<p class="text-[10px] text-slate-500 mb-2">Direct neural uplink capabilities.</p>
+<span class="px-1.5 py-0.5 bg-white/5 rounded text-[9px] border border-white/10">PENDING Q4</span>
+</div>
+<!-- Alerts Box -->
+<div class="mt-8 p-3 bg-governance/10 border border-governance/20 rounded">
+<div class="flex items-center gap-2 mb-2 text-governance">
+<span class="material-icons text-sm">warning</span>
+<span class="text-[10px] font-bold uppercase">Governance Alert</span>
+</div>
+<p class="text-[10px] text-slate-300 leading-relaxed">
+                        Detected anomaly in Sector 7 negotiation patterns. Automatic remediation protocols engaged.
+                    </p>
+</div>
+</div>
+</section>
+<!-- 4. Identity Annihilation Chamber (Bottom Left) -->
+<section class="col-span-12 md:col-span-3 row-span-8 glass-panel rounded-lg p-4 flex flex-col relative overflow-hidden">
+<div class="flex items-center justify-between mb-4 z-10">
+<h2 class="text-xs font-bold text-white tracking-widest uppercase flex items-center gap-2">
+<span class="material-icons text-sm text-red-400">fingerprint</span> 
+                    ID Annihilation
+                </h2>
+</div>
+<div class="flex-1 flex flex-col gap-2 relative z-10">
+<!-- Input Stage -->
+<div class="bg-background-dark/80 p-2 rounded border border-white/5">
+<div class="text-[9px] text-slate-500 mb-1 uppercase tracking-wider">Input Stream (PII)</div>
+<div class="space-y-1">
+<div class="h-2 w-3/4 bg-white/10 rounded animate-pulse"></div>
+<div class="h-2 w-1/2 bg-white/10 rounded animate-pulse delay-75"></div>
+<div class="text-[10px] text-red-400 font-mono filter blur-[2px] select-none">John Doe 192.168.1.1</div>
+</div>
+</div>
+<!-- Processing Visual -->
+<div class="flex-1 flex items-center justify-center py-2">
+<div class="flex flex-col items-center gap-1">
+<span class="material-icons text-white/20 animate-bounce">arrow_downward</span>
+<div class="w-12 h-12 rounded-full border border-primary/50 flex items-center justify-center relative animate-spin-slow">
+<div class="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
+<span class="material-icons text-primary text-lg">blur_on</span>
+</div>
+<span class="material-icons text-white/20 animate-bounce">arrow_downward</span>
+</div>
+</div>
+<!-- Output Stage -->
+<div class="bg-primary/5 p-2 rounded border border-primary/20">
+<div class="text-[9px] text-primary/70 mb-1 uppercase tracking-wider">IntentVector V2</div>
+<div class="font-mono text-[9px] text-primary break-all leading-tight">
+                        0x4F 1A 9C 22...<br/>
+                        [ANONYMIZED]<br/>
+                        &gt;&gt; SAFE TO PROCESS
+                    </div>
+</div>
+</div>
+<!-- Background Effect -->
+<div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=600&amp;q=80')] bg-cover opacity-10 mix-blend-overlay" data-alt="Abstract digital noise pattern representing data encryption"></div>
+</section>
+<!-- 5. A2A Negotiation Hub (Bottom Center - Fills rest of space) -->
+<section class="col-span-12 md:col-span-6 row-span-5 glass-panel rounded-lg p-0 flex flex-col overflow-hidden">
+<div class="p-3 bg-obsidian border-b border-white/10 flex justify-between items-center">
+<h2 class="text-xs font-bold text-white tracking-widest uppercase flex items-center gap-2">
+<span class="material-icons text-sm text-green-400">forum</span> 
+                    A2A Negotiation Hub
+                </h2>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+<span class="text-[9px] text-slate-400 font-mono">LIVE FEED</span>
+</div>
+</div>
+<div class="flex-1 bg-black/40 p-3 overflow-y-auto font-mono text-[11px] leading-relaxed custom-scrollbar relative">
+<!-- Log entries -->
+<div class="mb-1 text-slate-500 border-l-2 border-transparent pl-2">[14:02:11.002] System initialized. Listening for bids...</div>
+<div class="mb-1 group hover:bg-white/5 pl-2 transition-colors border-l-2 border-transparent hover:border-primary cursor-default">
+<span class="text-primary">[14:02:11.450]</span>
+<span class="text-blue-300">Agent_Alpha_09</span>
+<span class="text-slate-400">requested compute lock (GPU-Cluster-4)</span>
+</div>
+<div class="mb-1 group hover:bg-white/5 pl-2 transition-colors border-l-2 border-transparent hover:border-governance cursor-default">
+<span class="text-primary">[14:02:11.512]</span>
+<span class="text-governance">Agent_Beta_Governance</span>
+<span class="text-slate-400">counter-bid: 500 credits + <span class="text-governance">Compliance Check</span></span>
+</div>
+<div class="mb-1 group hover:bg-white/5 pl-2 transition-colors border-l-2 border-transparent hover:border-green-500 cursor-default">
+<span class="text-primary">[14:02:11.605]</span>
+<span class="text-green-400">Broker_Node_X</span>
+<span class="text-slate-300">Contract Executed: Hash #88a91b...</span>
+</div>
+<div class="mb-1 group hover:bg-white/5 pl-2 transition-colors border-l-2 border-transparent hover:border-primary cursor-default">
+<span class="text-primary">[14:02:12.010]</span>
+<span class="text-blue-300">Swarm_Controller</span>
+<span class="text-slate-400">Reallocating 40TB storage pool &gt; Zone 3</span>
+</div>
+<div class="mb-1 group hover:bg-white/5 pl-2 transition-colors border-l-2 border-transparent hover:border-red-400 cursor-default">
+<span class="text-primary">[14:02:12.115]</span>
+<span class="text-red-400">Security_Daemon</span>
+<span class="text-slate-400">Packet inspection complete. 0 threats found.</span>
+</div>
+<!-- Cursor blinking at the bottom -->
+<div class="mt-2 text-primary animate-pulse">_</div>
+</div>
+<!-- Quick Input -->
+<div class="p-2 bg-obsidian border-t border-white/10 flex gap-2">
+<span class="text-primary font-mono text-xs">&gt;</span>
+<input class="bg-transparent border-none outline-none text-[11px] font-mono text-white w-full placeholder-slate-600 focus:ring-0" placeholder="Inject protocol override..." type="text"/>
+</div>
+</section>
+</main>
+<!-- Footer Status Bar -->
+<footer class="h-8 bg-obsidian border-t border-white/10 flex items-center justify-between px-4 text-[10px] text-slate-500 font-mono shrink-0">
+<div class="flex items-center gap-4">
+<span>RAM: 64TB / 128TB</span>
+<span>CPU: 14% (Idle)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary/50"></span>
+            CONNECTED: node-us-east-1a
+        </div>
+</footer>
+</body></html>

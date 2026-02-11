@@ -1,0 +1,325 @@
+import argparse
+import ast
+import json
+import os
+import time
+import sys
+from pathlib import Path
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from math import isfinite
+from typing import Any
+
+from tools.contracts.canonical import build_canonical_key, parse_schema_version, quality_total
+from tools.contracts.adaptive_budgeting import AdaptiveContractBudgeting
+from tools.contracts.schema_healer import heal_payload
+
+
+class ContractChecker:
+    """
+    The Immune System.
+    ตรวจสอบความถูกต้องของข้อมูล (Data Integrity) ก่อนเข้าสู่ระบบหลัก.
+    """
+
+    def __init__(self, schema_path: str = "docs/schemas/"):
+        self.schemas: dict[str, dict[str, Any]] = {}
+        self.schema_path = schema_path
+        self.adaptive_budget = AdaptiveContractBudgeting()
+        self._load_schemas()
+
+    def _load_schemas(self):
+        """โหลดพิมพ์เขียว (DNA) ของข้อมูลที่ถูกต้อง"""
+        self.schemas["ipw_v1"] = {
+            "type": "object",
+            "required": ["intent", "vector", "timestamp"],
+            "properties": {
+                "intent": {"type": "string"},
+                "vector": {"type": "array", "items": {"type": "number"}},
+                "timestamp": {"type": "number"},
+            },
+            "aliases": {
+                "intent_vector": "vector",
+                "intent_ts": "timestamp",
+                "intent_name": "intent",
+            },
+        }
+
+    def _check_types(self, payload: dict[str, Any], schema: dict[str, Any]) -> tuple[bool, str | None]:
+        properties = schema.get("properties", {})
+        for field, field_schema in properties.items():
+            if field not in payload:
+                continue
+            expected_type = field_schema.get("type")
+            value = payload[field]
+            if expected_type == "string" and not isinstance(value, str):
+                return False, f"Field '{field}' must be string"
+            if expected_type == "number":
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    return False, f"Field '{field}' must be number"
+                if not isfinite(float(value)):
+                    return False, f"Field '{field}' must be finite number"
+            if expected_type == "array" and not isinstance(value, list):
+                return False, f"Field '{field}' must be array"
+        return True, None
+
+
+    def _vector_index_step(self, validation_intensity: str, vector_length: int) -> int:
+        if vector_length <= 1:
+            return 1
+        if validation_intensity == "strict":
+            return 1
+        if validation_intensity == "balanced":
+            return max(1, vector_length // 64)
+        return max(1, vector_length // 16)
+
+    def _check_vector_numbers(self, payload: dict[str, Any], validation_intensity: str) -> tuple[bool, str | None]:
+        vector = payload.get("vector")
+        if not isinstance(vector, list):
+            return True, None
+
+        step = self._vector_index_step(validation_intensity, len(vector))
+        for index, value in enumerate(vector):
+            if step > 1 and index % step != 0 and index != len(vector) - 1:
+                continue
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                return False, f"Field 'vector[{index}]' must be number"
+            if not isfinite(float(value)):
+                return False, f"Field 'vector[{index}]' must be finite number"
+        return True, None
+
+    def _compute_quality(self, payload: dict[str, Any], schema: dict[str, Any]) -> dict[str, float]:
+        required = schema.get("required", [])
+        present_required = sum(1 for key in required if key in payload)
+        completeness = present_required / len(required) if required else 1.0
+
+        timestamp = payload.get("timestamp")
+        now = time.time()
+        if isinstance(timestamp, (int, float)):
+            age = max(0.0, now - float(timestamp))
+            freshness = max(0.0, min(1.0, 1.0 - (age / 3600)))
+        else:
+            freshness = 0.0
+
+        confidence = 1.0 if completeness == 1.0 else 0.6 * completeness
+        return {
+            "confidence": round(confidence, 3),
+            "freshness": round(freshness, 3),
+            "completeness": round(completeness, 3),
+        }
+
+    def canonicalize_event(
+        self,
+        payload: dict[str, Any],
+        event_type: str,
+        source: str,
+        schema_version: str = "v1",
+    ) -> dict[str, Any]:
+        event_time = payload.get("timestamp", time.time())
+        quality = payload.get("quality") if isinstance(payload.get("quality"), dict) else {
+            "confidence": 0.7,
+            "freshness": 0.7,
+            "completeness": 0.7,
+        }
+        canonical_key = build_canonical_key(
+            event_type=event_type,
+            event_time=float(event_time),
+            source=source,
+            entity_id=str(payload.get("entity_id") or payload.get("bid_id") or "global"),
+            schema_version=schema_version,
+        )
+        return {
+            "schema_version": schema_version,
+            "event_type": event_type,
+            "event_time": event_time,
+            "source": source,
+            "canonical_key": canonical_key,
+            "quality": quality,
+            "payload": payload,
+        }
+
+    def deduplicate_events(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        dedup_map: dict[str, dict[str, Any]] = {}
+        for event in events:
+            key = event.get("canonical_key")
+            if not key:
+                continue
+            quality = event.get("quality", {})
+            current_score = quality_total(quality)
+            previous = dedup_map.get(key)
+            if previous is None:
+                dedup_map[key] = event
+                continue
+            previous_quality = previous.get("quality", {})
+            previous_score = quality_total(previous_quality)
+            if current_score > previous_score:
+                dedup_map[key] = event
+                continue
+
+            if current_score == previous_score and parse_schema_version(event.get("schema_version")) >= parse_schema_version(
+                previous.get("schema_version")
+            ):
+                dedup_map[key] = event
+        return list(dedup_map.values())
+
+    def validate(
+        self,
+        payload: dict[str, Any],
+        contract_type: str,
+        validation_intensity: str = "strict",
+    ) -> tuple[bool, dict[str, Any]]:
+        """
+        ตรวจจับเชื้อโรค (Invalid Data)
+        True = ข้อมูลบริสุทธิ์ (Pass)
+        False = ข้อมูลปนเปื้อน (Reject)
+        """
+        schema = self.schemas.get(contract_type)
+        if not schema:
+            return False, {"error": f"Unknown Contract Type: {contract_type}"}
+
+        healing = heal_payload(payload, aliases=schema.get("aliases", {}))
+        healed_payload = healing.payload
+
+        for field in schema.get("required", []):
+            if field not in healed_payload:
+                return False, {"error": f"Missing field '{field}'", "contract_type": contract_type}
+
+        type_ok, type_error = self._check_types(healed_payload, schema)
+        if not type_ok:
+            return False, {"error": type_error, "contract_type": contract_type}
+
+        vector_ok, vector_error = self._check_vector_numbers(healed_payload, validation_intensity)
+        if not vector_ok:
+            return False, {"error": vector_error, "contract_type": contract_type}
+
+        quality = self._compute_quality(healed_payload, schema)
+        return True, {
+            "contract_type": contract_type,
+            "quality": quality,
+            "payload": healed_payload,
+            "schema_healing": {
+                "applied": bool(healing.remapped_fields),
+                "remapped_fields": healing.remapped_fields,
+            },
+            "validation_intensity": validation_intensity,
+        }
+
+    def validate_adaptive(
+        self,
+        payload: dict[str, Any],
+        contract_type: str,
+        observed_rps: float | None = None,
+    ) -> tuple[bool, dict[str, Any]]:
+        start = time.perf_counter()
+        intensity = self.adaptive_budget.intensity
+        is_valid, result = self.validate(
+            payload=payload,
+            contract_type=contract_type,
+            validation_intensity=intensity,
+        )
+        latency_ms = (time.perf_counter() - start) * 1000.0
+        snapshot = self.adaptive_budget.observe(
+            latency_ms=latency_ms,
+            valid=is_valid,
+            healing_applied=bool(result.get("schema_healing", {}).get("applied")) if isinstance(result, dict) else False,
+            observed_rps=observed_rps,
+        )
+
+        if isinstance(result, dict):
+            result["adaptive_budget"] = {
+                "intensity": snapshot.intensity,
+                "governance_risk": snapshot.governance_risk,
+                "avg_latency_ms": snapshot.avg_latency_ms,
+                "load_rps": snapshot.load_rps,
+                "risk_threshold": self.adaptive_budget.risk_threshold,
+            }
+        return is_valid, result
+
+
+
+def _collect_python_functions(root_dir: str = ".") -> dict[str, list[str]]:
+    ignore_dirs = {".git", ".venv", "node_modules", "target", "__pycache__", ".lighthouseci"}
+    function_map: dict[str, list[str]] = {}
+
+    for root, dirs, files in os.walk(root_dir):
+        dirs[:] = [d for d in dirs if d not in ignore_dirs]
+        for file_name in files:
+            if not file_name.endswith(".py"):
+                continue
+            path = os.path.join(root, file_name)
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    tree = ast.parse(handle.read(), filename=path)
+            except Exception:  # noqa: BLE001
+                continue
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef):
+                    function_map.setdefault(node.name, []).append(path)
+    return function_map
+
+
+def _check_duplicate_functions(root_dir: str = ".", registry_file: str = "canonical_registry.json") -> tuple[bool, list[dict[str, Any]]]:
+    function_map = _collect_python_functions(root_dir=root_dir)
+    registry: dict[str, Any] = {}
+    if os.path.exists(registry_file):
+        with open(registry_file, "r", encoding="utf-8") as handle:
+            registry = json.load(handle)
+
+    approved = set(registry.get("approved_functions", []))
+    canonical = registry.get("canonical_functions", {})
+    violations: list[dict[str, Any]] = []
+
+    for func_name, locations in function_map.items():
+        if func_name.startswith("__") and func_name.endswith("__"):
+            continue
+
+        unique_locations = sorted(set(locations))
+        if len(unique_locations) <= 1:
+            continue
+
+        canonical_meta = canonical.get(func_name, {}) if isinstance(canonical, dict) else {}
+        canonical_path = canonical_meta.get("path") if isinstance(canonical_meta, dict) else None
+        if canonical_path:
+            normalized_expected = os.path.normpath(canonical_path)
+            normalized_actual = {os.path.normpath(path) for path in unique_locations}
+            if normalized_actual != {normalized_expected}:
+                violations.append({
+                    "function": func_name,
+                    "locations": unique_locations,
+                    "canonical_path": canonical_path,
+                })
+            continue
+
+        if func_name not in approved:
+            violations.append({"function": func_name, "locations": unique_locations})
+
+    return not violations, violations
+
+
+def _run_audit() -> int:
+    is_valid, violations = _check_duplicate_functions()
+    if is_valid:
+        print("✅ PASS – No duplicate violations (dunders skipped)")
+        return 0
+
+    print("❌ FAIL – Duplicate function violations detected")
+    for violation in violations:
+        print(f"- {violation['function']}: {violation['locations']}")
+    return 1
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Contract checker utilities")
+    parser.add_argument("--audit", action="store_true", help="run structural duplicate-function audit")
+    args = parser.parse_args()
+
+    if args.audit:
+        return _run_audit()
+
+    parser.print_help()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

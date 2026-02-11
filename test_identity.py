@@ -1,16 +1,16 @@
-import sys
 import json
 import time
 
-try:
-    import tachyon_core
-except ImportError:
-    print("❌ Critical Error: ไม่พบโมดูล 'tachyon_core'")
-    print("คำแนะนำ: ตรวจสอบว่าได้รัน 'cargo build --release' และ copy ไฟล์ .so/.pyd มาที่นี่แล้วหรือยัง")
-    sys.exit(1)
+from tests.conftest import _load_tachyon_core
 
 
 def main():
+    tachyon_core = _load_tachyon_core()
+    if tachyon_core is None:
+        print("❌ Critical Error: ไม่พบโมดูล 'tachyon_core'")
+        print("คำแนะนำ: ตรวจสอบว่าได้รัน 'cargo build --release' และ copy ไฟล์ .so/.pyd มาที่นี่แล้วหรือยัง")
+        return
+
     print(f"{'='*60}")
     print("📇 ASI V4.2.2: IDENTITY CRYSTALLIZATION SEQUENCE")
     print(f"{'='*60}\n")
@@ -49,7 +49,7 @@ def main():
         print(f"   TYPE: {card_info['archetype']}")
 
         traits = card_info['traits']
-        print("   📊 BLOCH STATS:")
+        print("   📊 BLOCK STATS:")
         print(f"      • Logic/Emotion Bias : {traits['logic_bias']*100:.1f}%")
         print(f"      • Risk Tolerance     : {traits['risk_tolerance']*100:.1f}%")
         print(f"      • Empathy Resonance  : {traits['empathy']*100:.1f}%")

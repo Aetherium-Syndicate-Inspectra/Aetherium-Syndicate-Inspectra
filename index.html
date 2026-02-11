@@ -1,193 +1,112 @@
 <!DOCTYPE html>
-<html lang="th" data-theme="dark">
+<html lang="th" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aetherium Genesis - Executive AI Console</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap">
-    <script>
-        window.tailwind = window.tailwind || {};
-        window.tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#1337ec',
-                        surface: {
-                            dark: '#1e293b',
-                            darker: '#0f1115'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    <link rel="stylesheet" href="assets/css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Universal Role Navigator + Resonance Control Plane</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { bg: '#0b1020', panel: '#121a31', panelSoft: '#1a2544', accent: '#f59e0b', good: '#34d399' } } } };
+  </script>
 </head>
-<body class="bg-slate-950 text-slate-100">
-    <div id="app">
-        <!-- Top Header -->
-        <header class="h-16 border-b border-slate-800 bg-slate-950/90 backdrop-blur flex items-center justify-between px-6 shrink-0 z-50">
-            <div class="flex items-center gap-4">
-                <div class="size-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
-                    <span class="material-symbols-outlined text-2xl">hub</span>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight">Aetherium Genesis</h1>
-                    <div class="flex items-center gap-2">
-                        <span class="size-2 bg-emerald-500 rounded-full pulse"></span>
-                        <span class="text-[10px] text-slate-400 font-mono tracking-widest uppercase">Executive Console v4.2.1</span>
-                    </div>
-                </div>
-            </div>
+<body class="bg-bg text-slate-100 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-5 space-y-4">
+    <header class="rounded-xl bg-panel border border-slate-700 p-4">
+      <h1 class="text-2xl font-bold">Universal Role Navigator (7 Industries)</h1>
+      <p class="text-sm text-slate-300 mt-1">Role Registry + Resonance Fingerprint + Drift Detector + Crisis Tournament (Frontend Foundation)</p>
+    </header>
 
-            <div class="flex items-center gap-6">
-                <!-- Role Switcher -->
-                <div class="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
-                    <span class="material-symbols-outlined text-sm text-slate-400">person_search</span>
-                    <select id="role-select" class="bg-transparent text-xs font-medium focus:outline-none cursor-pointer">
-                        <option value="executive">👑 Executive Director</option>
-                        <option value="analyst">📊 Senior Analyst</option>
-                        <option value="viewer">👁️ System Viewer</option>
-                        <option value="researcher">🤖 AI Researcher</option>
-                    </select>
-                </div>
+    <main class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+      <section class="xl:col-span-3 bg-panel rounded-xl border border-slate-700 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-semibold">Canonical Role Registry</h2>
+          <span id="roleCount" class="text-xs px-2 py-1 rounded bg-slate-800"></span>
+        </div>
+        <div class="text-xs text-slate-400">Meta-Schema: Focus / KPI / Horizon / Capability</div>
+        <div id="roleGroups" class="space-y-3"></div>
+      </section>
 
-                <div class="h-8 w-px bg-slate-800"></div>
+      <section class="xl:col-span-5 bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
+        <h2 class="font-semibold">Role Intelligence Card</h2>
+        <div id="roleCard" class="rounded-xl bg-panelSoft border border-slate-600 p-4"></div>
 
-                <div class="flex items-center gap-3">
-                    <button id="theme-toggle" class="p-2 text-slate-400 hover:text-white transition-colors">
-                        <span class="material-symbols-outlined">dark_mode</span>
-                    </button>
-                    <button class="p-2 text-slate-400 hover:text-white transition-colors relative">
-                        <span class="material-symbols-outlined">notifications</span>
-                        <span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full"></span>
-                    </button>
-                    <div class="flex items-center gap-3 pl-3 border-l border-slate-800">
-                        <div class="text-right hidden sm:block">
-                            <div class="text-sm font-bold text-white" id="user-name">Dr. Aris Thorne</div>
-                            <div class="text-[10px] text-primary font-bold uppercase tracking-wider" id="user-role-label">Executive Level 1</div>
-                        </div>
-                        <div class="size-9 rounded-lg border border-slate-700 bg-gradient-to-br from-primary/40 to-violet-500/30 flex items-center justify-center text-xs font-black text-white" id="user-avatar" aria-label="Current user avatar">AT</div>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <div class="rounded-xl bg-slate-900 border border-slate-700 p-3 space-y-2 text-sm">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold">Resonance Fingerprint</h3>
+            <span>Score: <b id="resonanceScore">0.91</b></span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="text-xs text-slate-400">Speed <input id="responseSpeed" type="range" min="0.2" max="1" step="0.1" value="0.6" class="w-full" /></label>
+            <label class="text-xs text-slate-400">Depth
+              <select id="detailDepth" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="summary">summary</option><option value="deep" selected>deep</option></select>
+            </label>
+            <label class="text-xs text-slate-400">Format
+              <select id="responseFormat" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="numbers" selected>numbers</option><option value="story">story</option></select>
+            </label>
+            <label class="text-xs text-slate-400">Context Mode
+              <select id="contextMode" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="strategic" selected>strategic</option><option value="operational">operational</option></select>
+            </label>
+          </div>
+          <label class="text-xs text-slate-400">C-Level Mode
+            <select id="cLevelMode" class="w-full mt-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"><option value="visionary" selected>Visionary (3Y)</option><option value="crisis">Crisis (Daily)</option></select>
+          </label>
+          <p class="text-xs text-cyan-300">Freeze Trail: <b id="freezeCount">0</b> snapshots</p>
+        </div>
+        <div class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm" id="modeExplain"></div>
+      </section>
 
-        <div class="main-content">
-            <!-- Sidebar Navigation -->
-            <aside class="sidebar shrink-0">
-                <div class="p-4">
-                    <button id="global-action-btn" class="w-full bg-primary hover:bg-primary-hover text-white rounded-xl p-3 flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 group">
-                        <span class="material-symbols-outlined">add</span>
-                        <span class="font-bold text-sm">New Directive</span>
-                    </button>
-                </div>
-
-                <nav class="flex-1 overflow-y-auto py-2">
-                    <div class="px-4 mb-2">
-                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Operational Views</h3>
-                    </div>
-                    <a href="#" class="nav-item active" data-view="dashboard">
-                        <span class="material-symbols-outlined">dashboard</span>
-                        <span>🏛️ Dashboard</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="spatial">
-                        <span class="material-symbols-outlined">hub</span>
-                        <span>🌌 Spatial Grid</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="command">
-                        <span class="material-symbols-outlined">terminal</span>
-                        <span>🎮 Command Center</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="meetings">
-                        <span class="material-symbols-outlined">groups</span>
-                        <span>🤝 AI Meetings</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="structure">
-                        <span class="material-symbols-outlined">account_tree</span>
-                        <span>🏢 Structure</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="analytics">
-                        <span class="material-symbols-outlined">monitoring</span>
-                        <span>📊 Analytics</span>
-                    </a>
-
-                    <div class="mt-8 px-4 mb-2">
-                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">System Control</h3>
-                    </div>
-                    <a href="#" class="nav-item text-rose-400 hover:text-rose-300" id="emergency-council-nav">
-                        <span class="material-symbols-outlined">warning</span>
-                        <span>Emergency Council</span>
-                    </a>
-                </nav>
-
-                <!-- System Load Mini -->
-                <div class="p-4 border-t border-slate-800 bg-slate-950/50">
-                    <div class="flex items-center justify-between text-[10px] font-bold text-slate-500 mb-2">
-                        <span class="tracking-widest uppercase">System Load</span>
-                        <span id="system-load-val">42%</span>
-                    </div>
-                    <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                        <div id="system-load-bar" class="h-full bg-emerald-500 transition-all duration-1000" style="width: 42%"></div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Main View Container -->
-            <main id="view-container">
-                <!-- Views will be injected here -->
-                <div id="loader" class="absolute inset-0 bg-slate-950 z-50 transition-opacity duration-300">
-                    <div class="p-6 md:p-8 space-y-5">
-                        <div class="skeleton h-8 w-64 rounded-lg"></div>
-                        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                            <div class="skeleton-card">
-                                <div class="skeleton h-4 w-28 rounded"></div>
-                                <div class="skeleton h-7 w-20 rounded mt-3"></div>
-                            </div>
-                            <div class="skeleton-card">
-                                <div class="skeleton h-4 w-24 rounded"></div>
-                                <div class="skeleton h-7 w-16 rounded mt-3"></div>
-                            </div>
-                            <div class="skeleton-card">
-                                <div class="skeleton h-4 w-32 rounded"></div>
-                                <div class="skeleton h-7 w-24 rounded mt-3"></div>
-                            </div>
-                        </div>
-                        <div class="text-xs font-mono text-slate-400 uppercase tracking-[0.2em]">Synchronizing AetherBus...</div>
-                    </div>
-                </div>
-            </main>
+      <section class="xl:col-span-4 bg-panel rounded-xl border border-slate-700 p-4 flex flex-col min-h-[620px]">
+        <div class="flex items-center justify-between mb-3 gap-2">
+          <h2 class="font-semibold">Unified LLM Chat</h2>
+          <div class="flex bg-slate-900 rounded-lg p-1 text-xs">
+            <button id="modeGlobal" class="px-3 py-1 rounded bg-accent text-slate-900 font-semibold">Global</button>
+            <button id="modeRole" class="px-3 py-1 rounded text-slate-300">Per-role</button>
+          </div>
         </div>
 
-        <!-- Global Status Bar -->
-        <footer class="status-bar shrink-0">
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-2">
-                    <span class="text-slate-500">AetherBus:</span>
-                    <span class="text-emerald-400 font-bold" id="bus-status">OPERATIONAL</span>
-                </div>
-                <div class="w-px h-3 bg-slate-800"></div>
-                <div class="flex items-center gap-2">
-                    <span>Latency:</span>
-                    <span class="text-slate-200" id="latency-val">0.8ms</span>
-                </div>
-                <div class="hidden sm:flex items-center gap-2">
-                    <span>Throughput:</span>
-                    <span class="text-slate-200" id="throughput-val">10,240 req/s</span>
-                </div>
-            </div>
-            <div class="ml-auto flex items-center gap-4">
-                <div id="clock" class="text-slate-300 font-mono">14:02:59 UTC</div>
-                <div class="text-[10px] text-slate-500">v4.2.1-stable</div>
-            </div>
-        </footer>
-    </div>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <div>
+            <label class="text-xs text-slate-400">บทบาทสนทนา</label>
+            <select id="chatRoleSelect" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">C-Level Mode Switch (&lt;1s)</label>
+            <select id="contextMode" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm">
+              <option value="visionary">Visionary (3Y)</option>
+              <option value="crisis">Crisis Manager (Daily)</option>
+            </select>
+          </div>
+        </div>
 
-    <!-- Scripts -->
-    <script type="module" src="assets/js/app.js"></script>
+        <div class="grid grid-cols-3 gap-2 mb-3 text-xs">
+          <div><label class="text-slate-400">ความเร็ว</label><select id="freqSpeed" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-1"><option value="fast">เร็ว</option><option value="balanced" selected>สมดุล</option><option value="deliberate">ละเอียด</option></select></div>
+          <div><label class="text-slate-400">ระดับรายละเอียด</label><select id="detailDepth" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-1"><option value="summary">ภาพรวม</option><option value="standard" selected>มาตรฐาน</option><option value="deep">เชิงลึก</option></select></div>
+          <div><label class="text-slate-400">รูปแบบคำตอบ</label><select id="responseFormat" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-1"><option value="numbers">ตัวเลข</option><option value="mixed" selected>ผสม</option><option value="story">เชิงเล่าเรื่อง</option></select></div>
+        </div>
+
+        <div id="chatWindow" class="flex-1 overflow-y-auto rounded-xl bg-slate-900 border border-slate-700 p-3 space-y-3"></div>
+        <div class="mt-3 flex gap-2">
+          <input id="chatInput" class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm" placeholder="เช่น สรุปแผนรับมือ supply shock สำหรับอุตสาหกรรม Film" />
+          <button id="sendBtn" class="px-4 py-2 rounded bg-good text-slate-900 font-semibold">ส่ง</button>
+        </div>
+      </section>
+    </main>
+
+    <section class="bg-panel rounded-xl border border-slate-700 p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold">Cross-Industry Crisis Tournament</h2>
+        <span class="text-xs px-2 py-1 rounded bg-slate-800">ranking + transferable policy</span>
+      </div>
+      <div class="flex flex-wrap gap-2 items-end">
+        <label class="text-xs text-slate-400">Scenario
+          <select id="tournamentScenario" class="mt-1 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-sm"></select>
+        </label>
+        <button id="runTournament" class="px-4 py-2 rounded bg-accent text-slate-900 font-semibold">Run Tournament</button>
+      </div>
+      <pre id="tournamentOutput" class="rounded-xl bg-slate-900 border border-slate-700 p-3 text-sm whitespace-pre-wrap min-h-[180px]"></pre>
+    </section>
+  </div>
+
+  <script type="module" src="assets/js/role-studio/main.js"></script>
 </body>
 </html>

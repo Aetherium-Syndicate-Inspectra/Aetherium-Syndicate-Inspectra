@@ -1,0 +1,25 @@
+Aetherium AI Physiology - High Level Summary
+===========================================
+
+1) Backbone (AetherBus Extreme)
+- Async publish/subscribe event bus for agent communication.
+- System-wide canonical keys are generated with one shared helper.
+- Recent-event memory is bounded to avoid memory growth.
+
+2) Immune System (ContractChecker)
+- Validates payloads against contract schema (ipw_v1).
+- Returns tuple contract result: (is_valid, details).
+- Applies one quality rubric: confidence, freshness, completeness.
+- Dedup keeps highest-quality event per canonical key.
+
+3) Brain Stem (Gateway Main)
+- FastAPI integration point for HTTP + WebSocket I/O.
+- For websocket input: parse JSON -> validate contract -> canonicalize -> emit.
+- Emits SYSTEM_ALERT on malformed or violating payloads.
+- Supports reflex mode when tachyon_core is not installed.
+
+Operational Standards Applied
+-----------------------------
+- Canonical key standard shared by all modules.
+- Single best implementation reused (canonical + quality score helpers).
+- Regression tests included for dedup and bus lifecycle functions.

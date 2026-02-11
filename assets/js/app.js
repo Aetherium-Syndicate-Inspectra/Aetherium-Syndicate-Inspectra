@@ -110,7 +110,9 @@ class App {
             return;
         }
 
-        switch (payload.type) {
+        const eventType = payload.type || payload.event_type;
+
+        switch (eventType) {
             case 'agent.updated':
                 this.state.upsertAgent(payload.data);
                 break;
@@ -125,14 +127,19 @@ class App {
                 this.state.updateMetrics(payload.data);
                 this.syncGlobalMetrics();
                 break;
+            case 'bid_created':
+            case 'bid_countered':
+            case 'conflict_resolved':
+                this.state.ingestBidLedgerEvent(payload);
+                break;
             default:
-                console.info('[Realtime] Unsupported event type', payload.type);
+                console.info('[Realtime] Unsupported event type', eventType);
         }
     }
 
 
     shouldProcessEvent(payload) {
-        const eventType = payload?.type || 'unknown';
+        const eventType = payload?.type || payload?.event_type || 'unknown';
         const freshnessWindowMs = eventType === 'metrics.updated' ? 750 : 250;
         const payloadTimestamp = Number.parseInt(payload?.timestamp ?? payload?.ts ?? Date.now(), 10);
         const eventTime = Number.isNaN(payloadTimestamp) ? Date.now() : payloadTimestamp;
@@ -221,7 +228,7 @@ class App {
         try {
             const module = await import(`./views/${viewName}-view.js`);
             const ViewClass = module.default;
-            this.currentViewInstance = new ViewClass(this.state);
+            this.currentViewInstance = new ViewClass(this.state, { apiClient: this.apiClient });
 
             this.viewContainer.innerHTML = '';
             this.viewContainer.appendChild(this.currentViewInstance.render());

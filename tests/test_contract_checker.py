@@ -1,0 +1,123 @@
+import time
+import unittest
+from math import inf
+
+from tools.contracts.contract_checker import ContractChecker
+
+
+class ContractCheckerTests(unittest.TestCase):
+    def setUp(self):
+        self.checker = ContractChecker()
+
+    def test_validate_ipw_v1_success(self):
+        payload = {"intent": "optimize", "vector": [0.1, 0.2], "timestamp": time.time()}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertTrue(ok)
+        self.assertIn("quality", result)
+
+    def test_validate_missing_required_field(self):
+        payload = {"intent": "optimize", "timestamp": time.time()}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertFalse(ok)
+        self.assertIn("Missing field", result["error"])
+
+    def test_validate_self_heals_schema_aliases(self):
+        payload = {"intent_name": "optimize", "intent_vector": [0.1, 0.2], "intent_ts": time.time()}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertTrue(ok)
+        self.assertTrue(result["schema_healing"]["applied"])
+        self.assertEqual(result["payload"]["intent"], "optimize")
+        self.assertIn("intent_vector", result["schema_healing"]["remapped_fields"])
+
+    def test_validate_self_heal_keeps_canonical_value_when_duplicate_keys(self):
+        payload = {
+            "intent": "canonical-intent",
+            "intent_name": "legacy-intent",
+            "vector": [0.3],
+            "intent_vector": [0.9],
+            "timestamp": time.time(),
+            "intent_ts": time.time() - 10,
+        }
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertTrue(ok)
+        self.assertEqual(result["payload"]["intent"], "canonical-intent")
+        self.assertEqual(result["payload"]["vector"], [0.3])
+
+    def test_validate_rejects_boolean_timestamp_even_if_python_treats_bool_as_int(self):
+        payload = {"intent": "optimize", "vector": [0.1, 0.2], "timestamp": True}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertFalse(ok)
+        self.assertEqual(result["error"], "Field 'timestamp' must be number")
+
+    def test_validate_rejects_non_finite_numeric_timestamp(self):
+        payload = {"intent": "optimize", "vector": [0.1, 0.2], "timestamp": inf}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertFalse(ok)
+        self.assertEqual(result["error"], "Field 'timestamp' must be finite number")
+
+
+    def test_validate_rejects_non_numeric_vector_item(self):
+        payload = {"intent": "optimize", "vector": [0.1, "x"], "timestamp": time.time()}
+        ok, result = self.checker.validate(payload, "ipw_v1")
+        self.assertFalse(ok)
+        self.assertEqual(result["error"], "Field 'vector[1]' must be number")
+
+    def test_validate_adaptive_includes_budget_snapshot(self):
+        payload = {"intent": "optimize", "vector": [0.1, 0.2], "timestamp": time.time()}
+        ok, result = self.checker.validate_adaptive(payload, "ipw_v1", observed_rps=300)
+        self.assertTrue(ok)
+        self.assertIn("adaptive_budget", result)
+        self.assertIn(result["adaptive_budget"]["intensity"], {"strict", "balanced", "fast"})
+
+    def test_validate_adaptive_keeps_strict_when_governance_risk_spikes(self):
+        bad_payload = {"intent": "optimize", "vector": [0.1], "timestamp": "bad"}
+        for _ in range(6):
+            self.checker.validate_adaptive(bad_payload, "ipw_v1", observed_rps=600)
+
+        snapshot = self.checker.adaptive_budget.snapshot()
+        self.assertEqual(snapshot.intensity, "strict")
+
+    def test_deduplicate_events_prefers_better_quality(self):
+        now = time.time()
+        base_payload = {"intent": "optimize", "vector": [1.0], "timestamp": now}
+        event = self.checker.canonicalize_event(base_payload, event_type="USER_INPUT", source="dashboard")
+        low_quality = {**event, "quality": {"confidence": 0.2, "freshness": 0.2, "completeness": 0.2}}
+        high_quality = {**event, "quality": {"confidence": 1.0, "freshness": 1.0, "completeness": 1.0}}
+
+        deduped = self.checker.deduplicate_events([low_quality, high_quality])
+        self.assertEqual(len(deduped), 1)
+        self.assertEqual(deduped[0]["quality"]["confidence"], 1.0)
+
+
+    def test_deduplicate_events_prefers_newer_schema_when_quality_ties(self):
+        now = time.time()
+        payload = {"entity_id": "BID-777", "timestamp": now}
+        v1 = self.checker.canonicalize_event(payload, event_type="bid_countered", source="ws", schema_version="v1")
+        v2 = self.checker.canonicalize_event(payload, event_type="bid_countered", source="ws", schema_version="v2")
+
+        v1["canonical_key"] = "stable-key"
+        v2["canonical_key"] = "stable-key"
+        v1["quality"] = {"confidence": 0.9, "freshness": 0.9, "completeness": 1.0}
+        v2["quality"] = {"confidence": 0.9, "freshness": 0.9, "completeness": 1.0}
+
+        deduped = self.checker.deduplicate_events([v1, v2])
+        self.assertEqual(len(deduped), 1)
+        self.assertEqual(deduped[0]["schema_version"], "v2")
+
+
+    def test_deduplicate_events_freeze_schema_uses_single_best_record(self):
+        now = time.time()
+        payload = {"entity_id": "freeze-1", "timestamp": now}
+        event = self.checker.canonicalize_event(payload, event_type="freeze.saved", source="api/freeze/save")
+
+        weaker = {**event, "quality": {"confidence": 0.7, "freshness": 0.8, "completeness": 0.9}}
+        stronger = {**event, "quality": {"confidence": 0.95, "freshness": 1.0, "completeness": 1.0}}
+
+        deduped = self.checker.deduplicate_events([weaker, stronger])
+        self.assertEqual(len(deduped), 1)
+        self.assertEqual(deduped[0]["quality"]["confidence"], 0.95)
+
+
+
+if __name__ == "__main__":
+    unittest.main()

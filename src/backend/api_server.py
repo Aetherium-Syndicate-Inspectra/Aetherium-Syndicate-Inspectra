@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from src.backend.auth.google_auth import router as google_auth_router
 from src.backend.freeze_api import router as freeze_router
+from src.backend.resonance_drift_api import router as resonance_drift_router
 from src.backend.db import (
     add_payment_method,
     create_transaction,
@@ -45,6 +46,7 @@ engine = tachyon_core.TachyonEngine()
 init_db()
 app.include_router(google_auth_router)
 app.include_router(freeze_router)
+app.include_router(resonance_drift_router)
 
 PAYMENT_WEBHOOK_SECRET = os.getenv("PAYMENT_WEBHOOK_SECRET", "asi-webhook-dev-secret")
 

@@ -1,13 +1,7 @@
 import json
 import time
 
-
-def _load_tachyon_core():
-    try:
-        import tachyon_core
-    except ImportError:
-        return None
-    return tachyon_core
+from tests.conftest import _load_tachyon_core
 
 
 def main():

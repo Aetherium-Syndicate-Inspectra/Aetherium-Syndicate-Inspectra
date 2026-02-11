@@ -1,4 +1,14 @@
+import argparse
+import ast
+import json
+import os
 import time
+import sys
+from pathlib import Path
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from math import isfinite
 from typing import Any
 
@@ -225,3 +235,91 @@ class ContractChecker:
                 "risk_threshold": self.adaptive_budget.risk_threshold,
             }
         return is_valid, result
+
+
+
+def _collect_python_functions(root_dir: str = ".") -> dict[str, list[str]]:
+    ignore_dirs = {".git", ".venv", "node_modules", "target", "__pycache__", ".lighthouseci"}
+    function_map: dict[str, list[str]] = {}
+
+    for root, dirs, files in os.walk(root_dir):
+        dirs[:] = [d for d in dirs if d not in ignore_dirs]
+        for file_name in files:
+            if not file_name.endswith(".py"):
+                continue
+            path = os.path.join(root, file_name)
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    tree = ast.parse(handle.read(), filename=path)
+            except Exception:  # noqa: BLE001
+                continue
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef):
+                    function_map.setdefault(node.name, []).append(path)
+    return function_map
+
+
+def _check_duplicate_functions(root_dir: str = ".", registry_file: str = "canonical_registry.json") -> tuple[bool, list[dict[str, Any]]]:
+    function_map = _collect_python_functions(root_dir=root_dir)
+    registry: dict[str, Any] = {}
+    if os.path.exists(registry_file):
+        with open(registry_file, "r", encoding="utf-8") as handle:
+            registry = json.load(handle)
+
+    approved = set(registry.get("approved_functions", []))
+    canonical = registry.get("canonical_functions", {})
+    violations: list[dict[str, Any]] = []
+
+    for func_name, locations in function_map.items():
+        if func_name.startswith("__") and func_name.endswith("__"):
+            continue
+
+        unique_locations = sorted(set(locations))
+        if len(unique_locations) <= 1:
+            continue
+
+        canonical_meta = canonical.get(func_name, {}) if isinstance(canonical, dict) else {}
+        canonical_path = canonical_meta.get("path") if isinstance(canonical_meta, dict) else None
+        if canonical_path:
+            normalized_expected = os.path.normpath(canonical_path)
+            normalized_actual = {os.path.normpath(path) for path in unique_locations}
+            if normalized_actual != {normalized_expected}:
+                violations.append({
+                    "function": func_name,
+                    "locations": unique_locations,
+                    "canonical_path": canonical_path,
+                })
+            continue
+
+        if func_name not in approved:
+            violations.append({"function": func_name, "locations": unique_locations})
+
+    return not violations, violations
+
+
+def _run_audit() -> int:
+    is_valid, violations = _check_duplicate_functions()
+    if is_valid:
+        print("✅ PASS – No duplicate violations (dunders skipped)")
+        return 0
+
+    print("❌ FAIL – Duplicate function violations detected")
+    for violation in violations:
+        print(f"- {violation['function']}: {violation['locations']}")
+    return 1
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Contract checker utilities")
+    parser.add_argument("--audit", action="store_true", help="run structural duplicate-function audit")
+    args = parser.parse_args()
+
+    if args.audit:
+        return _run_audit()
+
+    parser.print_help()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

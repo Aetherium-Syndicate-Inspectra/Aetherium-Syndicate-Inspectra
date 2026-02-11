@@ -2,5 +2,17 @@
   "approved_functions": [
     "main",
     "new"
-  ]
+  ],
+  "canonical_functions": {
+    "_load_tachyon_core": {
+      "path": "tests/conftest.py",
+      "purpose": "load tachyon core for integration tests",
+      "duplicate_allowed": false
+    },
+    "formulate_strategy": {
+      "path": "src/backend/crisis_tournament.py",
+      "purpose": "AI CEO decision strategy core",
+      "duplicate_allowed": false
+    }
+  }
 }

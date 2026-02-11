@@ -2,14 +2,7 @@ import random
 import struct
 import time
 
-
-def _load_tachyon_core():
-    # พยายาม Import โมดูลที่ Compile มา และคืนค่า None หากยังไม่พร้อมใช้งาน
-    try:
-        import tachyon_core
-    except ImportError:
-        return None
-    return tachyon_core
+from tests.conftest import _load_tachyon_core
 
 
 def create_mock_payload_v2(user_id, vector_data, ghost=1, seed=12345):

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.backend.crisis_tournament import CrisisScenario, CrisisTournament
+from src.backend.crisis_tournament import CrisisScenario, CrisisTournament, formulate_strategy
 from src.backend.freeze_light_events import FreezeLightEventStore
 
 
@@ -10,28 +10,8 @@ class StubCEO:
     industry: str
     ceo_id: str
 
-    def formulate_strategy(self, *, scenario, round: int, previous_outcome=None):
-        del scenario, previous_outcome
-        if self.industry == "aerospace":
-            return {
-                "inventory_buffer": True,
-                "supplier_diversification": True,
-                "vertical_integration": round == 2,
-                "stakeholder_communication": True,
-                "cost_impact": 0.2,
-            }
-        if self.industry == "medical":
-            return {
-                "regulatory_alignment": True,
-                "supplier_diversification": round > 0,
-                "demand_forecasting_under_uncertainty": True,
-                "cost_impact": 0.3,
-            }
-        return {
-            "workflow_reconfiguration": True,
-            "stakeholder_communication": True,
-            "cost_impact": 0.35,
-        }
+    def __post_init__(self):
+        self.formulate_strategy = formulate_strategy.__get__(self, StubCEO)
 
 
 def test_crisis_tournament_ranking_transfer_and_freeze_event(tmp_path: Path):

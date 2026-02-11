@@ -154,6 +154,30 @@ class CrisisTournament:
         return detected
 
 
+def formulate_strategy(agent: SupportsStrategy, *, scenario: CrisisScenario, round: int, previous_outcome: dict[str, Any] | None = None) -> dict[str, Any]:
+    del scenario, previous_outcome
+    if agent.industry == "aerospace":
+        return {
+            "inventory_buffer": True,
+            "supplier_diversification": True,
+            "vertical_integration": round == 2,
+            "stakeholder_communication": True,
+            "cost_impact": 0.2,
+        }
+    if agent.industry == "medical":
+        return {
+            "regulatory_alignment": True,
+            "supplier_diversification": round > 0,
+            "demand_forecasting_under_uncertainty": True,
+            "cost_impact": 0.3,
+        }
+    return {
+        "workflow_reconfiguration": True,
+        "stakeholder_communication": True,
+        "cost_impact": 0.35,
+    }
+
+
 class PolicyTransferEngine:
     def __init__(self):
         self.policy_library: list[dict[str, Any]] = []

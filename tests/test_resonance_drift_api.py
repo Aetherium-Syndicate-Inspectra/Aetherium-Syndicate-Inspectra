@@ -21,6 +21,8 @@ def test_orchestrator_builds_pending_actions_from_drift(tmp_path):
     actions = orchestrator.pull_pending_actions("u1", limit=3)
     assert len(actions) >= 1
     assert actions[0].user_id == "u1"
+    assert actions[0].cohort
+    assert actions[0].explanation
 
 
 def test_orchestrator_outcome_reverts_to_baseline_when_rejected(tmp_path):

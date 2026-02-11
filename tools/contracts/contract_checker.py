@@ -2,6 +2,7 @@ import time
 from typing import Any
 
 from tools.contracts.canonical import build_canonical_key, parse_schema_version, quality_total
+from tools.contracts.schema_healer import heal_payload
 
 
 class ContractChecker:
@@ -24,6 +25,11 @@ class ContractChecker:
                 "intent": {"type": "string"},
                 "vector": {"type": "array", "items": {"type": "number"}},
                 "timestamp": {"type": "number"},
+            },
+            "aliases": {
+                "intent_vector": "vector",
+                "intent_ts": "timestamp",
+                "intent_name": "intent",
             },
         }
 
@@ -126,13 +132,24 @@ class ContractChecker:
         if not schema:
             return False, {"error": f"Unknown Contract Type: {contract_type}"}
 
+        healing = heal_payload(payload, aliases=schema.get("aliases", {}))
+        healed_payload = healing.payload
+
         for field in schema.get("required", []):
-            if field not in payload:
+            if field not in healed_payload:
                 return False, {"error": f"Missing field '{field}'", "contract_type": contract_type}
 
-        type_ok, type_error = self._check_types(payload, schema)
+        type_ok, type_error = self._check_types(healed_payload, schema)
         if not type_ok:
             return False, {"error": type_error, "contract_type": contract_type}
 
-        quality = self._compute_quality(payload, schema)
-        return True, {"contract_type": contract_type, "quality": quality}
+        quality = self._compute_quality(healed_payload, schema)
+        return True, {
+            "contract_type": contract_type,
+            "quality": quality,
+            "payload": healed_payload,
+            "schema_healing": {
+                "applied": bool(healing.remapped_fields),
+                "remapped_fields": healing.remapped_fields,
+            },
+        }

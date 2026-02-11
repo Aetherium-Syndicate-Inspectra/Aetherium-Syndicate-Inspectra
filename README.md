@@ -210,6 +210,24 @@ node --test tests/*.test.mjs
    - ใช้กติกา canonical key เพื่อลดข้อมูลซ้ำ: `(entity_id, event_type, event_time, source)`
    - เลือก record ที่ดีที่สุดจาก `ingested_at ล่าสุด` + `quality_score สูงกว่า`
 
+
+## 🚀 AETHERBUS TACHYON Implementation Update (v4.2.3)
+
+สถานะ: **Ready for Deployment (Implementation Baseline Completed)**
+
+### สิ่งที่อัปเดตแล้วในระบบ
+
+- **Canonical Keys เดียวกันทั้งระบบ Contract Layer**: ยืนยันการใช้ canonical key รูปแบบเดียวกันผ่าน `schema_version:entity_id:event_type:event_time:source` ใน `ContractChecker` และ helper กลาง
+- **Unified Quality Rubric**: ใช้ rubric เดียว (`confidence`, `freshness`, `completeness`) สำหรับการให้คะแนนและเลือกข้อมูลที่ดีที่สุดใน dedup
+- **Self-healing Data Contracts (เริ่มใช้งานแล้ว)**: เพิ่ม alias healing ให้ schema `ipw_v1` เพื่อ remap คีย์ legacy เช่น `intent_vector -> vector`, `intent_ts -> timestamp`, `intent_name -> intent` ก่อน validation โดยยังคง canonical value เป็นหลัก
+- **Regression Coverage สำหรับ dedup + schema drift**: เพิ่มเทสต์ยืนยันการ heal schema และยืนยันพฤติกรรมเลือก record ที่ดีที่สุดยังทำงานสอดคล้องกับ quality rubric
+
+### คำแนะนำต่อยอดเชิงสร้างสรรค์
+
+1. ต่อ self-healing ให้รองรับการสร้าง alias map แบบอัตโนมัติจาก lineage log ของ schema drift
+2. เพิ่มชุด `peakTraffic` stress profile แยกตาม tier (Solo/Syndicate/Singularity) เพื่อวัด fairness และ p99 latency พร้อมกัน
+3. ผูกผลจาก Causal Policy Lab เข้ากับ Gatekeeper เพื่อปรับ policy อัตโนมัติแบบ evidence-driven
+
 ## 🧭 Roadmap (Next Creative Challenges)
 
 1. **Causal Policy Lab**
@@ -220,9 +238,6 @@ node --test tests/*.test.mjs
 
 3. **Narrative Incident Replay**
    - ทำ time-travel replay เหตุการณ์พร้อม decision trace สำหรับ postmortem เชิงผู้บริหาร
-
-4. **Self-healing Data Contracts**
-   - ตรวจ schema drift อัตโนมัติและสร้าง mapping rule เพื่อให้ pipeline ไม่พังเมื่อ source เปลี่ยน
 
 5. **A2A Negotiation Replay Simulator**
    - จำลองกรณีแย่งทรัพยากรระหว่าง Agent พร้อม explainability report ต่อรอบการเจรจา

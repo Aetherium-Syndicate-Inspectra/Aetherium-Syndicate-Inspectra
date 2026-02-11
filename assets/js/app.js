@@ -228,7 +228,7 @@ class App {
         try {
             const module = await import(`./views/${viewName}-view.js`);
             const ViewClass = module.default;
-            this.currentViewInstance = new ViewClass(this.state);
+            this.currentViewInstance = new ViewClass(this.state, { apiClient: this.apiClient });
 
             this.viewContainer.innerHTML = '';
             this.viewContainer.appendChild(this.currentViewInstance.render());

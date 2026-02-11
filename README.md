@@ -590,3 +590,37 @@ python -m api_gateway.main
 
 - เพิ่ม schema version registry (`ipw_v1`, `ipw_v2`, …) พร้อม migration map เพื่อรองรับ backward compatibility
 - เพิ่ม end-to-end websocket contract test (valid/malformed/violation) เพื่อป้องกัน drift ระหว่าง frontend กับ gateway
+
+## Freeze Light System Integration (ใหม่)
+
+ได้บูรณาการระบบ Freeze Light แบบใช้งานจริงเข้ากับสถาปัตยกรรมปัจจุบันแล้ว โดยเน้นความสอดคล้องของ event schema ทั้ง frontend/backend และการทำ dedup ตาม canonical key
+
+### สิ่งที่เพิ่มแล้ว
+
+- **Backend API (FastAPI) สำหรับ Freeze Light**
+  - `POST /api/freeze/save` บันทึกโครงสร้างแสงพร้อมไฟล์ `png/pdf`
+  - `GET /api/freeze/list` อ่านรายการงานที่บันทึกแล้ว
+  - `DELETE /api/freeze/{id}` ลบงานที่ต้องการ
+- **Canonical Event + Quality Rubric เดียวทั้งระบบ**
+  - event type มาตรฐาน: `freeze.saved`
+  - quality rubric มาตรฐาน: `confidence`, `freshness`, `completeness`
+- **Frontend Command View Integration**
+  - เพิ่ม Freeze panel สำหรับ Freeze / Save PNG / Save PDF / Edit Mode (Erase/Draw)
+  - แสดงรายการ frozen structures และ refresh จาก API
+- **Regression tests สำหรับ dedup/schema**
+  - ทดสอบ save/list/delete flow ของ freeze endpoints
+  - ทดสอบ dedup ว่าเลือก event ที่คุณภาพดีที่สุดเมื่อ canonical key ซ้ำ
+
+### โครงสร้างไฟล์ที่เพิ่ม
+
+- `src/backend/freeze_api.py`
+- `assets/js/utils/freeze-light-client.js`
+- `tests/test_freeze_api.py`
+
+### แนวทางต่อยอด (แนะนำ)
+
+1. เพิ่ม endpoint download (`/api/freeze/{id}/download`) เพื่อให้ frontend เปิด preview ได้โดยตรง
+2. เพิ่ม background worker สำหรับแปลงไฟล์ PNG→PDF แบบคุณภาพสูงและรองรับ batch
+3. เชื่อม freeze events เข้ากับ realtime channel (`ws/status`) สำหรับ collaborative editing
+4. เพิ่ม telemetry dashboard: freeze latency, conversion latency, error rate ราย format
+5. เพิ่ม undo/redo log แบบ versioned lineage เพื่อรองรับงานแก้ไขระยะยาว

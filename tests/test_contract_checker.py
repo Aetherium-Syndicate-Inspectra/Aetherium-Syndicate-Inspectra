@@ -48,5 +48,19 @@ class ContractCheckerTests(unittest.TestCase):
         self.assertEqual(deduped[0]["schema_version"], "v2")
 
 
+    def test_deduplicate_events_freeze_schema_uses_single_best_record(self):
+        now = time.time()
+        payload = {"entity_id": "freeze-1", "timestamp": now}
+        event = self.checker.canonicalize_event(payload, event_type="freeze.saved", source="api/freeze/save")
+
+        weaker = {**event, "quality": {"confidence": 0.7, "freshness": 0.8, "completeness": 0.9}}
+        stronger = {**event, "quality": {"confidence": 0.95, "freshness": 1.0, "completeness": 1.0}}
+
+        deduped = self.checker.deduplicate_events([weaker, stronger])
+        self.assertEqual(len(deduped), 1)
+        self.assertEqual(deduped[0]["quality"]["confidence"], 0.95)
+
+
+
 if __name__ == "__main__":
     unittest.main()

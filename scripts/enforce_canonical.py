@@ -6,7 +6,7 @@ import os
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
-from typing import List, Set
+from typing import Any, List
 
 ROOT_DIR = "."
 IGNORE_DIRS = {".git", ".venv", "node_modules", "target", "__pycache__", ".lighthouseci"}
@@ -38,13 +38,23 @@ def extract_functions(filepath: str) -> List[str]:
     return functions
 
 
-def load_registry() -> Set[str]:
+def load_registry() -> dict[str, Any]:
     if not os.path.exists(REGISTRY_FILE):
-        return set()
+        return {"approved_functions": set(), "canonical_functions": {}}
 
     with open(REGISTRY_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
-    return set(data.get("approved_functions", []))
+
+    canonical_functions = data.get("canonical_functions", {})
+    normalized_canonical = {
+        name: os.path.normpath(str(meta.get("path", "")))
+        for name, meta in canonical_functions.items()
+        if isinstance(meta, dict) and meta.get("path")
+    }
+    return {
+        "approved_functions": set(data.get("approved_functions", [])),
+        "canonical_functions": normalized_canonical,
+    }
 
 
 def _load_existing_lineage() -> list[dict]:
@@ -117,13 +127,36 @@ def main() -> int:
             func_map[func_name].append(filepath)
 
     registry = load_registry()
+    approved_registry = registry.get("approved_functions", set())
+    canonical_registry = registry.get("canonical_functions", {})
     violations = []
 
     print(f"📊 Scanned {len(files)} files, found {len(func_map)} unique functions.")
 
     for func_name, locations in func_map.items():
+        if func_name.startswith("__") and func_name.endswith("__"):
+            continue
+
         unique_locations = sorted(set(locations))
-        if len(unique_locations) > 1 and func_name not in registry:
+        if len(unique_locations) <= 1:
+            continue
+
+        canonical_path = canonical_registry.get(func_name)
+        if canonical_path:
+            canonical_normalized = os.path.normpath(canonical_path)
+            normalized_locations = [os.path.normpath(path) for path in unique_locations]
+            unexpected_locations = [path for path in normalized_locations if path != canonical_normalized]
+            if unexpected_locations:
+                violations.append(
+                    {
+                        "function": func_name,
+                        "locations": unique_locations,
+                        "canonical_path": canonical_path,
+                    }
+                )
+            continue
+
+        if func_name not in approved_registry:
             violations.append({"function": func_name, "locations": unique_locations})
 
     if violations:

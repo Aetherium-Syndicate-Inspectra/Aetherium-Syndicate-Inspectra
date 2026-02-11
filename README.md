@@ -213,3 +213,22 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ### Future Creative Challenges
 1. **Adversarial Resonance Chaos Test:** สร้างโหมด simulation ที่ยิง intent สลับเร็ว/ขัดแย้ง เพื่อตรวจความเสถียรของ drift intervention policy
 2. **Tournament Policy Compiler:** แปลงผล ranking/policy ให้เป็น machine-readable playbook (JSON policy graph) เพื่อส่งต่อเข้า PRGX3 orchestration โดยตรง
+
+## 🆕 Governance Update: PĀRĀJIKA Duplicate Function Hardening
+
+### สิ่งที่ปรับปรุง
+- เพิ่ม duplicate-function audit mode ใน `tools/contracts/contract_checker.py` (`--audit`) เพื่อสแกนฟังก์ชันซ้ำทั้ง repository
+- ปรับกฎ audit ให้ **ข้าม dunder methods** (`__*__`) เช่น `__init__` โดยถือเป็น pattern ปกติของ OOP
+- รวม `_load_tachyon_core` ไว้เป็น canonical helper ที่ `tests/conftest.py` และให้ `test_identity.py` / `test_tachyon.py` import จากจุดเดียว
+- ย้าย logic กลยุทธ์ตัวอย่างไปที่ `src/backend/crisis_tournament.py::formulate_strategy` และให้ `tests/test_crisis_tournament.py` bind/import จาก canonical source
+- อัปเดต `canonical_registry.json` ด้วย `canonical_functions` metadata สำหรับ `_load_tachyon_core` และ `formulate_strategy`
+- เสริม `scripts/enforce_canonical.py` ให้รองรับ canonical registry + dunder skip เพื่อให้ผลตรวจ Governance สอดคล้องกับ policy ใหม่
+
+### เหตุผลการเลือกฟังก์ชันเดียว (Single Best Function)
+- ลดโอกาส drift ของพฤติกรรมระหว่าง source/test จากการมีหลาย implementation
+- ทำให้ Contract/Governance audit ชัดเจนว่า function ไหนเป็นแหล่งจริง (canonical path)
+- ลดภาระ maintenance เมื่อมีการ refactor หรือแก้บั๊กในอนาคต
+
+### Future Creative Challenges
+1. **Canonical Import Verifier:** เพิ่ม static check ที่ตรวจว่าทุก test ใช้ import จาก canonical path เท่านั้น (fail-fast ก่อนเข้า CI stage ถัดไป)
+2. **Governance Heatmap Dashboard:** สร้าง dashboard แสดงแนวโน้ม duplicate violations ตามโฟลเดอร์/ทีม เพื่อคาดการณ์จุดเสี่ยงและวางแผน refactor เชิงรุก

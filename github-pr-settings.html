@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>GitHub PR Integration Settings</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: { primary: "#2b6cee", "background-light": "#f6f6f8", "background-dark": "#101622" },
+          fontFamily: { display: ["Space Grotesk"] },
+        },
+      },
+    };
+  </script>
+  <style>body { font-family: 'Space Grotesk', sans-serif; }</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased overflow-hidden">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-sm bg-background-dark/60">
+    <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden max-h-[94vh]">
+      <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary"><span class="material-icons">git_pull_request</span></div>
+          <div>
+            <h2 class="text-xl font-bold tracking-tight">Finalize &amp; Push to GitHub</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Diff-aware composer + Branch Policy Guardian</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-5 overflow-auto">
+        <div id="policyBanner" class="hidden rounded-lg border px-3 py-2 text-xs"></div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold" for="repo-name">Repository</label>
+          <input class="block w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700" id="repo-name" value="acme-corp/studio-design-system" type="text" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold" for="branch-name">Target Branch</label>
+          <input class="block w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700" id="branch-name" value="feature/creator-studio-pr-flow" type="text" />
+          <p class="text-[11px] text-slate-500">Policy: &lt;type&gt;/&lt;kebab-case&gt; เช่น feature/creator-studio-pr-flow</p>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold" for="commit-message">Commit Message</label>
+          <input class="block w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700" id="commit-message" placeholder="feat(scope): ..." type="text" />
+          <p class="text-[11px] text-slate-500">Conventional Commit เท่านั้น เช่น feat(creator-studio): add policy guard for pr flow</p>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold" for="pr-body">PR Body (Auto-generated from diff)</label>
+          <textarea class="block w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 resize-y min-h-[170px]" id="pr-body"></textarea>
+        </div>
+
+        <details class="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+          <summary class="cursor-pointer text-sm font-semibold">Diff Preview</summary>
+          <pre id="diffPreview" class="mt-2 text-[11px] whitespace-pre-wrap text-slate-500 dark:text-slate-300"></pre>
+        </details>
+      </div>
+
+      <div class="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+        <button class="px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400" type="button" onclick="window.close()">Cancel</button>
+        <button class="flex items-center justify-center gap-2 px-8 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" id="confirmPushBtn" type="button">
+          <span class="material-icons text-lg">rocket_launch</span>
+          <span>Confirm &amp; Push</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const branchInput = document.getElementById('branch-name');
+    const repoInput = document.getElementById('repo-name');
+    const commitInput = document.getElementById('commit-message');
+    const prBodyInput = document.getElementById('pr-body');
+    const diffPreview = document.getElementById('diffPreview');
+    const policyBanner = document.getElementById('policyBanner');
+    const confirmPushBtn = document.getElementById('confirmPushBtn');
+
+    const previousCode = localStorage.getItem('creator-studio-base-code') || '';
+    const currentCode = localStorage.getItem('creator-studio-code') || '';
+    const intent = localStorage.getItem('creator-studio-intent') || 'prepare pull request from creator studio';
+
+    function renderPolicy(policy) {
+      if (!policy) return;
+      policyBanner.classList.remove('hidden');
+      if (policy.ok) {
+        policyBanner.className = 'rounded-lg border border-emerald-400/40 bg-emerald-500/10 text-emerald-400 px-3 py-2 text-xs';
+        policyBanner.textContent = 'Policy gate: passed';
+        confirmPushBtn.disabled = false;
+      } else {
+        policyBanner.className = 'rounded-lg border border-amber-400/40 bg-amber-500/10 text-amber-300 px-3 py-2 text-xs';
+        policyBanner.textContent = `Policy gate: blocked - ${policy.errors.join('; ')}`;
+        confirmPushBtn.disabled = true;
+      }
+    }
+
+    async function composeSuggestion() {
+      try {
+        const response = await fetch('/api/creator/pr-compose', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            previous_code: previousCode,
+            code: currentCode,
+            intent,
+            branch: branchInput.value.trim(),
+            scope_hint: 'creator-studio',
+          }),
+        });
+
+        const data = await response.json();
+        const suggestion = data.suggestion || {};
+
+        if (!commitInput.value.trim()) {
+          commitInput.value = suggestion.commit_message || '';
+        }
+        if (!prBodyInput.value.trim()) {
+          prBodyInput.value = suggestion.pr_body || '';
+        }
+        diffPreview.textContent = suggestion.diff_preview || '(no diff)';
+        renderPolicy(data.policy);
+      } catch (error) {
+        policyBanner.classList.remove('hidden');
+        policyBanner.className = 'rounded-lg border border-red-400/40 bg-red-500/10 text-red-300 px-3 py-2 text-xs';
+        policyBanner.textContent = `composer failed: ${error.message}`;
+        confirmPushBtn.disabled = true;
+      }
+    }
+
+    async function submitPullRequest() {
+      const payload = {
+        repo: repoInput.value.trim(),
+        branch: branchInput.value.trim(),
+        message: commitInput.value.trim(),
+        pr_body: prBodyInput.value,
+        code: currentCode,
+        previous_code: previousCode,
+        intent,
+        scope_hint: 'creator-studio',
+      };
+
+      try {
+        const response = await fetch('/api/creator/github-pr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        renderPolicy(result.policy);
+
+        if (result.pr_url) {
+          alert(`PR Created: ${result.pr_url}`);
+          localStorage.setItem('creator-studio-base-code', currentCode);
+          return;
+        }
+
+        alert(result.message || 'PR request completed');
+      } catch (error) {
+        alert(`PR request failed: ${error.message}`);
+      }
+    }
+
+    branchInput.addEventListener('input', composeSuggestion);
+    commitInput.addEventListener('input', async () => {
+      const branch = branchInput.value.trim();
+      const message = commitInput.value.trim();
+      try {
+        const response = await fetch('/api/creator/pr-compose', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ previous_code: previousCode, code: currentCode, intent, branch }),
+        });
+        const data = await response.json();
+        const policy = data.policy || { ok: false, errors: ['unable to evaluate policy'] };
+        if (message !== (data.suggestion?.commit_message || '')) {
+          const branchOnlyPolicy = {
+            ...policy,
+            ok: policy.ok && /^((feat|fix|chore|refactor|docs|test|perf|ci)(\([a-z0-9-]+\))?: .{8,})$/.test(message),
+            errors: policy.ok && /^((feat|fix|chore|refactor|docs|test|perf|ci)(\([a-z0-9-]+\))?: .{8,})$/.test(message)
+              ? []
+              : ['commit message must follow Conventional Commits e.g. feat(scope): summary text'],
+          };
+          renderPolicy(branchOnlyPolicy);
+        } else {
+          renderPolicy(policy);
+        }
+      } catch (_error) {
+        confirmPushBtn.disabled = true;
+      }
+    });
+
+    confirmPushBtn.addEventListener('click', submitPullRequest);
+    composeSuggestion();
+  </script>
+</body>
+</html>

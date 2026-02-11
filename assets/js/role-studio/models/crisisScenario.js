@@ -18,6 +18,37 @@ export const crisisScenarios = [
       Healthcare: 'Critical device and medicine allocation constraints',
     },
   },
+  {
+    id: 'ai_ethics_breach',
+    name: 'AI Ethics Breach (Tech SaaS vs Traditional Bank)',
+    severity: 0.86,
+    uncertainty: 0.7,
+    industry_effects: {
+      'Tech SaaS': 'Model bias scandal and enterprise trust erosion',
+      'Traditional Bank': 'Regulator inquiry on decision transparency',
+    },
+  },
+  {
+    id: 'talent_shortage_2026',
+    name: 'Talent Shortage 2026 (Manufacturing vs Healthcare)',
+    severity: 0.75,
+    uncertainty: 0.55,
+    industry_effects: {
+      'Manufacturing Giant': 'Critical maintenance workforce gap',
+      Healthcare: 'Nurse and specialist retention collapse',
+    },
+  },
+  {
+    id: 'pay_equity_crisis',
+    name: 'Pay Equity Crisis',
+    severity: 0.78,
+    uncertainty: 0.64,
+    industry_effects: {
+      'Tech SaaS': 'Compensation transparency conflict',
+      'Traditional Bank': 'Legacy band inequity exposed',
+      Healthcare: 'Shift-pay disparity across departments',
+    },
+  },
 ];
 
 function scoreDecision(seed) {
@@ -50,6 +81,7 @@ export function runTournament({ scenarioId, industries, roleData }) {
     'build_strategic_buffer',
     'avoid_single_point_of_failure',
     'demand_forecasting_under_uncertainty',
+    'dynamic_skills_inference_for_gap_reduction',
   ];
 
   return { scenario, results, transferablePolicies };

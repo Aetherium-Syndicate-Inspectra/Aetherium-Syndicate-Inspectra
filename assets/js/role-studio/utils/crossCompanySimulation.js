@@ -77,3 +77,16 @@ export function renderCrossCompanyResult(result) {
     `Best transferable policy: ${result.best_transferable_policy || 'N/A'}`,
   ].join('\n');
 }
+
+export function exportTournamentPolicies(result) {
+  const payload = {
+    generated_at: new Date().toISOString(),
+    best_transferable_policy: result?.best_transferable_policy || null,
+    ranking: result?.ranking || [],
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'transferable_policies.json';
+  link.click();
+}

@@ -85,7 +85,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await bus.emit("SYSTEM_ALERT", {"message": "Malformed JSON payload", "raw": data})
                 continue
 
-            is_valid, result = immune_system.validate(parsed, contract_type="ipw_v1")
+            is_valid, result = immune_system.validate_adaptive(parsed, contract_type="ipw_v1")
             if not is_valid:
                 await bus.emit("SYSTEM_ALERT", {"message": "Contract violation", "detail": result})
                 continue

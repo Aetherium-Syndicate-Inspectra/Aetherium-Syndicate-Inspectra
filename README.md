@@ -271,3 +271,24 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ### Future Creative Challenges
 1. **Self-Evolving Registry Governance:** เพิ่ม policy guard ที่ตรวจ generated roles เทียบ canonical KPI ontology อัตโนมัติ และ auto-reject role ที่ drift เกิน threshold
 2. **Multi-Board Crisis Protocol Game:** ให้หลายบริษัทตั้ง board-level negotiation constraints (risk budget / ESG cap / SLA) แล้วใช้ game-theoretic solver หา coalition policy ที่ stable ที่สุด
+
+## 🆕 Backend Update: Causal Policy Lab + Policy Genome Engine (MVP)
+
+### สิ่งที่ปรับปรุง
+- เพิ่ม `src/backend/causal_policy_lab.py` เพื่อแปลง Freeze Light events (`storage/frozen_lights/events.jsonl`) เป็น causal intelligence โดยรองรับ 2 โหมด:
+  - **DoWhy mode (recommended):** ใช้ `CausalModel` เมื่อ dependency พร้อม
+  - **Fallback mode (no new dependency):** ใช้ adjusted OLS + randomized placebo refutation เพื่อประมาณ causal effect
+- เพิ่ม API ใหม่ใน `api_gateway/main.py`
+  - `POST /causal/estimate` สำหรับประเมิน treatment → outcome
+  - `GET /causal/recommend` สำหรับจัดอันดับ policy recommendation
+  - `POST /policy-genome/build` สำหรับสร้าง policy graph JSON จากผล causal recommendations
+- เพิ่ม `src/backend/policy_genome.py` เพื่อสร้าง Policy Genome graph (nodes/edges/embedding) พร้อม dedup ด้วย cosine similarity threshold
+- เพิ่มชุดทดสอบ `tests/test_causal_policy_lab.py` และ `tests/test_api_gateway_causal.py` (มี import skip เมื่อไม่มี FastAPI ใน environment)
+
+### เหตุผลการเลือกฟังก์ชันเดียว (Single Best Function)
+- เลือกให้ `CausalPolicyLab.estimate_causal_effect()` เป็น entry point กลางเพียงจุดเดียว เพื่อรวมทั้ง DoWhy และ fallback path ลด duplicate implementation
+- เลือกให้ `PolicyGenomeEngine.build_graph()` เป็น canonical graph builder จุดเดียว เพื่อคงโครงสร้าง JSON สอดคล้องทุก endpoint และงาน export
+
+### Future Creative Challenges
+1. **Counterfactual Sandbox:** เพิ่ม endpoint สำหรับ “what-if intervention replay” ที่ผู้ใช้เลือก confounder distribution ได้เอง แล้วเปรียบเทียบ ATE ต่อ industry ในรูป heatmap
+2. **Genome Evolution League:** ทำระบบ policy mutation + tournament ให้ graph evolution อัตโนมัติ (genetic search) เพื่อค้นหา policy DNA ที่ robust ที่สุดข้าม scenario

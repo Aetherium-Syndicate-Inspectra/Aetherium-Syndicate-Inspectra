@@ -40,6 +40,16 @@ class PaymentMethodRecord:
     created_at: str
 
 
+@dataclass
+class IdentityLinkRecord:
+    id: int
+    user_id: str
+    provider: str
+    provider_user_id: str
+    created_at: str
+    updated_at: str
+
+
 @contextmanager
 def get_conn():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -128,6 +138,18 @@ def init_db() -> None:
                 timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(user_id)
             );
+
+            CREATE TABLE IF NOT EXISTS identity_links (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                provider TEXT NOT NULL CHECK(provider IN ('LINE')),
+                provider_user_id TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(provider, provider_user_id),
+                UNIQUE(user_id, provider),
+                FOREIGN KEY (user_id) REFERENCES users(user_id)
+            );
             """
         )
 
@@ -157,6 +179,11 @@ def create_default_user(email: str, name: str | None, picture: str | None, googl
 def get_user_by_email(email: str) -> sqlite3.Row | None:
     with get_conn() as conn:
         return conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+
+def get_user_by_google_sub(google_sub: str) -> sqlite3.Row | None:
+    with get_conn() as conn:
+        return conn.execute("SELECT * FROM users WHERE google_sub = ?", (google_sub,)).fetchone()
 
 
 def get_user_subscription_by_api_key(api_key: str) -> SubscriptionRecord | None:
@@ -297,3 +324,23 @@ def update_transaction_status(tx_id: str, status: str, gateway_ref_id: str | Non
             (status, gateway_ref_id, tx_id),
         )
         conn.commit()
+
+
+def link_line_identity(*, user_id: str, line_user_id: str) -> IdentityLinkRecord:
+    timestamp = now_iso()
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO identity_links (user_id, provider, provider_user_id, created_at, updated_at)
+            VALUES (?, 'LINE', ?, ?, ?)
+            ON CONFLICT(user_id, provider)
+            DO UPDATE SET provider_user_id = excluded.provider_user_id, updated_at = excluded.updated_at
+            """,
+            (user_id, line_user_id, timestamp, timestamp),
+        )
+        row = conn.execute(
+            "SELECT * FROM identity_links WHERE user_id = ? AND provider = 'LINE'",
+            (user_id,),
+        ).fetchone()
+        conn.commit()
+    return IdentityLinkRecord(**dict(row))

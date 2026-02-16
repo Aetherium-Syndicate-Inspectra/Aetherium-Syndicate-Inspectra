@@ -24,6 +24,28 @@ class CreatorSession:
     code: str = ""
 
 
+@dataclass
+class BuildStudioIntent:
+    """Structured intent model for Creator Studio's build workflows."""
+
+    raw_request: str
+    architecture_flow: list[str]
+    architecture_views: list[str]
+    architecture_state: list[str]
+    ux_experiments: list[str]
+    llm_capabilities: list[str]
+
+    def as_prompt_block(self) -> str:
+        return (
+            "Build Creator Studio intent (normalized):\n"
+            f"- Flow modules: {', '.join(self.architecture_flow) or 'none'}\n"
+            f"- View modules: {', '.join(self.architecture_views) or 'none'}\n"
+            f"- State modules: {', '.join(self.architecture_state) or 'none'}\n"
+            f"- UX experiments: {', '.join(self.ux_experiments) or 'none'}\n"
+            f"- LLM capabilities: {', '.join(self.llm_capabilities) or 'none'}"
+        )
+
+
 class CreatorStudioService:
     """Service layer for Creator Studio chat->code generation and GitHub PR shipping."""
 
@@ -49,31 +71,40 @@ class CreatorStudioService:
     def chat(self, message: str) -> dict[str, str]:
         clean_message = message.strip()
         self._session.chat.append({"role": "user", "content": clean_message})
+        structured_intent = self._parse_build_studio_intent(clean_message)
 
-        llm_text, llm_code = self._call_openai(clean_message)
+        llm_text, llm_code = self._call_openai(clean_message, structured_intent)
         if not llm_code:
-            llm_text, llm_code = self._fallback_generate(clean_message)
+            llm_text, llm_code = self._fallback_generate(clean_message, structured_intent)
 
         self._session.chat.append({"role": "assistant", "content": llm_text})
         self._session.code = llm_code
         return {"response": llm_text, "code": llm_code}
 
-    def _call_openai(self, message: str) -> tuple[str, str]:
+    def _call_openai(self, message: str, structured_intent: BuildStudioIntent) -> tuple[str, str]:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             return "", ""
 
         try:
             from openai import OpenAI
+            import openai
+        except ImportError:
+            return "", ""
 
+        try:
             client = OpenAI(api_key=api_key)
-            prompt = self._build_prompt(message)
+            prompt = self._build_prompt(message, structured_intent)
             completion = client.chat.completions.create(
                 model=self.llm_model,
                 messages=[
                     {
                         "role": "system",
-                        "content": "คุณคือ Creator Studio AI ที่ต้องตอบกลับเป็น JSON {'response': string, 'code': string}",
+                        "content": (
+                            "You are the Creator Studio architecture assistant. "
+                            "Return strict JSON with keys: response, code. "
+                            "Use clear software-engineering terminology and preserve backward compatibility."
+                        ),
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -82,21 +113,43 @@ class CreatorStudioService:
             )
             payload = json.loads(completion.choices[0].message.content)
             return payload.get("response", ""), payload.get("code", "")
-        except Exception:
+        except (
+            openai.APIConnectionError,
+            openai.APITimeoutError,
+            openai.RateLimitError,
+            openai.APIError,
+            AttributeError,
+            json.JSONDecodeError,
+            KeyError,
+            TypeError,
+            ValueError,
+        ):
             return "", ""
 
-    def _build_prompt(self, message: str) -> str:
+    def _build_prompt(self, message: str, structured_intent: BuildStudioIntent) -> str:
         return (
-            "สรุปงานจากผู้ใช้และปรับโค้ดให้ต่อเนื่องจากโค้ดเดิม\n"
+            "Translate user intent into a maintainable Creator Studio implementation.\n"
             f"User message: {message}\n"
+            f"{structured_intent.as_prompt_block()}\n"
             f"Current code:\n{self._session.code}\n"
             f"Recent chat: {self._session.chat[-6:]}\n"
-            "ตอบกลับด้วย JSON เท่านั้น"
+            "Requirements:\n"
+            "1) Keep existing behavior unless user requested a breaking change.\n"
+            "2) Prefer modular structure for flow, views, state, and UX experimentation.\n"
+            "3) Output strict JSON only."
         )
 
-    def _fallback_generate(self, message: str) -> tuple[str, str]:
+    def _fallback_generate(self, message: str, structured_intent: BuildStudioIntent) -> tuple[str, str]:
         current = self._session.code
         lower = message.lower()
+
+        if self._requires_build_studio_blueprint(structured_intent):
+            code = self._build_creator_studio_blueprint(current, structured_intent)
+            response = (
+                "Added a Build Creator Studio architecture blueprint with modular flow, view, state, "
+                "and UX experiment primitives."
+            )
+            return response, code
 
         if "todo" in lower:
             code = (
@@ -123,6 +176,94 @@ class CreatorStudioService:
         stamped = datetime.now(timezone.utc).isoformat()
         code = current + f"\n<!-- Update: {stamped} | {message} -->"
         return "อัปเดตโค้ดตามคำสั่งล่าสุดเรียบร้อย (โหมด local AI fallback)", code
+
+    def _parse_build_studio_intent(self, message: str) -> BuildStudioIntent:
+        normalized = message.lower()
+        flow_modules = self._collect_keywords(
+            normalized,
+            {
+                "flow orchestration": ["flow", "pipeline", "orchestr", "workflow", "creator studio"],
+                "guardrail policies": ["governance", "guardrail", "policy", "contract"],
+            },
+        )
+        view_modules = self._collect_keywords(
+            normalized,
+            {
+                "view registry": ["view", "layout", "dashboard", "screen", "หน้า"],
+                "preview sandbox": ["preview", "sandbox", "prototype", "ux"],
+            },
+        )
+        state_modules = self._collect_keywords(
+            normalized,
+            {
+                "state store": ["state", "store", "context", "session"],
+                "event timeline": ["event", "history", "replay", "debug"],
+            },
+        )
+        experiments = self._collect_keywords(
+            normalized,
+            {
+                "ab tests": ["a/b", "ab test", "experiment", "ux test", "ทดลอง"],
+                "prompt variants": ["prompt", "llm", "model", "reasoning"],
+            },
+        )
+        llm_capabilities = self._collect_keywords(
+            normalized,
+            {
+                "spec-to-plan": ["spec", "plan", "implementation", "sdd"],
+                "code synthesis": ["generate", "code", "refactor", "build"],
+                "governance checks": ["governance", "contractchecker", "ruleset"],
+            },
+        )
+
+        return BuildStudioIntent(
+            raw_request=message,
+            architecture_flow=flow_modules,
+            architecture_views=view_modules,
+            architecture_state=state_modules,
+            ux_experiments=experiments,
+            llm_capabilities=llm_capabilities,
+        )
+
+    def _collect_keywords(self, normalized: str, dictionary: dict[str, list[str]]) -> list[str]:
+        return [term for term, variants in dictionary.items() if any(variant in normalized for variant in variants)]
+
+    def _requires_build_studio_blueprint(self, intent: BuildStudioIntent) -> bool:
+        return bool(intent.architecture_flow or intent.architecture_views or intent.architecture_state or intent.ux_experiments)
+
+    def _build_creator_studio_blueprint(self, current_code: str, intent: BuildStudioIntent) -> str:
+        modules = {
+            "flow": intent.architecture_flow or ["flow orchestration"],
+            "views": intent.architecture_views or ["view registry"],
+            "state": intent.architecture_state or ["state store"],
+            "ux": intent.ux_experiments or ["ab tests"],
+        }
+        block = (
+            "\n<script type=\"application/json\" id=\"build-creator-studio-spec\">\n"
+            + json.dumps(
+                {
+                    "module": "build_creator_studio",
+                    "version": "v4.3.1",
+                    "intent": intent.raw_request,
+                    "architecture": modules,
+                    "llm_logic": {
+                        "pipeline": ["spec_to_plan", "plan_to_patch", "contract_validation"],
+                        "capabilities": intent.llm_capabilities or ["spec-to-plan", "code synthesis"],
+                    },
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n</script>"
+        )
+        if "build-creator-studio-spec" in current_code:
+            return re.sub(
+                r"<script type=\"application/json\" id=\"build-creator-studio-spec\">[\s\S]*?</script>",
+                block.strip(),
+                current_code,
+                count=1,
+            )
+        return f"{current_code}\n{block}"
 
     def compose_pr_metadata(
         self,

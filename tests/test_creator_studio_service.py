@@ -61,3 +61,26 @@ def test_create_github_pr_without_token_returns_dry_run(monkeypatch):
 
     assert result["pr_url"] == ""
     assert "dry-run" in result["message"]
+
+
+def test_chat_build_creator_studio_request_generates_structured_blueprint(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    service = CreatorStudioService()
+
+    result = service.chat("Apply this in Build Creator Studio with flow, views, state, and UX experiments")
+
+    assert 'build-creator-studio-spec' in result["code"]
+    assert 'flow orchestration' in result["code"]
+    assert 'state store' in result["code"]
+    assert 'architecture blueprint' in result["response"]
+
+
+def test_build_prompt_includes_normalized_intent_model():
+    service = CreatorStudioService()
+    intent = service._parse_build_studio_intent("Need flow and view refactor with LLM governance")
+
+    prompt = service._build_prompt("Need flow and view refactor with LLM governance", intent)
+
+    assert 'Build Creator Studio intent (normalized)' in prompt
+    assert 'Flow modules' in prompt
+    assert 'governance checks' in prompt

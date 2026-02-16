@@ -8,10 +8,15 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 
 ## 🚀 System Status & Performance
 
-- **Version:** v4.3.0 (Diff-Aware PR Composer + Branch Policy Guardian)
+- **Version:** v4.3.1 (Launch Readiness & Infrastructure Report)
 - **Throughput:** 15,000,000 msg/sec (Verified via Tachyon SIMD)
 - **Latency:** Sub-microsecond (via RDMA/Zero-Copy architecture)
 - **Integrity:** 100% Drift-resistant (Strict Type Validation enforced)
+
+## 🆕 ASI v4.3.1: Launch Readiness & Infrastructure Report
+
+- เพิ่มเอกสารสรุปความพร้อมก่อนเปิดบริการระดับ Enterprise ใน `docs/asi_v4.3.1_launch_readiness_infrastructure_report.md`
+- ครอบคลุมสถานะ dependency, pre-launch checklist, service model (SaaS/On-Premise), และคำแนะนำเชิงสถาปัตยกรรมจาก Hollis
 
 ## 🆕 Database Integrity Fix (v4.3.1)
 

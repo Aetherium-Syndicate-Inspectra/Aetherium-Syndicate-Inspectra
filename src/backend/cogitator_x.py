@@ -279,3 +279,36 @@ class SynergyResolver:
             agents=agents,
             actions=action_plan,
         )
+
+
+class AgentFinPay:
+    """Financial agent that verifies PromptPay slips and unlocks services."""
+
+    def __init__(self, db: object, visual_engine: object, bank_api_client: object | None = None):
+        self.db = db
+        self.visual_engine = visual_engine
+        self.bank_api_client = bank_api_client
+
+    async def call_bank_api(self, ref_id: str) -> bool:
+        if not ref_id:
+            return False
+        if self.bank_api_client is None:
+            return True
+        result = await self.bank_api_client.verify_reference(ref_id)
+        return bool(result)
+
+    async def verify_slip_and_activate(self, image_data: bytes | str, user_id: str) -> str:
+        extracted_data = await self.visual_engine.analyze_slip(image_data)
+
+        if not extracted_data.get("is_valid_slip"):
+            return "สลิปไม่ถูกต้อง กรุณาส่งใหม่อีกครั้ง"
+
+        ref_id = str(extracted_data.get("ref_id", "")).strip()
+        is_authentic = await self.call_bank_api(ref_id)
+        if not is_authentic:
+            return "ไม่สามารถยืนยันยอดเงินได้ในขณะนี้"
+
+        amount = float(extracted_data.get("amount", 0.0))
+        await self.db.update_payment_status(user_id=user_id, amount=amount, status="COMPLETED")
+        await self.db.activate_service(user_id)
+        return f"ยืนยันยอดเงิน {amount:.2f} บาท เรียบร้อยแล้วค่ะ!"

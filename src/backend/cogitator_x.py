@@ -226,3 +226,56 @@ class CogitatorXEngine:
         if confidence < 0.5:
             return min(base_branch_factor + 2, 5)
         return base_branch_factor
+
+
+@dataclass(frozen=True)
+class SynergyResolution:
+    """Deterministic orchestration result for cross-category routing."""
+
+    channel: str
+    trigger: str
+    agents: tuple[str, ...]
+    actions: tuple[str, ...]
+
+
+class SynergyResolver:
+    """Rule-based resolver that maps events into coordinated agent actions."""
+
+    _CHANNEL_AGENT_MAP: dict[str, tuple[str, ...]] = {
+        "LINE": ("agentic-brain", "social-commerce"),
+        "PROMPTPAY": ("agentic-brain", "fintech"),
+        "TIKTOK": ("agentic-brain", "content-engine"),
+        "LIFF": ("agentic-brain", "identity"),
+    }
+
+    def resolve(self, *, channel: str, trigger: str, payload: dict[str, object] | None = None) -> SynergyResolution:
+        normalized_channel = channel.strip().upper()
+        normalized_trigger = trigger.strip().lower()
+        payload = payload or {}
+
+        base_agents = list(self._CHANNEL_AGENT_MAP.get(normalized_channel, ("agentic-brain",)))
+        actions: list[str] = ["log_event"]
+
+        if normalized_channel == "PROMPTPAY" and normalized_trigger in {"payment_received", "payment_confirmed"}:
+            base_agents.append("finops")
+            actions.extend(["record_income", "start_financial_workflow"])
+
+        if normalized_channel == "LINE" and normalized_trigger in {"purchase_intent", "order_confirmed"}:
+            base_agents.append("fintech")
+            actions.extend(["check_bnpl_eligibility", "register_social_commerce_event"])
+
+        if normalized_trigger == "education_eligible" or payload.get("category") == "high-tech":
+            base_agents.append("edtech")
+            actions.append("send_micro_learning")
+
+        if normalized_channel == "TIKTOK" and normalized_trigger == "comment_detected":
+            actions.extend(["create_personalized_reply", "handoff_to_line_oa"])
+
+        agents = tuple(sorted(set(base_agents)))
+        action_plan = tuple(dict.fromkeys(actions))
+        return SynergyResolution(
+            channel=normalized_channel,
+            trigger=normalized_trigger,
+            agents=agents,
+            actions=action_plan,
+        )

@@ -1,0 +1,63 @@
+.page-shell-controls {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.page-shell-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.82);
+  color: #e2e8f0;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.35);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.page-shell-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(79, 127, 255, 0.75);
+}
+
+.page-shell-btn .icon {
+  font-size: 0.92rem;
+  line-height: 1;
+}
+
+.page-shell-btn--lang {
+  background: rgba(43, 108, 238, 0.9);
+  border-color: rgba(125, 211, 252, 0.8);
+}
+
+[data-page-shell-mobile='stack'] {
+  min-height: 100vh;
+}
+
+@media (max-width: 1024px) {
+  [data-page-shell-mobile='stack'] {
+    overflow: auto !important;
+    height: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-shell-controls {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+
+  .page-shell-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.72rem;
+  }
+}

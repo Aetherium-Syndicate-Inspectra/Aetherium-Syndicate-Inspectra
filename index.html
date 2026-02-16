@@ -1,224 +1,101 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="th" class="dark">
 <head>
   <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>Platform Index | Creator Studio</title>
-  <link href="https://fonts.googleapis.com" rel="preconnect" />
-  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aetherium Syndicate Inspectra | Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: "class",
       theme: {
         extend: {
-          colors: {
-            primary: "#2b6cee",
-            "background-light": "#f6f6f8",
-            "background-dark": "#101622",
-          },
           fontFamily: {
-            display: ["Space Grotesk"],
+            display: ["Space Grotesk", "sans-serif"],
           },
-          borderRadius: {
-            DEFAULT: "0.25rem",
-            lg: "0.5rem",
-            xl: "0.75rem",
-            full: "9999px",
+          colors: {
+            primary: "#4f7fff",
+            "background-dark": "#070b14",
           },
         },
       },
     };
   </script>
-  <style>
-    body {
-      font-family: "Space Grotesk", sans-serif;
-      background-color: #101622;
-    }
-
-    .glass-nav {
-      background: rgba(16, 22, 34, 0.8);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(43, 108, 238, 0.1);
-    }
-
-    .hero-glow {
-      background: radial-gradient(circle at 50% 50%, rgba(43, 108, 238, 0.15) 0%, rgba(16, 22, 34, 0) 70%);
-    }
-
-    .studio-btn-glow {
-      box-shadow: 0 0 20px rgba(43, 108, 238, 0.4);
-      transition: all 0.3s ease;
-    }
-
-    .studio-btn-glow:hover {
-      box-shadow: 0 0 35px rgba(43, 108, 238, 0.6);
-      transform: translateY(-1px);
-    }
-
-    .grid-pattern {
-      background-image:
-        linear-gradient(rgba(43, 108, 238, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(43, 108, 238, 0.05) 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
-  </style>
 </head>
-<body class="bg-background-light text-slate-900 font-display selection:bg-primary/30 dark:bg-background-dark dark:text-slate-100">
-  <nav class="glass-nav fixed top-0 z-50 w-full">
-    <div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center gap-2">
-        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-          <span class="material-icons-round text-white">auto_awesome</span>
+<body class="bg-background-dark font-display text-slate-100">
+  <div class="relative min-h-screen overflow-hidden">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,127,255,0.25),transparent_45%)]"></div>
+    <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]"></div>
+
+    <header class="relative z-10 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
+        <div>
+          <p class="text-xs uppercase tracking-[0.28em] text-primary">Autonomous Enterprise OS</p>
+          <h1 class="text-2xl font-bold">Aetherium Syndicate Inspectra</h1>
         </div>
-        <span class="text-xl font-bold tracking-tight">STUDIO<span class="text-primary">.</span>OS</span>
+        <nav class="flex flex-wrap items-center gap-3 text-sm">
+          <a class="rounded-lg border border-slate-700 px-4 py-2 transition hover:border-primary hover:text-primary" href="creator-studio.html">Creator Studio</a>
+          <a class="rounded-lg border border-slate-700 px-4 py-2 transition hover:border-primary hover:text-primary" href="enterprise_windows.html">Enterprise Windows</a>
+          <a class="rounded-lg border border-slate-700 px-4 py-2 transition hover:border-primary hover:text-primary" href="github-pr-settings.html">PR Settings</a>
+        </nav>
       </div>
+    </header>
 
-      <div class="hidden items-center space-x-8 md:flex">
-        <a class="text-sm font-medium transition-colors hover:text-primary" href="#">Docs</a>
-        <a class="text-sm font-medium transition-colors hover:text-primary" href="#">Community</a>
-        <a class="text-sm font-medium transition-colors hover:text-primary" href="creator-studio.html" target="_blank" rel="noopener">Creator Studio</a>
-        <div class="h-4 w-px bg-primary/20"></div>
-        <button class="text-sm font-medium transition-colors hover:text-primary" type="button">Sign In</button>
-        <button class="rounded-lg bg-primary/10 px-5 py-2 text-sm font-semibold text-primary transition-all hover:bg-primary/20" type="button">
-          Contact Sales
-        </button>
-      </div>
+    <main class="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <section class="mb-10 rounded-2xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl shadow-black/40">
+        <p class="mb-3 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">Control Plane</p>
+        <h2 class="mb-4 text-4xl font-bold leading-tight sm:text-5xl">หน้าแรกใหม่สำหรับเข้าถึงทุกส่วนของระบบ</h2>
+        <p class="max-w-3xl text-slate-300">
+          โครงสร้างใหม่นี้รวมเส้นทางหลักทั้งหมดของแพลตฟอร์ม ทั้งเครื่องมือสร้างระบบ, หน้าต่าง enterprise และหน้าตั้งค่า เพื่อให้ทีมสามารถเริ่มงานได้จากจุดเดียวและเชื่อมต่อไปยังหน้าต่าง ๆ ได้ทันที
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a class="rounded-xl bg-primary px-5 py-3 font-semibold text-white transition hover:bg-blue-500" href="creator-studio.html">เปิด Creator Studio</a>
+          <a class="rounded-xl border border-slate-700 px-5 py-3 font-semibold transition hover:border-primary hover:text-primary" href="src/frontend/login.html">เข้าสู่ระบบ</a>
+          <a class="rounded-xl border border-slate-700 px-5 py-3 font-semibold transition hover:border-primary hover:text-primary" href="src/frontend/billing_settings.html">Billing Settings</a>
+        </div>
+      </section>
 
-      <div class="md:hidden">
-        <span class="material-icons-round">menu</span>
-      </div>
-    </div>
-  </nav>
-
-  <main class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden pt-20">
-    <div class="grid-pattern absolute inset-0 opacity-40"></div>
-    <div class="hero-glow pointer-events-none absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2"></div>
-
-    <div class="relative z-10 mx-auto max-w-5xl px-4 text-center">
-      <div class="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
-        <span class="relative flex h-2 w-2">
-          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
-          <span class="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
-        </span>
-        New Release: v2.0 Beta
-      </div>
-
-      <h1 class="mb-6 text-5xl font-bold leading-[1.1] tracking-tighter md:text-7xl">
-        The Future of Dev <br />
-        <span class="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">is Generated.</span>
-      </h1>
-
-      <p class="mx-auto mb-12 max-w-2xl text-lg font-light leading-relaxed text-slate-400 md:text-xl">
-        Go from idea to production in minutes with our AI-powered Creator Studio.
-        The end-to-end platform designed for the next generation of engineers.
-      </p>
-
-      <div class="flex flex-col items-center justify-center gap-6 md:flex-row">
-        <button id="launchCreatorStudio" class="studio-btn-glow group relative flex items-center gap-3 overflow-hidden rounded-xl bg-primary px-8 py-5 text-lg font-bold text-white transition-all" type="button">
-          <span class="absolute inset-0 -translate-x-full bg-gradient-to-r from-white/0 via-white/10 to-white/0 transition-transform duration-700 group-hover:translate-x-full"></span>
-          <span class="material-icons-round">bolt</span>
-          Launch Creator Studio
-          <span class="material-icons-round opacity-70">auto_awesome</span>
-        </button>
-
-        <a class="flex items-center gap-2 px-6 py-3 font-medium text-slate-300 transition-colors hover:text-white" href="#">
-          <span class="material-icons-round text-xl">menu_book</span>
-          Read the Docs
+      <section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <a href="creator-studio.html" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Build</p>
+          <h3 class="mb-3 text-2xl font-semibold">Creator Studio</h3>
+          <p class="text-slate-300">เข้าสู่เครื่องมือสร้างระบบหลักเพื่อจัดการ flow, views, state และการทดลอง UX ของแพลตฟอร์ม</p>
         </a>
-      </div>
-    </div>
 
-    <div class="relative z-10 mt-20 mx-auto w-full max-w-6xl px-4">
-      <div class="group relative overflow-hidden rounded-xl border border-primary/20 bg-background-dark/80 p-2 shadow-2xl">
-        <div class="absolute inset-0 bg-primary/5 transition-colors group-hover:bg-primary/10"></div>
-        <img
-          alt="Futuristic dark code editor interface with blue accents"
-          class="h-auto w-full rounded-lg opacity-60 grayscale-[0.2] transition-all duration-500 group-hover:grayscale-0"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCur6r7aNYNJP1zbyYzJ0paQy6qZEyPogEnfQ5H4TyhSfDMh6VlVl8kjFGlH9pDLYa4NkVt1F7o7qCCJJ8v2QoLgpW0Pf6f640apQesnh7BJ9IvYMMpk9lMX8WWszQF9C0tnlqrU3uGagkpfZRe5nBBFYqqo_o2mn0Pfdgpezy3rccdY9355LLQcoXCbUcFytjqpp3FHiz_dvvEBT5BqkOvi5_8loNw2SDpzILtmg_conChbewvB5gVghIaWEf-WFDxU2XPLaAbKAk"
-        />
+        <a href="enterprise_windows.html" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Operate</p>
+          <h3 class="mb-3 text-2xl font-semibold">Enterprise Windows</h3>
+          <p class="text-slate-300">เปิดหน้าต่างการทำงานระดับองค์กรสำหรับ control panel, dashboard และการติดตามสถานะเชิงปฏิบัติการ</p>
+        </a>
 
-        <div class="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-wrap justify-center gap-4">
-          <div class="flex items-center gap-2 rounded-lg border border-primary/40 bg-background-dark/90 px-4 py-2 text-sm backdrop-blur-md">
-            <span class="material-icons-round text-sm text-primary">settings_input_component</span>
-            Instant Scaffolding
-          </div>
-          <div class="flex items-center gap-2 rounded-lg border border-primary/40 bg-background-dark/90 px-4 py-2 text-sm backdrop-blur-md">
-            <span class="material-icons-round text-sm text-primary">psychology</span>
-            AI Logic Engine
-          </div>
-          <div class="flex items-center gap-2 rounded-lg border border-primary/40 bg-background-dark/90 px-4 py-2 text-sm backdrop-blur-md">
-            <span class="material-icons-round text-sm text-primary">cloud_done</span>
-            One-Click Deploy
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
+        <a href="github-pr-settings.html" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Governance</p>
+          <h3 class="mb-3 text-2xl font-semibold">GitHub PR Settings</h3>
+          <p class="text-slate-300">ตั้งค่ามาตรฐาน pull request และ workflow สำหรับการกำกับคุณภาพโค้ดของทีม</p>
+        </a>
 
-  <section class="relative z-10 bg-background-dark py-24">
-    <div class="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
-      <article class="rounded-2xl border border-primary/10 bg-primary/5 p-8 transition-all hover:border-primary/30">
-        <div class="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
-          <span class="material-icons-round">architecture</span>
-        </div>
-        <h3 class="mb-3 text-xl font-bold">Infinite Architecture</h3>
-        <p class="font-light leading-relaxed text-slate-400">
-          Define your schema in plain English. Our engine creates the database, API, and frontend boilerplate instantly.
-        </p>
-      </article>
+        <a href="src/frontend/login.html" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Access</p>
+          <h3 class="mb-3 text-2xl font-semibold">User Login</h3>
+          <p class="text-slate-300">เชื่อมเข้าสู่ระบบ authentication เพื่อเข้าถึงบริการที่ต้องใช้สิทธิ์และ role เฉพาะ</p>
+        </a>
 
-      <article class="rounded-2xl border border-primary/10 bg-primary/5 p-8 transition-all hover:border-primary/30">
-        <div class="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
-          <span class="material-icons-round">terminal</span>
-        </div>
-        <h3 class="mb-3 text-xl font-bold">Live Collaboration</h3>
-        <p class="font-light leading-relaxed text-slate-400">
-          Invite your team to the Studio. Real-time multi-player editing for rapid prototyping and pair programming.
-        </p>
-      </article>
+        <a href="src/frontend/billing_settings.html" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Finance</p>
+          <h3 class="mb-3 text-2xl font-semibold">Billing Settings</h3>
+          <p class="text-slate-300">จัดการแผนใช้งานและการชำระเงินสำหรับระดับ SOLO, SYNDICATE และ SINGULARITY</p>
+        </a>
 
-      <article class="rounded-2xl border border-primary/10 bg-primary/5 p-8 transition-all hover:border-primary/30">
-        <div class="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
-          <span class="material-icons-round">rocket_launch</span>
-        </div>
-        <h3 class="mb-3 text-xl font-bold">Edge Optimization</h3>
-        <p class="font-light leading-relaxed text-slate-400">
-          Every app launched via Studio is automatically optimized for global edge delivery with zero config.
-        </p>
-      </article>
-    </div>
-  </section>
-
-  <footer class="relative z-10 border-t border-primary/10 bg-background-dark py-12">
-    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-4 sm:px-6 lg:flex-row lg:px-8">
-      <div class="flex items-center gap-2 opacity-60">
-        <div class="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
-          <span class="material-icons-round text-[12px] text-white">auto_awesome</span>
-        </div>
-        <span class="text-sm font-bold tracking-tight">STUDIO.OS</span>
-      </div>
-
-      <div class="flex gap-8 text-sm text-slate-500">
-        <a class="transition-colors hover:text-primary" href="#">Privacy Policy</a>
-        <a class="transition-colors hover:text-primary" href="#">Terms of Service</a>
-        <a class="transition-colors hover:text-primary" href="#">Twitter</a>
-        <a class="transition-colors hover:text-primary" href="#">GitHub</a>
-      </div>
-
-      <div class="text-sm text-slate-500">© 2024 Studio Labs Inc. All rights reserved.</div>
-    </div>
-  </footer>
-
-  <script>
-    const launchButton = document.getElementById("launchCreatorStudio");
-    if (launchButton) {
-      launchButton.addEventListener("click", () => {
-        window.open("creator-studio.html", "_blank", "width=1400,height=900");
-      });
-    }
-  </script>
+        <a href="README.md" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Docs</p>
+          <h3 class="mb-3 text-2xl font-semibold">System Documentation</h3>
+          <p class="text-slate-300">อ่านภาพรวมสถาปัตยกรรม, modules หลัก, และ roadmap ล่าสุดของระบบทั้งหมด</p>
+        </a>
+      </section>
+    </main>
+  </div>
 </body>
 </html>

@@ -1,13 +1,24 @@
+import asyncio
 import json
 import logging
 
 import uvicorn
-from fastapi import Body, FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from api_gateway.aetherbus_extreme import AetherBusExtreme
 from src.backend.causal_policy_lab import CausalPolicyLab
 from src.backend.creator_studio import CreatorStudioService
+from src.backend.genesis_core import (
+    GenesisCoreService,
+    IntentIngressRequest,
+    LifecycleManager,
+    SoulBreakError,
+    WebSocketBridge,
+    problem_details_from_error,
+    verify_hmac_sha256,
+)
 from src.backend.policy_genome import PolicyGenomeEngine
 from tools.contracts.contract_checker import ContractChecker
 
@@ -30,6 +41,10 @@ immune_system = ContractChecker()
 causal_lab = CausalPolicyLab()
 policy_genome_engine = PolicyGenomeEngine()
 creator_studio = CreatorStudioService()
+genesis_core = GenesisCoreService()
+genesis_lifecycle = LifecycleManager()
+genesis_bridge = WebSocketBridge(genesis_core.environment)
+GENESIS_WEBHOOK_SECRET = "genesis-webhook-dev-secret"
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,6 +52,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(SoulBreakError)
+async def soulbreak_exception_handler(_request: Request, exc: SoulBreakError):
+    status_code, payload = problem_details_from_error(exc, status_code=400)
+    return JSONResponse(status_code=status_code, content=payload)
+
+
+@app.on_event("startup")
+async def startup_genesis_lifecycle() -> None:
+    async def heartbeat_loop() -> None:
+        while True:
+            await genesis_core.environment.publish(
+                "system.vitals",
+                {"cpu_load": 0.32, "memory_usage": 0.41, "status": "genesis_online"},
+            )
+            await asyncio.sleep(2)
+
+    await genesis_lifecycle.start(heartbeat_loop())
+
+
+@app.on_event("shutdown")
+async def shutdown_genesis_lifecycle() -> None:
+    await genesis_lifecycle.shutdown()
+
 
 
 @app.get("/")
@@ -222,6 +261,42 @@ async def websocket_endpoint(websocket: WebSocket):
         await bus.unsubscribe("SYSTEM_ALERT", synapse_handler)
         await bus.unsubscribe("CODE_GEN_UPDATE", synapse_handler)
         logger.info("🔌 Dashboard Disconnected")
+
+
+@app.get("/api/genesis/terminology")
+async def get_genesis_terminology():
+    return {"mapping": genesis_core.terminology.snapshot()}
+
+
+@app.post("/api/genesis/intent")
+async def ingest_genesis_intent(payload: dict = Body(...)):
+    envelope = await genesis_core.ingest_intent(IntentIngressRequest(**payload))
+    return {
+        "protocol": ["devordota", "akashic_envelope", "aetherbus", "digisonic"],
+        "envelope": envelope.model_dump(),
+    }
+
+
+@app.post("/api/genesis/webhook/ingest")
+async def genesis_webhook_ingest(request: Request):
+    raw = await request.body()
+    signature = request.headers.get("X-Genesis-Signature")
+    if not verify_hmac_sha256(raw, signature, secret=GENESIS_WEBHOOK_SECRET):
+        return JSONResponse(status_code=401, content={"status": "invalid_signature"})
+    payload = await request.json()
+    envelope = await genesis_core.ingest_intent(IntentIngressRequest(**payload))
+    return {"status": "ok", "vector_id": envelope.intent_vector.vector_id}
+
+
+@app.websocket("/ws/genesis")
+async def websocket_genesis(websocket: WebSocket):
+    await websocket.accept()
+    await genesis_bridge.attach(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        await genesis_bridge.detach(websocket)
 
 
 if __name__ == "__main__":

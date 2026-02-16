@@ -1,0 +1,12 @@
+{
+  "blocked_intents": [
+    "delete_all_records",
+    "wipe_identity_store",
+    "bypass_governance"
+  ],
+  "high_risk_intents": [
+    "financial_transfer",
+    "filesystem_delete",
+    "model_override"
+  ]
+}

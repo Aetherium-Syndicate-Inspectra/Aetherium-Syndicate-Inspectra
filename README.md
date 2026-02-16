@@ -26,6 +26,23 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 1. **Zero-Trust DB Session Guard:** เพิ่มชั้นตรวจสอบ session policy (PRAGMA baseline + schema hash) ทุกครั้งก่อน query สำคัญ
 2. **Temporal Integrity Replay:** สร้างระบบ replay transaction log เพื่อจำลอง incident และวัดความทนทานของ constraint ภายใต้โหลดสูง
 
+
+## 🆕 Build Creator Studio LLM Orchestration Update (v4.3.1)
+
+### What changed
+- Upgraded `CreatorStudioService` to normalize user requests into a structured Build Creator Studio intent model covering **flow orchestration**, **view registry**, **state store**, and **UX experiment tracks**.
+- Added deterministic fallback logic that injects a machine-readable architecture blueprint (`build-creator-studio-spec`) when requests mention Build/Creator Studio architecture upgrades.
+- Standardized prompt language to international software-engineering terminology (spec-to-plan, code synthesis, contract validation) while preserving backward compatibility with existing generated code.
+
+### Why this improves the platform
+- Enables spec-driven LLM behavior for Creator Studio instead of unstructured prompt-only generation.
+- Keeps legacy output intact while adding a new extensible architecture contract for future automation and governance checks.
+- Makes implementation vocabulary clearer for cross-functional teams (engineering, product, and governance).
+
+### Next suggested enhancements
+1. Add JSON schema validation for `build-creator-studio-spec` before PR composition.
+2. Introduce multi-file orchestration so the same intent model can patch `views`, `state`, and `services` modules in one generation cycle.
+
 ## 🧠 Core Architecture: The AI Physiology Stack
 
 ระบบถูกออกแบบโดยแบ่งเป็น 3 เลเยอร์หลักที่ทำงานสอดประสานกัน:

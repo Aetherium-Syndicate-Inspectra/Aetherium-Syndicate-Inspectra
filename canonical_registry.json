@@ -1,7 +1,9 @@
 {
   "approved_functions": [
+    "evaluate",
     "main",
-    "new"
+    "new",
+    "snapshot"
   ],
   "canonical_functions": {
     "_load_tachyon_core": {

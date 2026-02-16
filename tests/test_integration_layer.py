@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from src.backend.api_server import app
 from src.backend.cogitator_x import SynergyResolver
 from src.backend.db import create_or_get_user, get_conn
-from src.backend.integration_layer import build_promptpay_qr_payload
+from src.backend.integration_layer import build_promptpay_qr_payload, build_tiktok_script
 
 
 def test_synergy_resolver_routes_promptpay_and_edtech() -> None:
@@ -85,3 +85,16 @@ def test_line_webhook_and_liff_sync_roundtrip() -> None:
         ).fetchone()
     assert row is not None
     assert row["provider_user_id"] == "line-user-001"
+
+
+def test_tiktok_script_builder_contains_hook_body_and_cta() -> None:
+    payload = build_tiktok_script(
+        trend_name="ทองคำ 2026",
+        key_points=["สรุปราคา", "ความเสี่ยง", "วิธีเริ่มต้น"],
+        line_oa_link="https://line.me/R/ti/p/@aetherium",
+    )
+
+    assert payload["topic"] == "TikTok_Automation"
+    assert payload["script"]["hook"].startswith("ทองคำ 2026")
+    assert len(payload["script"]["body"]) == 3
+    assert "LINE OA" in payload["script"]["cta"]

@@ -150,6 +150,20 @@ def init_db() -> None:
                 UNIQUE(user_id, provider),
                 FOREIGN KEY (user_id) REFERENCES users(user_id)
             );
+
+
+            CREATE TABLE IF NOT EXISTS user_contexts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                line_user_id TEXT,
+                google_sub TEXT,
+                tiktok_user_id TEXT,
+                context_json TEXT DEFAULT '{}',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(user_id),
+                FOREIGN KEY (user_id) REFERENCES users(user_id)
+            );
             """
         )
 
@@ -344,3 +358,45 @@ def link_line_identity(*, user_id: str, line_user_id: str) -> IdentityLinkRecord
         ).fetchone()
         conn.commit()
     return IdentityLinkRecord(**dict(row))
+
+
+async def update_payment_status(*, user_id: str, amount: float, status: str) -> str:
+    tx_type = "TOPUP"
+    normalized_status = status if status in {"PENDING", "SUCCESS", "FAILED"} else "SUCCESS"
+    return create_transaction(user_id=user_id, amount=amount, tx_type=tx_type, status=normalized_status)
+
+
+async def activate_service(user_id: str) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE subscriptions SET status = 'ACTIVE', next_billing_date = ? WHERE user_id = ?",
+            ((datetime.now(tz=timezone.utc) + timedelta(days=30)).isoformat(), user_id),
+        )
+        conn.commit()
+
+
+def upsert_user_context(
+    *,
+    user_id: str,
+    line_user_id: str | None = None,
+    google_sub: str | None = None,
+    tiktok_user_id: str | None = None,
+    context_json: str = "{}",
+) -> None:
+    timestamp = now_iso()
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO user_contexts (user_id, line_user_id, google_sub, tiktok_user_id, context_json, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id)
+            DO UPDATE SET
+                line_user_id = COALESCE(excluded.line_user_id, user_contexts.line_user_id),
+                google_sub = COALESCE(excluded.google_sub, user_contexts.google_sub),
+                tiktok_user_id = COALESCE(excluded.tiktok_user_id, user_contexts.tiktok_user_id),
+                context_json = excluded.context_json,
+                updated_at = excluded.updated_at
+            """,
+            (user_id, line_user_id, google_sub, tiktok_user_id, context_json, timestamp, timestamp),
+        )
+        conn.commit()

@@ -276,3 +276,46 @@ def _solve_linear_system(a: list[list[float]], b: list[float]) -> list[float]:
             factor = aug[row][col]
             aug[row] = [cur - factor * lead for cur, lead in zip(aug[row], aug[col])]
     return [aug[idx][-1] for idx in range(n)]
+
+
+@dataclass
+class PolicyProposal:
+    actor: str
+    action: str
+    payload: dict[str, Any]
+
+
+@dataclass
+class PolicyDecision:
+    status: str
+    reason: str
+    rewritten_action: str | None = None
+
+
+class CausalIntegrityGuard:
+    """Real-time governance gate for Thai PDPA-aware proposals."""
+
+    def __init__(self, charter_rules: list[str] | None = None):
+        self.charter_rules = charter_rules or [
+            "no_sensitive_personal_data_without_consent",
+            "must_provide_opt_out",
+            "no_deceptive_marketing",
+        ]
+
+    def evaluate(self, proposal: PolicyProposal) -> PolicyDecision:
+        simulation = self._simulate_impact(proposal)
+        if not simulation["pdpa_safe"]:
+            return PolicyDecision(
+                status="rewrite",
+                reason="PDPA risk detected",
+                rewritten_action="request_explicit_consent_before_processing",
+            )
+        if not simulation["charter_compliant"]:
+            return PolicyDecision(status="rewrite", reason="Governance charter mismatch", rewritten_action="reduce_scope")
+        return PolicyDecision(status="commit", reason="Proposal passed causal and governance checks")
+
+    def _simulate_impact(self, proposal: PolicyProposal) -> dict[str, bool]:
+        payload_text = json.dumps(proposal.payload, ensure_ascii=False).lower()
+        pdpa_safe = "national_id" not in payload_text and "face_embedding" not in payload_text
+        charter_compliant = "dark_pattern" not in payload_text
+        return {"pdpa_safe": pdpa_safe, "charter_compliant": charter_compliant}

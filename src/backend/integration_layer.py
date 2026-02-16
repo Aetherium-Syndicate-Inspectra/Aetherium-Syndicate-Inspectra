@@ -6,9 +6,10 @@ import binascii
 import hashlib
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
 
+from src.backend.aetherbus_extreme import AetherBus
 from src.backend.cogitator_x import SynergyResolver
 from src.backend.db import get_user_by_google_sub, link_line_identity
 
@@ -54,6 +55,12 @@ class TikTokCommentEvent(BaseModel):
     text: str
 
 
+class TikTokTrendRequest(BaseModel):
+    trend_name: str
+    key_points: list[str] = Field(default_factory=list)
+    line_oa_link: str
+
+
 def _tlv(tag: str, value: str) -> str:
     return f"{tag}{len(value):02d}{value}"
 
@@ -85,15 +92,54 @@ def build_promptpay_qr_payload(*, merchant_id: str, amount_thb: float, reference
     return body + _crc16_ccitt_false(body)
 
 
+async def process_agent_logic(event_data: dict[str, Any], user_id: str) -> None:
+    bus = AetherBus()
+    await bus.emit(
+        "LINE_EVENT_TRIGGER",
+        {
+            "user_id": user_id,
+            "content": event_data.get("message", {}),
+            "context_id": f"ctx_{user_id}",
+            "channel": "LINE",
+        },
+    )
+
+
+def _detect_line_trigger(text: str) -> str:
+    lowered = text.lower()
+    if "ซื้อ" in text or "buy" in lowered:
+        return "purchase_intent"
+    return "message_received"
+
+
+def build_tiktok_script(*, trend_name: str, key_points: list[str], line_oa_link: str) -> dict[str, Any]:
+    ordered_points = [point.strip() for point in key_points if point.strip()]
+    if not ordered_points:
+        ordered_points = [f"Highlight why {trend_name} matters for Thai audiences."]
+
+    script = {
+        "hook": f"{trend_name} กำลังมาแรงในไทย — ห้ามพลาด!",
+        "body": ordered_points,
+        "cta": f"ทัก LINE OA เพื่อรับข้อเสนอพิเศษ: {line_oa_link}",
+    }
+    return {
+        "topic": "TikTok_Automation",
+        "script": script,
+        "metadata": {
+            "loop": "content_to_commerce",
+            "locale": "th-TH",
+        },
+    }
+
+
 @router.post("/line/webhook")
-def line_webhook(payload: LineWebhookPayload) -> dict[str, Any]:
+async def line_webhook(payload: LineWebhookPayload, background_tasks: BackgroundTasks) -> dict[str, Any]:
     processed: list[dict[str, Any]] = []
     for event in payload.events:
         text = event.message.text if event.message else ""
-        trigger = "message_received"
-        if "ซื้อ" in text or "buy" in text.lower():
-            trigger = "purchase_intent"
+        trigger = _detect_line_trigger(text)
         resolution = resolver.resolve(channel="LINE", trigger=trigger, payload={"text": text})
+        background_tasks.add_task(process_agent_logic, event_data=event.model_dump(by_alias=True), user_id=event.source.user_id)
         processed.append(
             {
                 "line_user_id": event.source.user_id,
@@ -151,4 +197,20 @@ def tiktok_comment_ingest(payload: TikTokCommentEvent) -> dict[str, Any]:
             "agents": list(resolution.agents),
             "actions": list(resolution.actions),
         },
+    }
+
+
+@router.post("/tiktok/script")
+async def tiktok_script_dispatch(payload: TikTokTrendRequest) -> dict[str, Any]:
+    bus_payload = build_tiktok_script(
+        trend_name=payload.trend_name,
+        key_points=payload.key_points,
+        line_oa_link=payload.line_oa_link,
+    )
+    bus = AetherBus()
+    await bus.emit(bus_payload["topic"], bus_payload)
+    return {
+        "status": "queued",
+        "topic": bus_payload["topic"],
+        "script": bus_payload["script"],
     }

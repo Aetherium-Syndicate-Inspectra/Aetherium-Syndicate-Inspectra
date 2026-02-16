@@ -19,6 +19,7 @@
     };
   </script>
   <style>body { font-family: 'Space Grotesk', sans-serif; }</style>
+  <link rel="stylesheet" href="assets/css/page-shell.css" />
 </head>
 <body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased overflow-hidden">
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-sm bg-background-dark/60">
@@ -27,7 +28,7 @@
         <div class="flex items-center gap-3">
           <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary"><span class="material-icons">git_pull_request</span></div>
           <div>
-            <h2 class="text-xl font-bold tracking-tight">Finalize &amp; Push to GitHub</h2>
+            <h2 class="text-xl font-bold tracking-tight" data-i18n-th="ยืนยันและส่งขึ้น GitHub" data-i18n-en="Finalize &amp; Push to GitHub">Finalize &amp; Push to GitHub</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Diff-aware composer + Branch Policy Guardian</p>
           </div>
         </div>
@@ -199,5 +200,6 @@
     confirmPushBtn.addEventListener('click', submitPullRequest);
     composeSuggestion();
   </script>
+  <script src="assets/js/utils/page-shell.js"></script>
 </body>
 </html>

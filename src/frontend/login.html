@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,6 +9,9 @@
     body { background:#0a0a0f; color:#fff; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:16px; font-family:Arial,sans-serif; }
     .login-card { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 24px; text-align:center; width:min(100%,420px);}
     .hint { opacity: .8; font-size: 13px; margin-top: 12px; }
+    .status { margin-top: 14px; font-size: 13px; color: #94a3b8; min-height: 22px; }
+    .status.error { color: #fda4af; }
+    .status.success { color: #86efac; }
   </style>
   <link rel="stylesheet" href="../../assets/css/page-shell.css" />
 </head>
@@ -17,49 +20,114 @@
     <h1 data-i18n-th="ระบบควบคุมการเข้าถึง" data-i18n-en="ACCESS CONTROL">ACCESS CONTROL</h1>
     <p data-i18n-th="จำเป็นต้องยืนยันตัวตน" data-i18n-en="Identity Verification Required">Identity Verification Required</p>
 
-    <div id="g_id_onload"
-         data-client_id="YOUR_GOOGLE_CLIENT_ID"
-         data-callback="handleCredentialResponse"
-         data-auto_prompt="false">
-    </div>
-    <div class="g_id_signin"
-         data-type="standard"
-         data-size="large"
-         data-theme="filled_black"
-         data-text="sign_in_with"
-         data-shape="rectangular"
-         data-logo_alignment="left">
-    </div>
-
-    <p class="hint">Set GOOGLE_CLIENT_ID in backend env and replace YOUR_GOOGLE_CLIENT_ID for local test.</p>
+    <div id="googleSignInContainer" class="mt-4"></div>
+    <p id="loginStatus" class="status" role="status">กำลังเตรียมระบบล็อกอิน...</p>
+    <p class="hint">หากใช้งานแบบ local ให้ตั้งค่า GOOGLE_CLIENT_ID และเปิด API server ที่รองรับ /api/auth/google</p>
   </div>
 
   <script>
+    const loginStatus = document.getElementById('loginStatus');
+
+    function setStatus(message, type = '') {
+      loginStatus.textContent = message;
+      loginStatus.className = `status ${type}`.trim();
+    }
+
+    function resolveApiBase() {
+      const configured = localStorage.getItem('asi_api_base');
+      if (configured) {
+        return configured.replace(/\/$/, '');
+      }
+
+      if (window.location.protocol.startsWith('http')) {
+        return window.location.origin;
+      }
+
+      return 'http://localhost:8000';
+    }
+
+    async function loadGoogleConfig() {
+      const apiBase = resolveApiBase();
+      const response = await fetch(`${apiBase}/api/auth/google/config`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `Config endpoint failed (${response.status})`);
+      }
+      const config = await response.json();
+      if (!config.client_id) {
+        throw new Error('GOOGLE_CLIENT_ID ไม่ถูกตั้งค่าใน backend');
+      }
+      return { apiBase, clientId: config.client_id };
+    }
+
     async function handleCredentialResponse(response) {
       try {
-        const res = await fetch('http://localhost:8000/api/auth/google', {
+        const apiBase = resolveApiBase();
+        setStatus('กำลังตรวจสอบข้อมูลบัญชี...', '');
+        const res = await fetch(`${apiBase}/api/auth/google`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ token: response.credential })
         });
 
         const data = await res.json();
-        if (data.status === 'success') {
+        if (res.ok && data.status === 'success') {
           localStorage.setItem('asi_token', data.access_token);
           localStorage.setItem('user_profile', JSON.stringify(data.user));
+          localStorage.setItem('asi_api_base', apiBase);
           if (data.user.api_key) {
             localStorage.setItem('asi_api_key', data.user.api_key);
           }
-          window.location.href = '../../index.html';
+          setStatus('ล็อกอินสำเร็จ กำลังเข้าสู่ Workspace...', 'success');
+          window.location.href = '../../app-home.html';
           return;
         }
 
-        alert('Login failed: ' + JSON.stringify(data));
+        setStatus(`Login failed: ${data.detail || JSON.stringify(data)}`, 'error');
       } catch (err) {
         console.error(err);
-        alert('Unable to login. Check backend connectivity.');
+        setStatus(`Unable to login: ${err.message}`, 'error');
       }
     }
+
+    window.handleCredentialResponse = handleCredentialResponse;
+
+    async function initGoogleSignIn() {
+      try {
+        const { clientId } = await loadGoogleConfig();
+        if (!window.google?.accounts?.id) {
+          throw new Error('Google Identity script not loaded');
+        }
+
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleCredentialResponse,
+          auto_select: false,
+          ux_mode: 'popup'
+        });
+
+        window.google.accounts.id.renderButton(
+          document.getElementById('googleSignInContainer'),
+          {
+            type: 'standard',
+            theme: 'filled_black',
+            size: 'large',
+            text: 'signin_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+            width: 280
+          }
+        );
+        setStatus('พร้อมใช้งาน: กรุณาเลือกบัญชี Google เพื่อเข้าสู่ระบบ', 'success');
+      } catch (error) {
+        console.error(error);
+        setStatus(`ระบบล็อกอินยังไม่พร้อมใช้งาน: ${error.message}`, 'error');
+      }
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(initGoogleSignIn, 200);
+    });
   </script>
   <script src="../../assets/js/utils/page-shell.js"></script>
 </body>

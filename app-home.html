@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aetherium Syndicate Inspectra | Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { display: ['Space Grotesk', 'sans-serif'] },
+          colors: { primary: '#4f7fff', 'background-dark': '#070b14' }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/page-shell.css" />
+</head>
+<body class="bg-background-dark font-display text-slate-100">
+  <div class="relative min-h-screen overflow-hidden">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,127,255,0.25),transparent_45%)]"></div>
+    <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]"></div>
+
+    <header class="relative z-10 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
+        <div>
+          <p class="text-xs uppercase tracking-[0.28em] text-primary">Authenticated Workspace</p>
+          <h1 class="text-2xl font-bold">Aetherium Syndicate Inspectra</h1>
+        </div>
+        <nav class="flex flex-wrap items-center gap-3 text-sm">
+          <a class="rounded-lg border border-slate-700 px-4 py-2 transition hover:border-primary hover:text-primary" href="creator-studio.html">Creator Studio</a>
+          <a class="rounded-lg border border-slate-700 px-4 py-2 transition hover:border-primary hover:text-primary" href="enterprise_windows.html">Enterprise Windows</a>
+          <a class="rounded-lg border border-slate-700 px-4 py-2 transition hover:border-primary hover:text-primary" href="github-pr-settings.html">PR Settings</a>
+          <button id="logoutBtn" class="rounded-lg border border-rose-500/50 px-4 py-2 text-rose-300 transition hover:border-rose-400 hover:text-rose-200">ออกจากระบบ</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <section class="mb-10 rounded-2xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl shadow-black/40">
+        <p class="mb-3 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">Control Plane</p>
+        <h2 class="mb-4 text-4xl font-bold leading-tight sm:text-5xl">พื้นที่ทำงานหลังล็อกอิน</h2>
+        <p id="welcomeText" class="max-w-3xl text-slate-300">ยินดีต้อนรับกลับสู่ระบบ ASI Workspace</p>
+      </section>
+
+      <section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <a href="creator-studio.html" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Build</p>
+          <h3 class="mb-3 text-2xl font-semibold">Creator Studio</h3>
+          <p class="text-slate-300">เข้าสู่เครื่องมือสร้างระบบหลักเพื่อจัดการ flow, views และการทดลอง UX</p>
+        </a>
+
+        <a href="enterprise_windows.html" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Operate</p>
+          <h3 class="mb-3 text-2xl font-semibold">Enterprise Windows</h3>
+          <p class="text-slate-300">เปิดหน้าต่างการทำงานระดับองค์กรสำหรับ dashboard และสถานะปฏิบัติการ</p>
+        </a>
+
+        <a href="github-pr-settings.html" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Governance</p>
+          <h3 class="mb-3 text-2xl font-semibold">GitHub PR Settings</h3>
+          <p class="text-slate-300">ตั้งค่ามาตรฐาน pull request และ workflow สำหรับการกำกับคุณภาพโค้ด</p>
+        </a>
+
+        <a href="src/frontend/billing_settings.html" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Finance</p>
+          <h3 class="mb-3 text-2xl font-semibold">Billing Settings</h3>
+          <p class="text-slate-300">จัดการแผนใช้งานและการชำระเงินสำหรับระดับ SOLO, SYNDICATE และ SINGULARITY</p>
+        </a>
+
+        <a href="README.md" class="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 transition hover:-translate-y-1 hover:border-primary/60 hover:bg-slate-900">
+          <p class="mb-2 text-sm text-primary">Docs</p>
+          <h3 class="mb-3 text-2xl font-semibold">System Documentation</h3>
+          <p class="text-slate-300">อ่านภาพรวมสถาปัตยกรรมและ roadmap ล่าสุดของระบบทั้งหมด</p>
+        </a>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('asi_token');
+    const userProfileRaw = localStorage.getItem('user_profile');
+    if (!token || !userProfileRaw) {
+      window.location.href = 'src/frontend/login.html';
+    } else {
+      try {
+        const user = JSON.parse(userProfileRaw);
+        if (user?.name || user?.email) {
+          document.getElementById('welcomeText').textContent = `ยินดีต้อนรับ ${user.name || user.email} เข้าสู่ระบบ ASI Workspace`;
+        }
+      } catch (error) {
+        console.warn('Failed to parse user profile', error);
+      }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('asi_token');
+      localStorage.removeItem('user_profile');
+      localStorage.removeItem('asi_api_key');
+      window.location.href = 'index.html';
+    });
+  </script>
+  <script src="assets/js/utils/page-shell.js"></script>
+</body>
+</html>

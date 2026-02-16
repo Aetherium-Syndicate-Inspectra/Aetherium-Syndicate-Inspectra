@@ -14,3 +14,40 @@ def test_upsert_user_context_persists_cross_platform_mapping(tmp_path):
     assert row is not None
     assert row["line_user_id"] == "line-123"
     assert row["tiktok_user_id"] == "tt-555"
+
+
+def test_create_or_get_user_updates_google_link_for_existing_email(tmp_path):
+    db.DB_PATH = tmp_path / "asi-auth.db"
+    db.init_db()
+
+    user_id, _ = db.create_default_user("auth@example.com", "Auth User", None, None)
+
+    user, api_key = db.create_or_get_user(
+        email="auth@example.com",
+        name="Auth User",
+        picture="https://example.com/avatar.png",
+        google_sub="google-sub-123",
+    )
+
+    assert api_key is None
+    assert user["user_id"] == user_id
+    assert user["google_sub"] == "google-sub-123"
+    assert user["picture"] == "https://example.com/avatar.png"
+
+
+def test_create_or_get_user_prefers_existing_google_sub_link(tmp_path):
+    db.DB_PATH = tmp_path / "asi-auth-sub.db"
+    db.init_db()
+
+    user_id, _ = db.create_default_user("owner@example.com", "Owner", None, "google-sub-owner")
+
+    user, api_key = db.create_or_get_user(
+        email="new-email@example.com",
+        name="Owner",
+        picture=None,
+        google_sub="google-sub-owner",
+    )
+
+    assert api_key is None
+    assert user["user_id"] == user_id
+    assert user["email"] == "owner@example.com"

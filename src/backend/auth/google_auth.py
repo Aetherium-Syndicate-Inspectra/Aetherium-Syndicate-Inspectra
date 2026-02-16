@@ -51,6 +51,15 @@ def create_access_token(user_id: str, tier: str, email: str, expires_in: int = 3
     return b".".join([header_b, payload_b, _b64url(sig)]).decode("utf-8")
 
 
+@router.get("/api/auth/google/config")
+async def google_auth_config() -> dict[str, Any]:
+    return {
+        "client_id": GOOGLE_CLIENT_ID,
+        "configured": bool(GOOGLE_CLIENT_ID),
+        "dependencies_ready": bool(id_token is not None and grequests is not None),
+    }
+
+
 @router.post("/api/auth/google")
 async def google_login(request: GoogleLoginRequest) -> dict[str, Any]:
     if not GOOGLE_CLIENT_ID:

@@ -261,9 +261,27 @@ def update_subscription_tier(user_id: str, tier_level: str, max_agents: int, gho
 
 
 def create_or_get_user(email: str, name: str | None, picture: str | None, google_sub: str | None = None) -> tuple[sqlite3.Row, str | None]:
+    if google_sub:
+        linked = get_user_by_google_sub(google_sub)
+        if linked:
+            return linked, None
+
     existing = get_user_by_email(email)
     if existing:
-        return existing, None
+        with get_conn() as conn:
+            conn.execute(
+                """
+                UPDATE users
+                SET name = COALESCE(?, name),
+                    picture = COALESCE(?, picture),
+                    google_sub = COALESCE(google_sub, ?)
+                WHERE user_id = ?
+                """,
+                (name, picture, google_sub, existing["user_id"]),
+            )
+            updated = conn.execute("SELECT * FROM users WHERE user_id = ?", (existing["user_id"],)).fetchone()
+            conn.commit()
+        return updated, None
 
     user_id, api_key = create_default_user(email=email, name=name, picture=picture, google_sub=google_sub)
     with get_conn() as conn:

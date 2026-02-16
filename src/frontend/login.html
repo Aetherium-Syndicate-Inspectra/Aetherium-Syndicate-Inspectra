@@ -6,15 +6,16 @@
   <title>ASI Login</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    body { background:#0a0a0f; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh; font-family:Arial,sans-serif; }
-    .login-card { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 24px; text-align:center; }
+    body { background:#0a0a0f; color:#fff; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:16px; font-family:Arial,sans-serif; }
+    .login-card { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 24px; text-align:center; width:min(100%,420px);}
     .hint { opacity: .8; font-size: 13px; margin-top: 12px; }
   </style>
+  <link rel="stylesheet" href="../../assets/css/page-shell.css" />
 </head>
 <body>
   <div class="login-card">
-    <h1>ACCESS CONTROL</h1>
-    <p>Identity Verification Required</p>
+    <h1 data-i18n-th="ระบบควบคุมการเข้าถึง" data-i18n-en="ACCESS CONTROL">ACCESS CONTROL</h1>
+    <p data-i18n-th="จำเป็นต้องยืนยันตัวตน" data-i18n-en="Identity Verification Required">Identity Verification Required</p>
 
     <div id="g_id_onload"
          data-client_id="YOUR_GOOGLE_CLIENT_ID"
@@ -60,5 +61,6 @@
       }
     }
   </script>
+  <script src="../../assets/js/utils/page-shell.js"></script>
 </body>
 </html>

@@ -21,30 +21,31 @@
       }
     };
   </script>
+  <link rel="stylesheet" href="assets/css/page-shell.css" />
 </head>
 <body class="bg-bg text-slate-100 min-h-screen">
   <div class="max-w-7xl mx-auto px-4 py-6 space-y-5">
     <header class="rounded-xl bg-panel border border-slate-700 p-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold">Enterprise Software Simulation Hub</h1>
+          <h1 class="text-2xl font-bold" data-i18n-th="ศูนย์จำลองซอฟต์แวร์องค์กร" data-i18n-en="Enterprise Software Simulation Hub">Enterprise Software Simulation Hub</h1>
           <p class="mt-1 text-sm text-slate-300">คลิกไอคอนเพื่อเปิดหน้าต่างจำลองของแต่ละแพลตฟอร์ม</p>
         </div>
         <a href="index.html" class="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm hover:bg-slate-600">
           <span aria-hidden="true">↩</span>
-          <span>กลับหน้า Role Navigator</span>
+          <span><span data-i18n-th="กลับหน้า Role Navigator" data-i18n-en="Back to Role Navigator">กลับหน้า Role Navigator</span></span>
         </a>
       </div>
     </header>
 
     <section class="rounded-xl bg-panel border border-slate-700 p-4">
-      <h2 class="font-semibold mb-3">Software Windows Launcher</h2>
+      <h2 class="font-semibold mb-3"><span data-i18n-th="ตัวเปิดหน้าต่างซอฟต์แวร์" data-i18n-en="Software Windows Launcher">Software Windows Launcher</span></h2>
       <div id="launcherGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
     </section>
 
     <section class="rounded-xl bg-panel border border-slate-700 p-4">
       <div class="flex items-center justify-between gap-3 mb-3">
-        <h2 class="font-semibold">Simulation Window</h2>
+        <h2 class="font-semibold"><span data-i18n-th="หน้าต่างจำลอง" data-i18n-en="Simulation Window">Simulation Window</span></h2>
         <span id="windowStatus" class="text-xs rounded bg-slate-800 px-2 py-1">ยังไม่ได้เลือกแพลตฟอร์ม</span>
       </div>
       <div id="softwareWindow" class="rounded-xl border border-slate-600 bg-panelSoft p-4 min-h-[280px]"></div>
@@ -154,5 +155,6 @@
     renderLauncher();
     openSoftwareWindow(softwareTemplates[0].id);
   </script>
+  <script src="assets/js/utils/page-shell.js"></script>
 </body>
 </html>

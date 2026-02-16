@@ -1,24 +1,34 @@
-ASI High-Level Summary (Auto-generated)
+ASI High-Level Summary
 
-1) Core Platform
-- FastAPI API Gateway + Tachyon Rust core bridge
-- Realtime status via WebSocket/SSE
+1) Platform Topology
+- Primary backend modules under `src/backend/` provide domain logic for resonance, policy, crisis, economy, and creator studio services.
+- API entrypoints currently exist in both `api_gateway/` and `src/backend/api_server.py`.
+- Frontend static assets are served from `assets/` with role studio and dashboard views.
 
-2) Entitlement & Monetization
-- Tier model: SOLO / SYNDICATE / SINGULARITY
-- API-key hashing (SHA-256), feature gating, tier-based rate limiting
-- Billing APIs for status, upgrade, marketplace, and credit top-up
+2) Determinism & Validation Model
+- Contract and schema tooling exists in `tools/contracts/`.
+- Canonical/consistency checks are supported by scripts such as `scripts/enforce_canonical.py`.
+- Duplicate logic detection scripts are available in `scripts/check-duplicate-functions.mjs` and `scripts/semantic_duplicate_detector.py`.
 
-3) Identity
-- Google Sign-In endpoint for ID token verification
-- Auto-provision user + default SOLO subscription
+3) Security & Identity
+- Google authentication logic is in `src/backend/auth/google_auth.py`.
+- Enterprise hardening should enforce strict session lifecycle controls and default-deny RBAC checks.
 
-4) Fiat Gateway
-- Tokenized payment method linking (no raw card/CVV storage)
-- Transaction ledger for SUBSCRIPTION / TOPUP statuses
-- Webhook signature verification (HMAC-SHA256)
+4) Data Layer
+- Current implementation uses SQLite patterns suitable for local/development workloads.
+- Recommended production trajectory: PostgreSQL + migration tracking (Alembic) + explicit rollback strategy.
 
-5) Recommended Next Enhancements
-- Replace mock charge path with real Omise/Stripe SDK integration
-- Add recurring billing scheduler + retry/backoff policy
-- Add fraud/risk scoring per transaction and gateway failover
+5) Operations & Deployment Guidance (Baseline)
+- Define one authoritative API ingress path.
+- Maintain mandatory signature verification, strict schema validation, and quarantine flows.
+- Preserve effectively-once semantics and idempotent handlers when refactoring.
+- Document deployment profiles (dev/staging/prod) and incident rollback steps.
+
+6) Prioritized Improvement Areas
+- Consolidate duplicated API middleware and route definitions.
+- Refactor repeated business logic into stateless common utilities.
+- Complete system/deployment/runbook documentation for faster team handoff.
+- Apply Lighthouse-driven frontend performance optimizations while preserving CSP and security headers.
+
+7) Reference
+- Detailed execution roadmap: `docs/enterprise_hardening_recommendations.md`.

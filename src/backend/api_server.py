@@ -9,9 +9,10 @@ import json
 import os
 import re
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, Header, HTTPException, Response, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Header, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -49,6 +50,13 @@ app.include_router(resonance_drift_router)
 app.include_router(integration_router)
 
 PAYMENT_WEBHOOK_SECRET = os.getenv("PAYMENT_WEBHOOK_SECRET", "asi-webhook-dev-secret")
+RULESET_PATH = Path(__file__).resolve().parent / "inspirafirma_ruleset.json"
+TACHYON_LIBRARY_PATH = os.getenv("TACHYON_CORE_LIBRARY_PATH", "")
+
+try:
+    INSPIRAFIRMA_RULESET = json.loads(RULESET_PATH.read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError):
+    INSPIRAFIRMA_RULESET = {"blocked_intents": [], "high_risk_intents": []}
 
 app.add_middleware(
     CORSMiddleware,
@@ -56,6 +64,32 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def enforce_inspirafirma_charter(request: Request, call_next):
+    if request.method in {"POST", "PUT", "PATCH"} and request.headers.get("content-type", "").startswith("application/json"):
+        raw_body = await request.body()
+        if raw_body:
+            try:
+                payload = json.loads(raw_body)
+            except json.JSONDecodeError:
+                payload = {}
+
+            intent = str(payload.get("intent", "")).strip().lower()
+            blocked = {str(item).strip().lower() for item in INSPIRAFIRMA_RULESET.get("blocked_intents", [])}
+            if intent and intent in blocked:
+                raise HTTPException(status_code=403, detail=f"Intent '{intent}' is blocked by Inviolable Charter")
+
+            if any(key in payload for key in ("bypass_governance", "override_safety")):
+                raise HTTPException(status_code=403, detail="Governance override is denied by Inviolable Charter")
+
+        async def receive() -> dict[str, Any]:
+            return {"type": "http.request", "body": raw_body, "more_body": False}
+
+        request = Request(request.scope, receive)
+
+    return await call_next(request)
 
 AGENTS: list[dict[str, Any]] = [
     {
@@ -275,12 +309,24 @@ def create_directive(payload: DirectiveCreate) -> dict[str, Any]:
     return directive
 
 
+@app.get("/api/tachyon/bridge")
+def tachyon_bridge_status() -> dict[str, Any]:
+    return {
+        "python_extension_loaded": engine is not None,
+        "library_path_hint": TACHYON_LIBRARY_PATH or "unset",
+        "runtime": "python-extension" if engine is not None else "degraded",
+    }
+
+
 @app.get("/api/mint-starter-deck")
 def mint_starter_deck(seed: int = 1000, user_sub=require_feature("MINT_AGENT")) -> dict[str, Any]:
     if engine is None:
         raise HTTPException(
             status_code=503,
-            detail="tachyon_core module not found. Build/install the Python extension to mint starter decks.",
+            detail=(
+                "tachyon_core module not found. Build/install the Python extension (.so/.dll) "
+                "and optionally set TACHYON_CORE_LIBRARY_PATH."
+            ),
         )
 
     try:

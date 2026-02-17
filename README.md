@@ -1,4 +1,4 @@
-# Aetherium-Syndicate-Inspectra (v4.3.0)
+# Aetherium-Syndicate-Inspectra (v4.3.1)
 
 **OS for Autonomous Enterprise - High Integrity Edition**
 

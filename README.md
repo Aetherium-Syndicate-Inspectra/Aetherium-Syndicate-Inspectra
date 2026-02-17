@@ -18,6 +18,11 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 - เพิ่มเอกสารสรุปความพร้อมก่อนเปิดบริการระดับ Enterprise ใน `docs/asi_v4.3.1_launch_readiness_infrastructure_report.md`
 - ครอบคลุมสถานะ dependency, pre-launch checklist, service model (SaaS/On-Premise), และคำแนะนำเชิงสถาปัตยกรรมจาก Hollis
 
+## 🆕 AetherBus Extreme v4.3.2 (Tachyon Integrated)
+
+- เพิ่มเอกสารสเปกเชิงเทคนิค `docs/aetherevent_aetherbus_extreme_high_performance_spec_v4_3_2.md`
+- เพิ่มชุดทดสอบประสิทธิภาพ `bench_aether_extreme.py` สำหรับจำลอง Hybrid Python + Tachyon Bridge throughput/latency
+
 
 ## 🔐 Environment Secrets (.env) for Google Auth
 

@@ -31,7 +31,7 @@ except ImportError:  # pragma: no cover - optional runtime dependency
 router = APIRouter()
 # Load environment values from project root `.env` when present.
 load_dotenv()
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_ID = os.getenv("766326105036-dfjhu5840ig9dshnr6p7hj32ugjcsun5.apps.googleusercontent.com")
 JWT_SECRET = os.getenv("ASI_JWT_SECRET", "asi-dev-secret")
 
 

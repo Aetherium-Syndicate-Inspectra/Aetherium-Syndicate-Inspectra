@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from src.backend.resonance_feedback_loop import ResonanceFeedbackLoopOrchestrator, utc_now_iso
@@ -117,7 +117,7 @@ def api_submit_resonance_action_outcome(user_id: str, action_id: str, payload: A
 
 
 @router.post("/profiles/{user_id}/actions/pull")
-def api_pull_resonance_pending_actions(user_id: str, limit: int = 5) -> dict[str, Any]:
+def api_pull_resonance_pending_actions(user_id: str, limit: int = Query(default=5, ge=1, le=100)) -> dict[str, Any]:
     actions = service.pull_pending_actions(user_id, limit=limit)
     return {
         "user_id": user_id,

@@ -10,6 +10,12 @@ import os
 import time
 from typing import Any
 
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - optional runtime dependency
+    def load_dotenv() -> bool:
+        return False
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
@@ -23,7 +29,9 @@ except ImportError:  # pragma: no cover - optional runtime dependency
     grequests = None
 
 router = APIRouter()
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+# Load environment values from project root `.env` when present.
+load_dotenv()
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 JWT_SECRET = os.getenv("ASI_JWT_SECRET", "asi-dev-secret")
 
 
@@ -74,7 +82,7 @@ def create_access_token(user_id: str, tier: str, email: str, expires_in: int = 3
 def verify_google_token(token: str) -> UserIdentity:
     """Validate Google ID token and convert it to ASI identity model."""
     if not GOOGLE_CLIENT_ID:
-        raise HTTPException(status_code=503, detail="GOOGLE_CLIENT_ID is not configured")
+        raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID is not configured in .env")
     if id_token is None or grequests is None:
         raise HTTPException(status_code=503, detail="google-auth dependencies are not installed")
 

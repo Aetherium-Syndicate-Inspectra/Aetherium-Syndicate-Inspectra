@@ -48,3 +48,27 @@ def test_orchestrator_outcome_reverts_to_baseline_when_rejected(tmp_path):
 
     assert snapshot.current_preferences["format"] == "summary"
     assert snapshot.current_preferences["tone"] == "strategic"
+
+
+def test_pull_pending_actions_rejects_non_positive_limit(tmp_path):
+    detector = DriftDetector(event_store=FreezeLightEventStore(event_log_path=tmp_path / "events.jsonl"))
+    evaluator = InterventionEvaluator(event_store=detector.event_store)
+    orchestrator = ResonanceFeedbackLoopOrchestrator(detector=detector, evaluator=evaluator)
+
+    for score in [0.93, 0.9, 0.87, 0.5, 0.4]:
+        orchestrator.ingest_feedback(
+            user_id="u3",
+            intent="budget",
+            response="draft",
+            feedback_score=score,
+        )
+
+    try:
+        orchestrator.pull_pending_actions("u3", limit=0)
+        assert False, "expected ValueError for non-positive limit"
+    except ValueError as exc:
+        assert str(exc) == "limit must be > 0"
+
+    # Ensure queue is unchanged when validation fails.
+    actions = orchestrator.pull_pending_actions("u3", limit=5)
+    assert actions

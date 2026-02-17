@@ -69,6 +69,8 @@ Status: `Implementable now / ready for real-user telemetry wiring`
 Response fields:
 - `current_resonance_score`
 - `drift_threshold`
+- `active_cohort`
+- `last_drift_ratio`
 - `detection_window`
 - `switch_count`
 - `switch_success_rate`
@@ -103,6 +105,8 @@ Response: `{ "status": "updated", "user_id": "u-001" }`
 ### `POST /profiles/{user_id}/actions/pull?limit=5`
 
 ดึง action ที่ detector เสนอเพื่อให้ frontend/agent workflow นำไปใช้ทันที
+
+Query param `limit` ต้องอยู่ในช่วง `1..100`
 
 Response includes `actions[]` with:
 - `action_id`

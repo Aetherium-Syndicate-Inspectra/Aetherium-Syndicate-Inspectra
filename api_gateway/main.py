@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 
-import uvicorn
 from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -300,5 +299,7 @@ async def websocket_genesis(websocket: WebSocket):
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     logger.info("🚀 Aetherium Manifest: Awakening Sequence Initiated...")
     uvicorn.run(app, host="0.0.0.0", port=8000)

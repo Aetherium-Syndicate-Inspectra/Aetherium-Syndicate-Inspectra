@@ -11,7 +11,7 @@ import re
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Response, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Header, HTTPException, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -37,13 +37,11 @@ from tools.contracts.canonical import build_canonical_key
 
 try:
     import tachyon_core
-except ImportError as exc:  # pragma: no cover - runtime integration check
-    raise RuntimeError(
-        "tachyon_core module not found. Build/install the Python extension before running API server."
-    ) from exc
+except ImportError:  # pragma: no cover - runtime integration check
+    tachyon_core = None
 
 app = FastAPI(title="Aetherium Tachyon API", version="1.1.0")
-engine = tachyon_core.TachyonEngine()
+engine = tachyon_core.TachyonEngine() if tachyon_core is not None else None
 init_db()
 app.include_router(google_auth_router)
 app.include_router(freeze_router)
@@ -278,7 +276,13 @@ def create_directive(payload: DirectiveCreate) -> dict[str, Any]:
 
 
 @app.get("/api/mint-starter-deck")
-def mint_starter_deck(seed: int = 1000, user_sub=Depends(require_feature("MINT_AGENT"))) -> dict[str, Any]:
+def mint_starter_deck(seed: int = 1000, user_sub=require_feature("MINT_AGENT")) -> dict[str, Any]:
+    if engine is None:
+        raise HTTPException(
+            status_code=503,
+            detail="tachyon_core module not found. Build/install the Python extension to mint starter decks.",
+        )
+
     try:
         sentinel, catalyst, harmonizer = engine.mint_starter_deck(seed)
         register_agent(user_sub.user_id)
@@ -300,7 +304,7 @@ def mint_starter_deck(seed: int = 1000, user_sub=Depends(require_feature("MINT_A
 
 
 @app.get("/api/billing/status")
-def billing_status(user_sub=Depends(require_feature(None))) -> dict[str, Any]:
+def billing_status(user_sub=require_feature(None)) -> dict[str, Any]:
     config = get_tier_config(user_sub.tier_level)
     return {
         "user_id": user_sub.user_id,
@@ -317,7 +321,7 @@ def billing_status(user_sub=Depends(require_feature(None))) -> dict[str, Any]:
 
 
 @app.post("/api/billing/payment-methods", status_code=201)
-def link_payment_method(payload: PaymentMethodCreateRequest, user_sub=Depends(require_feature(None))) -> dict[str, Any]:
+def link_payment_method(payload: PaymentMethodCreateRequest, user_sub=require_feature(None)) -> dict[str, Any]:
     provider = payload.provider.upper()
     if provider not in {"OMISE", "STRIPE", "K_BANK"}:
         raise HTTPException(status_code=400, detail="Unsupported provider")
@@ -345,7 +349,7 @@ def link_payment_method(payload: PaymentMethodCreateRequest, user_sub=Depends(re
 
 
 @app.get("/api/billing/payment-methods")
-def get_payment_methods(user_sub=Depends(require_feature(None))) -> dict[str, Any]:
+def get_payment_methods(user_sub=require_feature(None)) -> dict[str, Any]:
     methods = list_payment_methods(user_sub.user_id)
     return {
         "payment_methods": [
@@ -363,7 +367,7 @@ def get_payment_methods(user_sub=Depends(require_feature(None))) -> dict[str, An
 
 
 @app.post("/api/billing/upgrade")
-def billing_upgrade(payload: UpgradeRequest, user_sub=Depends(require_feature(None))) -> dict[str, Any]:
+def billing_upgrade(payload: UpgradeRequest, user_sub=require_feature(None)) -> dict[str, Any]:
     if user_sub.user_id != payload.user_id:
         raise HTTPException(status_code=403, detail="Cannot upgrade another user")
 
@@ -413,7 +417,7 @@ async def billing_webhook(
 
 
 @app.get("/api/marketplace/agents")
-def marketplace_agents(user_sub=Depends(require_feature(None))) -> dict[str, Any]:
+def marketplace_agents(user_sub=require_feature(None)) -> dict[str, Any]:
     return {
         "tier": user_sub.tier_level,
         "catalog": [
@@ -425,7 +429,7 @@ def marketplace_agents(user_sub=Depends(require_feature(None))) -> dict[str, Any
 
 
 @app.post("/api/credits/topup")
-def credits_topup(payload: CreditTopupRequest, user_sub=Depends(require_feature("GHOST_WORKER"))) -> dict[str, Any]:
+def credits_topup(payload: CreditTopupRequest, user_sub=require_feature("GHOST_WORKER")) -> dict[str, Any]:
     if user_sub.user_id != payload.user_id:
         raise HTTPException(status_code=403, detail="Cannot top up another user")
 

@@ -51,3 +51,19 @@ def test_create_or_get_user_prefers_existing_google_sub_link(tmp_path):
     assert api_key is None
     assert user["user_id"] == user_id
     assert user["email"] == "owner@example.com"
+
+
+def test_upsert_user_context_does_not_clear_existing_context_json_when_omitted(tmp_path):
+    db.DB_PATH = tmp_path / "asi-context-preserve.db"
+    db.init_db()
+    user_id, _ = db.create_default_user("ctx-preserve@example.com", "Ctx Preserve", None, None)
+
+    db.upsert_user_context(user_id=user_id, context_json='{"persona":"analyst"}')
+    db.upsert_user_context(user_id=user_id, line_user_id="line-789")
+
+    with db.get_conn() as conn:
+        row = conn.execute("SELECT * FROM user_contexts WHERE user_id = ?", (user_id,)).fetchone()
+
+    assert row is not None
+    assert row["line_user_id"] == "line-789"
+    assert row["context_json"] == '{"persona":"analyst"}'

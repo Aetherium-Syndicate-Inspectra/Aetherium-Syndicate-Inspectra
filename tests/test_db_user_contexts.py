@@ -67,3 +67,17 @@ def test_upsert_user_context_does_not_clear_existing_context_json_when_omitted(t
     assert row is not None
     assert row["line_user_id"] == "line-789"
     assert row["context_json"] == '{"persona":"analyst"}'
+
+
+def test_upsert_user_context_uses_default_context_json_on_initial_insert(tmp_path):
+    db.DB_PATH = tmp_path / "asi-context-default.db"
+    db.init_db()
+    user_id, _ = db.create_default_user("ctx-default@example.com", "Ctx Default", None, None)
+
+    db.upsert_user_context(user_id=user_id)
+
+    with db.get_conn() as conn:
+        row = conn.execute("SELECT * FROM user_contexts WHERE user_id = ?", (user_id,)).fetchone()
+
+    assert row is not None
+    assert row["context_json"] == "{}"

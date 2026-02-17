@@ -417,15 +417,18 @@ def upsert_user_context(
         conn.execute(
             """
             INSERT INTO user_contexts (user_id, line_user_id, google_sub, tiktok_user_id, context_json, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, COALESCE(?, '{}'), ?, ?)
             ON CONFLICT(user_id)
             DO UPDATE SET
                 line_user_id = COALESCE(excluded.line_user_id, user_contexts.line_user_id),
                 google_sub = COALESCE(excluded.google_sub, user_contexts.google_sub),
                 tiktok_user_id = COALESCE(excluded.tiktok_user_id, user_contexts.tiktok_user_id),
-                context_json = COALESCE(excluded.context_json, user_contexts.context_json),
+                context_json = CASE
+                    WHEN ? IS NULL THEN user_contexts.context_json
+                    ELSE excluded.context_json
+                END,
                 updated_at = excluded.updated_at
             """,
-            (user_id, line_user_id, google_sub, tiktok_user_id, context_json, timestamp, timestamp),
+            (user_id, line_user_id, google_sub, tiktok_user_id, context_json, timestamp, timestamp, context_json),
         )
         conn.commit()

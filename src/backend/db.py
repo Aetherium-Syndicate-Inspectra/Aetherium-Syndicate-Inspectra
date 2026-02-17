@@ -424,7 +424,7 @@ def upsert_user_context(
                 google_sub = COALESCE(excluded.google_sub, user_contexts.google_sub),
                 tiktok_user_id = COALESCE(excluded.tiktok_user_id, user_contexts.tiktok_user_id),
                 context_json = CASE
-                    WHEN ? IS NULL THEN user_contexts.context_json
+                    WHEN ? IS NULL THEN COALESCE(user_contexts.context_json, '{}')
                     ELSE excluded.context_json
                 END,
                 updated_at = excluded.updated_at

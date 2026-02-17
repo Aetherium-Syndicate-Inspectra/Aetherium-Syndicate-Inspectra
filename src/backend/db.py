@@ -361,6 +361,17 @@ def update_transaction_status(tx_id: str, status: str, gateway_ref_id: str | Non
 def link_line_identity(*, user_id: str, line_user_id: str) -> IdentityLinkRecord:
     timestamp = now_iso()
     with get_conn() as conn:
+        # Keep LINE identity mappings one-to-one across users. If the same
+        # LINE account is linked again (e.g. user account merge/recovery),
+        # move that mapping to the latest user_id instead of raising an
+        # uncaught UNIQUE constraint error.
+        conn.execute(
+            """
+            DELETE FROM identity_links
+            WHERE provider = 'LINE' AND provider_user_id = ? AND user_id <> ?
+            """,
+            (line_user_id, user_id),
+        )
         conn.execute(
             """
             INSERT INTO identity_links (user_id, provider, provider_user_id, created_at, updated_at)

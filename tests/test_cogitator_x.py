@@ -54,3 +54,23 @@ def test_pangenes_crystallizes_gems_when_outcome_fails() -> None:
 
     assert result["answer"] == "12"
     assert len(result["gems"]) >= 1
+
+
+def test_cogitator_x_resonance_path_adds_decision_state_and_memory_report() -> None:
+    generator = LanguageMixedThoughtGenerator()
+    prm = ProcessRewardModel()
+    gems = WisdomGemStore()
+    pangenes = PangenesAgent(gems)
+    engine = CogitatorXEngine(generator=generator, prm=prm, pangenes=pangenes)
+
+    outcome = RuleBasedOutcomeReward(answer_checker=lambda a: a == "9")
+    result = engine.solve_with_resonance(
+        prompt="Compute 4 + 5",
+        outcome_reward=outcome,
+        user_id="user-1",
+        resonance_score=0.2,
+    )
+
+    assert result["answer"] == "9"
+    assert result["decision_state"] == "stabilization_mode"
+    assert "memory_report" in result

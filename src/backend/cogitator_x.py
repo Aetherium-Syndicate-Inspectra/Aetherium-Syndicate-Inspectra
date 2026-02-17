@@ -5,6 +5,8 @@ from typing import Callable
 import math
 import re
 
+from src.backend.paged_kv_cache import PagedKVBlockManager
+
 
 @dataclass
 class ReasoningTrace:
@@ -161,6 +163,7 @@ class CogitatorXEngine:
         self.prm = prm
         self.pangenes = pangenes
         self.c_puct = c_puct
+        self._memory = PagedKVBlockManager(num_gpu_blocks=64, block_size=16)
 
     def solve(
         self,
@@ -193,6 +196,43 @@ class CogitatorXEngine:
             "hidden_thought": best_trace.steps,
             "gems": self.pangenes.store.list_all(),
         }
+
+    def solve_with_resonance(
+        self,
+        prompt: str,
+        outcome_reward: RuleBasedOutcomeReward,
+        *,
+        user_id: str,
+        resonance_score: float,
+        language_mode: str = "mixed",
+    ) -> dict[str, object]:
+        """Contextual reasoning path that adapts budget from resonance state."""
+        compute_budget = 8 if resonance_score >= 0.6 else 14
+        branch_factor = 2 if resonance_score >= 0.6 else 4
+
+        request_id = f"{user_id}:{abs(hash(prompt)) % 1_000_000}"
+        estimated_tokens = max(8, min(48, len(prompt.split()) * 2))
+        self._memory.allocate_for_request(request_id=request_id, num_tokens=estimated_tokens)
+
+        try:
+            result = self.solve(
+                prompt=prompt,
+                outcome_reward=outcome_reward,
+                compute_budget=compute_budget,
+                base_branch_factor=branch_factor,
+                language_mode=language_mode,
+            )
+        finally:
+            self._memory.release_request(request_id)
+
+        result["resonance_score"] = resonance_score
+        result["memory_report"] = self._memory.memory_report()
+        if resonance_score < 0.35:
+            result["decision_state"] = "stabilization_mode"
+            result["confidence"] = max(float(result.get("confidence", 0.0)) * 0.85, 0.0)
+        else:
+            result["decision_state"] = "nominal"
+        return result
 
     def _select(self, root: SearchNode) -> SearchNode:
         node = root

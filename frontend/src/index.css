@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #090d1a;
+  color: #e6f2ff;
+}
+
+.card {
+  @apply rounded-xl border border-cyan-400/20 bg-slate-900/70 p-4;
+}

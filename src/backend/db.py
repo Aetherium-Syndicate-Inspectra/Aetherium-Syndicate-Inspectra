@@ -410,7 +410,7 @@ def upsert_user_context(
     line_user_id: str | None = None,
     google_sub: str | None = None,
     tiktok_user_id: str | None = None,
-    context_json: str = "{}",
+    context_json: str | None = None,
 ) -> None:
     timestamp = now_iso()
     with get_conn() as conn:
@@ -423,7 +423,7 @@ def upsert_user_context(
                 line_user_id = COALESCE(excluded.line_user_id, user_contexts.line_user_id),
                 google_sub = COALESCE(excluded.google_sub, user_contexts.google_sub),
                 tiktok_user_id = COALESCE(excluded.tiktok_user_id, user_contexts.tiktok_user_id),
-                context_json = excluded.context_json,
+                context_json = COALESCE(excluded.context_json, user_contexts.context_json),
                 updated_at = excluded.updated_at
             """,
             (user_id, line_user_id, google_sub, tiktok_user_id, context_json, timestamp, timestamp),

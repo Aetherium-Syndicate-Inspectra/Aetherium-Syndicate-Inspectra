@@ -419,7 +419,7 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 
 ### Future Creative Challenges
 1. **Interactive Window Bridge:** ให้แต่ละไอคอนส่ง context ไปที่ Unified LLM Chat อัตโนมัติ (preload prompt + role + crisis mode) เพื่อรัน simulation แบบ one-click
-2. **Multi-Window Stress Lab:** เพิ่มโหมดเปิดหลาย software windows พร้อมกัน แล้ววัด cross-system drift/resonance ใน scenario เดียวแบบเรียลไทม์
+2. **Multi-Window Stress Lab:** เพิ่มโหมดเปิดหลาย software window พร้อมกัน แล้ววัด cross-system drift/resonance ใน scenario เดียวแบบเรียลไทม์
 
 ## 🆕 Adaptive Registry + Enterprise Hub Update (Latest)
 

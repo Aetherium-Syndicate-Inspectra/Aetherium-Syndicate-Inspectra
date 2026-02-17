@@ -88,6 +88,9 @@ class ResonanceFeedbackLoopOrchestrator:
         return self.detector._get_profile(user_id)
 
     def pull_pending_actions(self, user_id: str, limit: int = 5) -> list[PendingIntervention]:
+        if limit <= 0:
+            raise ValueError("limit must be > 0")
+
         actions = self._pending_actions.get(user_id, [])
         selected = actions[:limit]
         self._pending_actions[user_id] = actions[limit:]

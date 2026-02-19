@@ -312,9 +312,16 @@ def add_payment_method(
         )
         payment_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
 
-        # First payment method becomes default automatically.
-        if payment_id and conn.execute("SELECT COUNT(*) AS c FROM payment_methods WHERE user_id = ?", (user_id,)).fetchone()["c"] == 1:
-            conn.execute("UPDATE payment_methods SET is_default = 1 WHERE id = ?", (payment_id,))
+        # Keep at least one default payment method for every user. Besides the
+        # first-method case, this also self-heals legacy/corrupt states where
+        # all existing methods have is_default = 0.
+        if payment_id:
+            has_default = conn.execute(
+                "SELECT 1 FROM payment_methods WHERE user_id = ? AND is_default = 1 LIMIT 1",
+                (user_id,),
+            ).fetchone()
+            if not has_default:
+                conn.execute("UPDATE payment_methods SET is_default = 1 WHERE id = ?", (payment_id,))
 
         row = conn.execute("SELECT * FROM payment_methods WHERE id = ?", (payment_id,)).fetchone()
         conn.commit()

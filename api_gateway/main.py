@@ -24,6 +24,14 @@ from src.backend.genesis_core import (
 )
 from src.backend.policy_genome import PolicyGenomeEngine
 from src.backend.resonance_feedback_loop import ResonanceFeedbackLoopOrchestrator
+from src.backend.cogitator_x import (
+    CogitatorXEngine,
+    LanguageMixedThoughtGenerator,
+    PangenesAgent,
+    ProcessRewardModel,
+    RuleBasedOutcomeReward,
+    WisdomGemStore,
+)
 from tools.contracts.contract_checker import ContractChecker
 
 logger = logging.getLogger("AetherGateway")
@@ -48,6 +56,11 @@ genesis_lifecycle = LifecycleManager()
 genesis_bridge = WebSocketBridge(genesis_core.environment)
 GENESIS_WEBHOOK_SECRET = "genesis-webhook-dev-secret"
 resonance_orchestrator = ResonanceFeedbackLoopOrchestrator()
+cogitator_engine = CogitatorXEngine(
+    generator=LanguageMixedThoughtGenerator(),
+    prm=ProcessRewardModel(),
+    pangenes=PangenesAgent(WisdomGemStore()),
+)
 
 
 @asynccontextmanager
@@ -275,6 +288,31 @@ async def websocket_aetherbus(websocket: WebSocket):
             await asyncio.sleep(1.5)
     except WebSocketDisconnect:
         logger.info("🔌 AetherBus client disconnected")
+
+
+@app.post("/api/v1/chat/llm")
+async def chat_with_internal_llm(payload: dict = Body(...)):
+    prompt = str(payload.get("prompt", "")).strip()
+    if not prompt:
+        return JSONResponse(status_code=400, content={"message": "prompt is required"})
+
+    result = cogitator_engine.solve(
+        prompt=prompt,
+        outcome_reward=RuleBasedOutcomeReward(lambda _answer: True),
+        compute_budget=8,
+        base_branch_factor=3,
+        language_mode="mixed",
+    )
+
+    answer = str(result.get("answer", "")).strip()
+    if answer == "insufficient-data" or not answer:
+        answer = f"[Cogitator-X] ได้รับคำถามแล้ว: {prompt}\nสรุปเบื้องต้น: ควรเพิ่มบริบทหรือข้อมูลเชิงตัวเลขเพื่อให้ตอบได้แม่นยำยิ่งขึ้น"
+
+    return {
+        "answer": answer,
+        "confidence": float(result.get("confidence", 0.0)),
+        "engine": "cogitator_x_internal",
+    }
 
 
 @app.get("/api/genesis/terminology")

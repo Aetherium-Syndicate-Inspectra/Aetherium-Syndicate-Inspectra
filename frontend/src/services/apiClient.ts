@@ -7,6 +7,8 @@ export const systemApi = {
   getResonanceStatus: () => axios.get(`${API_BASE_URL}/api/v1/resonance/drift`),
   getAgents: () => axios.get(`${API_BASE_URL}/api/v1/agents/council`),
   getGoogleConfig: () => axios.get(`${API_BASE_URL}/api/auth/google/config`),
+  chatWithInternalLlm: (prompt: string) =>
+    axios.post<{ answer: string; confidence: number; engine: string }>(`${API_BASE_URL}/api/v1/chat/llm`, { prompt }),
 };
 
 export const wsUrls = {

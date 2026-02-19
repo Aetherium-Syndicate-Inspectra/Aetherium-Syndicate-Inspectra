@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Sparkles, ShieldCheck, Cpu, ArrowRight } from 'lucide-react';
 import { FeatureCard } from '../components/landing/FeatureCard';
+import { useEffect, useState } from 'react';
 
 interface LandingPageProps {
   onEnterDashboard: () => void;
@@ -25,6 +26,140 @@ const coreFeatures = [
 ];
 
 export function LandingPage({ onEnterDashboard }: LandingPageProps) {
+  const [isGoogleReady, setGoogleReady] = useState(false);
+  const [isAuthenticating, setAuthenticating] = useState(false);
+  const [loginStatus, setLoginStatus] = useState('กำลังเตรียม Google Sign-In...');
+  const [fedcmStatus, setFedcmStatus] = useState('กำลังประเมินความพร้อม FedCM...');
+
+  const resolveApiBase = () => {
+    const configured = localStorage.getItem('asi_api_base');
+    if (configured) {
+      return configured.replace(/\/$/, '');
+    }
+
+    if (import.meta.env.VITE_API_BASE) {
+      return import.meta.env.VITE_API_BASE.replace(/\/$/, '');
+    }
+
+    return window.location.origin;
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const isFedcmSupported = typeof window !== 'undefined' && 'IdentityCredential' in window;
+    setFedcmStatus(
+      isFedcmSupported
+        ? 'เบราว์เซอร์รองรับ FedCM: ใช้งานโฟลว์ใหม่ได้ตามแนวทางล่าสุด'
+        : 'เบราว์เซอร์ยังไม่รองรับ FedCM เต็มรูปแบบ: ระบบจะใช้ fallback ของ Google Identity Services'
+    );
+
+    const loadGoogleScript = async () => {
+      if (window.google?.accounts?.id) {
+        return;
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        const existing = document.querySelector('script[data-google-gsi="1"]') as HTMLScriptElement | null;
+        if (existing) {
+          existing.addEventListener('load', () => resolve(), { once: true });
+          existing.addEventListener('error', () => reject(new Error('โหลด Google script ไม่สำเร็จ')), { once: true });
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.dataset.googleGsi = '1';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('โหลด Google script ไม่สำเร็จ'));
+        document.head.appendChild(script);
+      });
+    };
+
+    const initGoogleSignIn = async () => {
+      try {
+        await loadGoogleScript();
+        const apiBase = resolveApiBase();
+        const configRes = await fetch(`${apiBase}/api/auth/google/config`);
+        if (!configRes.ok) {
+          throw new Error(`ไม่สามารถโหลด client config (${configRes.status})`);
+        }
+
+        const config = await configRes.json();
+        if (!config.client_id) {
+          throw new Error('backend ยังไม่ได้ตั้งค่า GOOGLE_CLIENT_ID');
+        }
+
+        if (!mounted || !window.google?.accounts?.id) {
+          return;
+        }
+
+        window.google.accounts.id.initialize({
+          client_id: config.client_id,
+          callback: async ({ credential }) => {
+            if (!credential) {
+              setLoginStatus('ไม่พบ credential จาก Google');
+              return;
+            }
+
+            try {
+              setAuthenticating(true);
+              setLoginStatus('กำลังตรวจสอบข้อมูลบัญชี...');
+
+              const authRes = await fetch(`${apiBase}/api/auth/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential }),
+              });
+
+              const payload = await authRes.json();
+              if (!authRes.ok || payload.status !== 'success') {
+                throw new Error(payload.detail || 'ไม่สามารถยืนยันตัวตนได้');
+              }
+
+              localStorage.setItem('asi_token', payload.access_token);
+              localStorage.setItem('user_profile', JSON.stringify(payload.user));
+              localStorage.setItem('asi_api_base', apiBase);
+              if (payload.user?.api_key) {
+                localStorage.setItem('asi_api_key', payload.user.api_key);
+              }
+
+              setLoginStatus('ยืนยันตัวตนสำเร็จ พร้อมเข้าสู่ Console');
+              setGoogleReady(true);
+            } catch (error) {
+              setLoginStatus(`ล็อกอินไม่สำเร็จ: ${(error as Error).message}`);
+            } finally {
+              setAuthenticating(false);
+            }
+          },
+          use_fedcm_for_prompt: true,
+          auto_select: false,
+        });
+
+        window.google.accounts.id.renderButton(document.getElementById('googleSignInContainer')!, {
+          theme: 'outline',
+          size: 'large',
+          shape: 'pill',
+          text: 'continue_with',
+          logo_alignment: 'left',
+          width: 320,
+        });
+
+        setLoginStatus('พร้อมใช้งาน: ปุ่ม Google Sign-In แบบกำหนดเองถูกโหลดแล้ว');
+      } catch (error) {
+        setLoginStatus(`Google Sign-In ใช้งานไม่ได้: ${(error as Error).message}`);
+      }
+    };
+
+    void initGoogleSignIn();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-8 lg:px-10">
       <header className="flex items-center justify-between border-b border-cyan-glow/10 pb-6">
@@ -34,6 +169,7 @@ export function LandingPage({ onEnterDashboard }: LandingPageProps) {
         </div>
         <button
           onClick={onEnterDashboard}
+          disabled={!isGoogleReady || isAuthenticating}
           className="inline-flex items-center gap-2 rounded-xl border border-cyan-glow/30 bg-cyan-glow/10 px-4 py-2 text-sm font-medium text-cyan-glow hover:bg-cyan-glow/15"
         >
           Access Console <ArrowRight size={16} />
@@ -62,6 +198,16 @@ export function LandingPage({ onEnterDashboard }: LandingPageProps) {
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               <InfoPill icon={<ShieldCheck size={16} />} label="Zero-Trust Entry" value="Enabled" />
               <InfoPill icon={<Cpu size={16} />} label="Tachyon Warmup" value="0.3µs Baseline" />
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-cyan-glow/20 bg-aether-800/40 p-5">
+              <p className="text-xs uppercase tracking-[0.22em] text-cyan-glow/70">Google Sign-In</p>
+              <div id="googleSignInContainer" className="mt-4" />
+              <p className="mt-3 text-sm text-white/70">{loginStatus}</p>
+              <p className="mt-2 text-xs text-white/45">{fedcmStatus}</p>
+              <p className="mt-1 text-xs text-white/45">
+                หมายเหตุ: เลี่ยงการพึ่งพา `platform.js`/`signin2.render()` โดยตรงเพราะอยู่ในช่วง deprecation และควรย้ายไป Google Identity Services.
+              </p>
             </div>
           </div>
 

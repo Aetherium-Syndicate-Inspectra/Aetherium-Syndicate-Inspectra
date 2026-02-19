@@ -49,7 +49,6 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 
 ### What changed
 - Upgraded `CreatorStudioService` to normalize user requests into a structured Build Creator Studio intent model covering **flow orchestration**, **view registry**, **state store**, and **UX experiment tracks**.
-- Added deterministic fallback logic that injects a machine-readable architecture blueprint (`build-creator-studio-spec`) when requests mention Build/Creator Studio architecture upgrades.
 - Standardized prompt language to international software-engineering terminology (spec-to-plan, code synthesis, contract validation) while preserving backward compatibility with existing generated code.
 
 ### Why this improves the platform
@@ -58,7 +57,6 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 - Makes implementation vocabulary clearer for cross-functional teams (engineering, product, and governance).
 
 ### Next suggested enhancements
-1. Add JSON schema validation for `build-creator-studio-spec` before PR composition.
 2. Introduce multi-file orchestration so the same intent model can patch `views`, `state`, and `services` modules in one generation cycle.
 
 ## 🧠 Core Architecture: The AI Physiology Stack
@@ -271,11 +269,7 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ## 🆕 Diff-Aware PR Composer + Branch Policy Guardian (v4.3.0)
 
 ### สิ่งที่ปรับปรุง
-- เพิ่ม logic `compose_pr_metadata()` ใน `src/backend/creator_studio.py` เพื่อวิเคราะห์ diff จริงระหว่าง `previous_code` และ `current_code` แล้วสร้าง commit message + PR body อัตโนมัติ
 - เพิ่ม governance gate `validate_pr_policy()` เพื่อตรวจ branch policy (`type/kebab-case`) และ semantic commit (Conventional Commits) ก่อนเปิด PR
-- เพิ่ม API `POST /api/creator/pr-compose` ใน `api_gateway/main.py` สำหรับให้ frontend ขอ suggestion + policy status แบบ real-time
-- อัปเดต `POST /api/creator/github-pr` ให้ใช้ policy gate บังคับก่อนยิง GitHub API และ fallback ไป compose metadata อัตโนมัติเมื่อไม่ส่ง message/body
-- ปรับ `github-pr-settings.html` ให้เป็น PR composer จริง: auto-fill commit/body จาก diff, แสดง diff preview, และ disable ปุ่ม push เมื่อ policy ไม่ผ่าน
 
 ### Data Cleaning / Duplicate Handling
 - ลดความซ้ำซ้อนโดยรวม logic วิเคราะห์ diff และ policy ไว้ที่ service กลาง `CreatorStudioService` เพียงจุดเดียว แล้วให้ทั้ง endpoint compose และ endpoint create PR ใช้ logic เดียวกัน
@@ -287,9 +281,6 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ## 🆕 Creator Studio IDE + PR Modal Alignment (v4.2.9)
 
 ### สิ่งที่ปรับปรุง
-- ปรับ `creator-studio.html` ให้เป็น IDE layout ตามสเปกล่าสุด (Top Toolbar, AI Chat panel, Code/Preview split, Console, Status bar)
-- เชื่อมปุ่ม `Create GitHub PR` ใน Creator Studio ให้เปิดหน้าต่าง `github-pr-settings.html`
-- เพิ่มหน้า `github-pr-settings.html` สำหรับกรอก branch/commit แล้วยิง API `POST /api/creator/github-pr` โดยตรง
 
 ### Data Cleaning / Duplicate Handling
 - เลือกใช้เส้นทาง PR เพียง workflow เดียว (Creator Studio Toolbar -> PR Settings modal -> API endpoint) เพื่อลด duplicate CTA และลดความสับสนของผู้ใช้
@@ -302,7 +293,6 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 
 ### สิ่งที่ปรับปรุง
 - ปรับ `index.html` เป็นหน้า Platform Index สไตล์เดียวกับ Creator Studio branding (glass nav, hero glow, feature cards, footer)
-- เชื่อมปุ่ม `Launch Creator Studio` ให้เปิด `creator-studio.html` ในหน้าต่างใหม่ตาม workflow หลักของระบบ
 - ลดความซ้ำซ้อนของ CTA เดิมโดยใช้ primary entry point เดียวสำหรับการเปิด Creator Studio
 
 ### เหตุผลการเลือกฟังก์ชันเดียว (Single Best Entry)
@@ -315,13 +305,7 @@ Aetherium-Syndicate-Inspectra คือแพลตฟอร์มต้นแ�
 ## 🆕 Creator Studio Bootstrap (v4.2.7)
 
 ### สิ่งที่เพิ่มเข้ามา
-- เพิ่มปุ่ม Launcher ใน `index.html` เพื่อเปิดหน้าต่าง `creator-studio.html` แยกสำหรับงานสร้างแอปด้วย AI
-- เพิ่มหน้า `creator-studio.html` + `assets/css/creator-studio.css` + `assets/js/creator-studio/main.js` ที่ประกอบด้วย split layout (Chat + Monaco-like Code Workspace + Live Preview)
 - เพิ่ม API ฝั่ง FastAPI ใน `api_gateway/main.py`:
-  - `POST /api/creator/chat` สำหรับรับบทสนทนาและอัปเดตโค้ด
-  - `POST /api/creator/github-pr` สำหรับ workflow การสร้าง Pull Request
-- เพิ่ม service ใหม่ `src/backend/creator_studio.py` เพื่อรวม logic generation, fallback mode, และการเชื่อม GitHub REST API
-- เพิ่ม unit tests `tests/test_creator_studio_service.py` เพื่อยืนยันการทำงานหลักในโหมดไม่มี token/key
 
 ### Data Cleaning / Duplicate Handling
 - รวม logic การสร้างโค้ด Creator Studio ไว้ในคลาสเดียว `CreatorStudioService` เพื่อลดการกระจาย logic ซ้ำระหว่าง route

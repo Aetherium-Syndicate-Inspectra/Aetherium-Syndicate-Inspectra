@@ -107,13 +107,15 @@ def init_db() -> None:
                 user_id TEXT NOT NULL,
                 feature_type TEXT NOT NULL,
                 cost_credits INTEGER NOT NULL,
-                timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id)
             );
 
             CREATE TABLE IF NOT EXISTS agents_registry (
                 agent_id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(user_id)
             );
 
             CREATE TABLE IF NOT EXISTS payment_methods (

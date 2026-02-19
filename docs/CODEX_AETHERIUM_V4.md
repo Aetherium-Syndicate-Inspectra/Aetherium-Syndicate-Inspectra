@@ -57,7 +57,6 @@ aetherium-syndicate-inspectra/
 │
 ├── src/backend/                        # [PYTHON] Canonical business logic center (Layer 2)
 │   ├── cogitator_x.py
-│   ├── creator_studio.py
 │   ├── resonance_drift.py
 │   ├── resonance_drift_api.py
 │   ├── crisis_tournament.py
@@ -79,7 +78,6 @@ aetherium-syndicate-inspectra/
 │   ├── css/
 │   └── js/
 │       ├── app.js
-│       ├── creator-studio/
 │       ├── role-studio/
 │       ├── services/
 │       ├── state/
@@ -101,7 +99,6 @@ aetherium-syndicate-inspectra/
 ├── docs/                               # Architecture/spec references
 ├── canonical_registry.json             # Canonical map for SBF governance
 ├── index.html                          # Main dashboard entry
-├── creator-studio.html                 # Creator Studio entry
 ├── enterprise_windows.html             # Enterprise simulation entry
 └── src/frontend/                       # Legacy pages retained for compatibility/migration
 ```

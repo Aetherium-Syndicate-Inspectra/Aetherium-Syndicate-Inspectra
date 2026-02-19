@@ -11,7 +11,6 @@ from fastapi.staticfiles import StaticFiles
 
 from api_gateway.aetherbus_extreme import AetherBusExtreme
 from src.backend.causal_policy_lab import CausalPolicyLab
-from src.backend.creator_studio import CreatorStudioService
 from src.backend.auth.google_auth import router as google_auth_router
 from src.backend.genesis_core import (
     GenesisCoreService,
@@ -44,7 +43,6 @@ bus = AetherBusExtreme()
 immune_system = ContractChecker()
 causal_lab = CausalPolicyLab()
 policy_genome_engine = PolicyGenomeEngine()
-creator_studio = CreatorStudioService()
 genesis_core = GenesisCoreService()
 genesis_lifecycle = LifecycleManager()
 genesis_bridge = WebSocketBridge(genesis_core.environment)
@@ -169,91 +167,6 @@ async def agents_council():
 @app.get("/api/events/recent")
 async def recent_events(limit: int = 50):
     return {"events": bus.recent_events(limit=limit)}
-
-
-@app.post("/api/creator/chat")
-async def creator_chat(payload: dict = Body(...)):
-    message = (payload.get("message") or "").strip()
-    if not message:
-        return {"response": "กรุณาป้อนข้อความก่อน", "code": creator_studio.session.code}
-
-    result = creator_studio.chat(message)
-    event = immune_system.canonicalize_event(
-        {
-            "intent": "creator_chat",
-            "explanation": result["response"],
-            "code_size": len(result["code"]),
-        },
-        event_type="CODE_GEN_UPDATE",
-        source="creator_studio",
-    )
-    await bus.emit("CODE_GEN_UPDATE", event)
-    return result
-
-
-
-
-@app.post("/api/creator/pr-compose")
-async def creator_pr_compose(payload: dict = Body(...)):
-    previous_code = payload.get("previous_code", "")
-    current_code = payload.get("code", "")
-    if not current_code:
-        return {"message": "missing fields: code"}
-
-    suggestion = creator_studio.compose_pr_metadata(
-        previous_code=previous_code,
-        current_code=current_code,
-        user_intent=payload.get("intent", ""),
-        scope_hint=payload.get("scope_hint", "creator-studio"),
-    )
-
-    branch_hint = payload.get("branch", "feature/creator-studio-update")
-    policy = creator_studio.validate_pr_policy(
-        branch=branch_hint,
-        commit_message=suggestion["commit_message"],
-    )
-
-    return {"suggestion": suggestion, "policy": policy}
-
-@app.post("/api/creator/github-pr")
-async def creator_github_pr(payload: dict = Body(...)):
-    required = ["repo", "branch", "code"]
-    missing = [field for field in required if not payload.get(field)]
-    if missing:
-        return {"message": f"missing fields: {', '.join(missing)}", "pr_url": ""}
-
-    compose = creator_studio.compose_pr_metadata(
-        previous_code=payload.get("previous_code", ""),
-        current_code=payload["code"],
-        user_intent=payload.get("intent", ""),
-        scope_hint=payload.get("scope_hint", "creator-studio"),
-    )
-    commit_message = (payload.get("message") or compose["commit_message"]).strip()
-    policy = creator_studio.validate_pr_policy(
-        branch=payload["branch"],
-        commit_message=commit_message,
-    )
-    if not policy["ok"]:
-        return {"message": "policy gate rejected request", "pr_url": "", "policy": policy}
-
-    result = creator_studio.create_github_pr(
-        repo=payload["repo"],
-        branch=payload["branch"],
-        commit_message=commit_message,
-        code=payload["code"],
-        filename=payload.get("filename", "app.js"),
-        base_branch=payload.get("base_branch"),
-        pr_body=payload.get("pr_body", compose["pr_body"]),
-        enforce_policy=True,
-    )
-    await bus.emit(
-        "SYSTEM_ALERT",
-        {
-            "message": "Creator Studio PR action completed",
-            "detail": result,
-        },
-    )
-    return {**result, "policy": policy, "compose": compose}
 
 
 @app.post("/causal/estimate")

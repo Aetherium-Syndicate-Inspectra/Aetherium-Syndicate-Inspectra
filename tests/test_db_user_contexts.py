@@ -53,6 +53,27 @@ def test_create_or_get_user_prefers_existing_google_sub_link(tmp_path):
     assert user["email"] == "owner@example.com"
 
 
+def test_create_or_get_user_backfills_google_sub_when_legacy_value_is_blank(tmp_path):
+    db.DB_PATH = tmp_path / "asi-auth-blank-sub.db"
+    db.init_db()
+
+    user_id, _ = db.create_default_user("legacy@example.com", "Legacy", None, None)
+    with db.get_conn() as conn:
+        conn.execute("UPDATE users SET google_sub = '' WHERE user_id = ?", (user_id,))
+        conn.commit()
+
+    user, api_key = db.create_or_get_user(
+        email="legacy@example.com",
+        name="Legacy",
+        picture=None,
+        google_sub="google-sub-recovered",
+    )
+
+    assert api_key is None
+    assert user["user_id"] == user_id
+    assert user["google_sub"] == "google-sub-recovered"
+
+
 def test_upsert_user_context_does_not_clear_existing_context_json_when_omitted(tmp_path):
     db.DB_PATH = tmp_path / "asi-context-preserve.db"
     db.init_db()

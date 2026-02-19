@@ -329,6 +329,8 @@ def update_subscription_tier(user_id: str, tier_level: str, max_agents: int, gho
 
 
 def create_or_get_user(email: str, name: str | None, picture: str | None, google_sub: str | None = None) -> tuple[sqlite3.Row, str | None]:
+    google_sub = (google_sub or "").strip() or None
+
     if google_sub:
         linked = get_user_by_google_sub(google_sub)
         if linked:

@@ -8,6 +8,7 @@ import { TachyonPanel } from '../components/TachyonPanel';
 import { ResonancePanel } from '../components/ResonancePanel';
 import { DepartmentsPanel } from '../components/DepartmentsPanel';
 import { PoliciesPanel } from '../components/PoliciesPanel';
+import { ChatPanel } from '../components/ChatPanel';
 
 interface DashboardShellProps {
   activeTab: string;
@@ -25,6 +26,7 @@ const panelMap: Record<string, React.ReactNode> = {
   resonance: <ResonancePanel />,
   departments: <DepartmentsPanel />,
   policies: <PoliciesPanel />,
+  chat: <ChatPanel />,
 };
 
 export function DashboardShell({

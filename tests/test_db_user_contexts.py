@@ -74,6 +74,24 @@ def test_create_or_get_user_backfills_google_sub_when_legacy_value_is_blank(tmp_
     assert user["google_sub"] == "google-sub-recovered"
 
 
+def test_create_or_get_user_treats_blank_google_sub_input_as_missing(tmp_path):
+    db.DB_PATH = tmp_path / "asi-auth-blank-input-sub.db"
+    db.init_db()
+
+    user_id, _ = db.create_default_user("blank-input@example.com", "Blank Input", None, None)
+
+    user, api_key = db.create_or_get_user(
+        email="blank-input@example.com",
+        name="Blank Input",
+        picture=None,
+        google_sub="   ",
+    )
+
+    assert api_key is None
+    assert user["user_id"] == user_id
+    assert user["google_sub"] is None
+
+
 def test_upsert_user_context_does_not_clear_existing_context_json_when_omitted(tmp_path):
     db.DB_PATH = tmp_path / "asi-context-preserve.db"
     db.init_db()

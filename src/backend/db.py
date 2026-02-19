@@ -276,7 +276,7 @@ def create_or_get_user(email: str, name: str | None, picture: str | None, google
                 UPDATE users
                 SET name = COALESCE(?, name),
                     picture = COALESCE(?, picture),
-                    google_sub = COALESCE(google_sub, ?)
+                    google_sub = COALESCE(NULLIF(google_sub, ''), ?)
                 WHERE user_id = ?
                 """,
                 (name, picture, google_sub, existing["user_id"]),

@@ -24,6 +24,7 @@ from src.backend.genesis_core import (
 )
 from src.backend.policy_genome import PolicyGenomeEngine
 from src.backend.resonance_feedback_loop import ResonanceFeedbackLoopOrchestrator
+from src.backend.reasoning_profile import select_reasoning_profile
 from src.backend.cogitator_x import (
     CogitatorXEngine,
     LanguageMixedThoughtGenerator,
@@ -35,70 +36,6 @@ from src.backend.cogitator_x import (
 from tools.contracts.contract_checker import ContractChecker
 
 logger = logging.getLogger("AetherGateway")
-
-try:
-    import tachyon_core
-
-    tachyon_engine = tachyon_core.TachyonEngine()
-    HAS_BRAIN = True
-    logger.info("🧠 Tachyon Core: CONNECTED")
-except ImportError:
-    HAS_BRAIN = False
-    tachyon_engine = None
-    logger.warning("⚠️ Tachyon Core: NOT FOUND (Running in Spinal Reflex Mode)")
-
-bus = AetherBusExtreme()
-immune_system = ContractChecker()
-causal_lab = CausalPolicyLab()
-policy_genome_engine = PolicyGenomeEngine()
-genesis_core = GenesisCoreService()
-genesis_lifecycle = LifecycleManager()
-genesis_bridge = WebSocketBridge(genesis_core.environment)
-GENESIS_WEBHOOK_SECRET = "genesis-webhook-dev-secret"
-resonance_orchestrator = ResonanceFeedbackLoopOrchestrator()
-cogitator_engine = CogitatorXEngine(
-    generator=LanguageMixedThoughtGenerator(),
-    prm=ProcessRewardModel(),
-    pangenes=PangenesAgent(WisdomGemStore()),
-)
-
-
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
-    async def heartbeat_loop() -> None:
-        while True:
-            await genesis_core.environment.publish(
-                "system.vitals",
-                {"cpu_load": 0.32, "memory_usage": 0.41, "status": "genesis_online"},
-            )
-            await asyncio.sleep(2)
-
-    await genesis_lifecycle.start(heartbeat_loop())
-    try:
-        yield
-    finally:
-        await genesis_lifecycle.shutdown()
-
-
-app = FastAPI(title="Aetherium Syndicate Interface", lifespan=lifespan)
-
-frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
-if frontend_dist.exists():
-    app.mount("/dashboard/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="dashboard-assets")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:4173",
-        "http://127.0.0.1:4173",
-    ],
-    allow_methods=["*"],
-    allow_headers=["*"],
-    allow_credentials=True,
-)
-app.include_router(google_auth_router)
 
 @app.exception_handler(SoulBreakError)
 async def soulbreak_exception_handler(_request: Request, exc: SoulBreakError):
@@ -296,11 +233,13 @@ async def chat_with_internal_llm(payload: dict = Body(...)):
     if not prompt:
         return JSONResponse(status_code=400, content={"message": "prompt is required"})
 
+    compute_budget, base_branch_factor = select_reasoning_profile(prompt)
+
     result = cogitator_engine.solve(
         prompt=prompt,
         outcome_reward=RuleBasedOutcomeReward(lambda _answer: True),
-        compute_budget=8,
-        base_branch_factor=3,
+        compute_budget=compute_budget,
+        base_branch_factor=base_branch_factor,
         language_mode="mixed",
     )
 

@@ -127,3 +127,70 @@ def test_upsert_user_context_backfills_legacy_null_context_json(tmp_path):
     assert row is not None
     assert row["line_user_id"] == "line-legacy-001"
     assert row["context_json"] == "{}"
+
+
+def test_upsert_user_context_reassigns_line_user_id_to_latest_user(tmp_path):
+    db.DB_PATH = tmp_path / "asi-context-reassign.db"
+    db.init_db()
+    user_one, _ = db.create_default_user("ctx-one@example.com", "Ctx One", None, None)
+    user_two, _ = db.create_default_user("ctx-two@example.com", "Ctx Two", None, None)
+
+    db.upsert_user_context(user_id=user_one, line_user_id="line-shared-001")
+    db.upsert_user_context(user_id=user_two, line_user_id="line-shared-001")
+
+    with db.get_conn() as conn:
+        first_row = conn.execute("SELECT * FROM user_contexts WHERE user_id = ?", (user_one,)).fetchone()
+        second_row = conn.execute("SELECT * FROM user_contexts WHERE user_id = ?", (user_two,)).fetchone()
+
+    assert first_row is not None
+    assert second_row is not None
+    assert first_row["line_user_id"] is None
+    assert second_row["line_user_id"] == "line-shared-001"
+
+
+def test_upsert_user_context_treats_blank_identity_values_as_missing(tmp_path):
+    db.DB_PATH = tmp_path / "asi-context-blank-values.db"
+    db.init_db()
+    user_id, _ = db.create_default_user("ctx-blank@example.com", "Ctx Blank", None, None)
+
+    db.upsert_user_context(user_id=user_id, line_user_id="   ", google_sub="", tiktok_user_id="	")
+
+    with db.get_conn() as conn:
+        row = conn.execute("SELECT * FROM user_contexts WHERE user_id = ?", (user_id,)).fetchone()
+
+    assert row is not None
+    assert row["line_user_id"] is None
+    assert row["google_sub"] is None
+    assert row["tiktok_user_id"] is None
+
+
+def test_init_db_backfills_duplicate_line_user_contexts_before_unique_index(tmp_path):
+    db.DB_PATH = tmp_path / "asi-context-dedup-init.db"
+    db.init_db()
+    user_one, _ = db.create_default_user("ctx-dedup-one@example.com", "Ctx Dedup One", None, None)
+    user_two, _ = db.create_default_user("ctx-dedup-two@example.com", "Ctx Dedup Two", None, None)
+
+    with db.get_conn() as conn:
+        conn.execute("DROP INDEX IF EXISTS idx_user_contexts_line_user_id_unique")
+        conn.execute("DROP INDEX IF EXISTS idx_user_contexts_google_sub_unique")
+        conn.execute("DROP INDEX IF EXISTS idx_user_contexts_tiktok_user_id_unique")
+        conn.execute(
+            "INSERT INTO user_contexts (user_id, line_user_id, created_at, updated_at) VALUES (?, ?, ?, ?)",
+            (user_one, "line-dedup-001", "2024-01-01T00:00:00+00:00", "2024-01-01T00:00:00+00:00"),
+        )
+        conn.execute(
+            "INSERT INTO user_contexts (user_id, line_user_id, created_at, updated_at) VALUES (?, ?, ?, ?)",
+            (user_two, "line-dedup-001", "2024-02-01T00:00:00+00:00", "2024-02-01T00:00:00+00:00"),
+        )
+        conn.commit()
+
+    db.init_db()
+
+    with db.get_conn() as conn:
+        rows = conn.execute(
+            "SELECT user_id, line_user_id FROM user_contexts WHERE user_id IN (?, ?) ORDER BY user_id",
+            (user_one, user_two),
+        ).fetchall()
+
+    kept = [r for r in rows if r["line_user_id"] == "line-dedup-001"]
+    assert len(kept) == 1

@@ -166,6 +166,72 @@ def init_db() -> None:
                 UNIQUE(user_id),
                 FOREIGN KEY (user_id) REFERENCES users(user_id)
             );
+
+            UPDATE user_contexts
+            SET line_user_id = NULL
+            WHERE TRIM(COALESCE(line_user_id, '')) = '';
+
+            UPDATE user_contexts
+            SET google_sub = NULL
+            WHERE TRIM(COALESCE(google_sub, '')) = '';
+
+            UPDATE user_contexts
+            SET tiktok_user_id = NULL
+            WHERE TRIM(COALESCE(tiktok_user_id, '')) = '';
+
+            WITH dedup AS (
+                SELECT
+                    id,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY line_user_id
+                        ORDER BY updated_at DESC, created_at DESC, id DESC
+                    ) AS rn
+                FROM user_contexts
+                WHERE line_user_id IS NOT NULL
+            )
+            UPDATE user_contexts
+            SET line_user_id = NULL
+            WHERE id IN (SELECT id FROM dedup WHERE rn > 1);
+
+            WITH dedup AS (
+                SELECT
+                    id,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY google_sub
+                        ORDER BY updated_at DESC, created_at DESC, id DESC
+                    ) AS rn
+                FROM user_contexts
+                WHERE google_sub IS NOT NULL
+            )
+            UPDATE user_contexts
+            SET google_sub = NULL
+            WHERE id IN (SELECT id FROM dedup WHERE rn > 1);
+
+            WITH dedup AS (
+                SELECT
+                    id,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY tiktok_user_id
+                        ORDER BY updated_at DESC, created_at DESC, id DESC
+                    ) AS rn
+                FROM user_contexts
+                WHERE tiktok_user_id IS NOT NULL
+            )
+            UPDATE user_contexts
+            SET tiktok_user_id = NULL
+            WHERE id IN (SELECT id FROM dedup WHERE rn > 1);
+
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_user_contexts_line_user_id_unique
+                ON user_contexts(line_user_id)
+                WHERE line_user_id IS NOT NULL;
+
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_user_contexts_google_sub_unique
+                ON user_contexts(google_sub)
+                WHERE google_sub IS NOT NULL;
+
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_user_contexts_tiktok_user_id_unique
+                ON user_contexts(tiktok_user_id)
+                WHERE tiktok_user_id IS NOT NULL;
             """
         )
 
@@ -421,8 +487,45 @@ def upsert_user_context(
     tiktok_user_id: str | None = None,
     context_json: str | None = None,
 ) -> None:
+    line_user_id = (line_user_id or '').strip() or None
+    google_sub = (google_sub or '').strip() or None
+    tiktok_user_id = (tiktok_user_id or '').strip() or None
+
     timestamp = now_iso()
     with get_conn() as conn:
+        if line_user_id is not None:
+            conn.execute(
+                """
+                UPDATE user_contexts
+                SET line_user_id = NULL,
+                    updated_at = ?
+                WHERE line_user_id = ? AND user_id <> ?
+                """,
+                (timestamp, line_user_id, user_id),
+            )
+
+        if google_sub is not None:
+            conn.execute(
+                """
+                UPDATE user_contexts
+                SET google_sub = NULL,
+                    updated_at = ?
+                WHERE google_sub = ? AND user_id <> ?
+                """,
+                (timestamp, google_sub, user_id),
+            )
+
+        if tiktok_user_id is not None:
+            conn.execute(
+                """
+                UPDATE user_contexts
+                SET tiktok_user_id = NULL,
+                    updated_at = ?
+                WHERE tiktok_user_id = ? AND user_id <> ?
+                """,
+                (timestamp, tiktok_user_id, user_id),
+            )
+
         conn.execute(
             """
             INSERT INTO user_contexts (user_id, line_user_id, google_sub, tiktok_user_id, context_json, created_at, updated_at)

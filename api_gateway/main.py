@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -38,7 +39,6 @@ except ImportError:
     tachyon_engine = None
     logger.warning("⚠️ Tachyon Core: NOT FOUND (Running in Spinal Reflex Mode)")
 
-app = FastAPI(title="Aetherium Syndicate Interface")
 bus = AetherBusExtreme()
 immune_system = ContractChecker()
 causal_lab = CausalPolicyLab()
@@ -48,6 +48,26 @@ genesis_lifecycle = LifecycleManager()
 genesis_bridge = WebSocketBridge(genesis_core.environment)
 GENESIS_WEBHOOK_SECRET = "genesis-webhook-dev-secret"
 resonance_orchestrator = ResonanceFeedbackLoopOrchestrator()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    async def heartbeat_loop() -> None:
+        while True:
+            await genesis_core.environment.publish(
+                "system.vitals",
+                {"cpu_load": 0.32, "memory_usage": 0.41, "status": "genesis_online"},
+            )
+            await asyncio.sleep(2)
+
+    await genesis_lifecycle.start(heartbeat_loop())
+    try:
+        yield
+    finally:
+        await genesis_lifecycle.shutdown()
+
+
+app = FastAPI(title="Aetherium Syndicate Interface", lifespan=lifespan)
 
 frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 if frontend_dist.exists():
@@ -71,25 +91,6 @@ app.include_router(google_auth_router)
 async def soulbreak_exception_handler(_request: Request, exc: SoulBreakError):
     status_code, payload = problem_details_from_error(exc, status_code=400)
     return JSONResponse(status_code=status_code, content=payload)
-
-
-@app.on_event("startup")
-async def startup_genesis_lifecycle() -> None:
-    async def heartbeat_loop() -> None:
-        while True:
-            await genesis_core.environment.publish(
-                "system.vitals",
-                {"cpu_load": 0.32, "memory_usage": 0.41, "status": "genesis_online"},
-            )
-            await asyncio.sleep(2)
-
-    await genesis_lifecycle.start(heartbeat_loop())
-
-
-@app.on_event("shutdown")
-async def shutdown_genesis_lifecycle() -> None:
-    await genesis_lifecycle.shutdown()
-
 
 
 @app.get("/")

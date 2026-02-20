@@ -1,107 +1,55 @@
-# คู่มือการใช้งาน Aetherium-Syndicate-Inspectra
+# Aetherium Syndicate Inspectra (ASI) - User Guide
 
-เอกสารนี้สรุปขั้นตอนเริ่มต้นสำหรับรันระบบแบบ local ทั้งฝั่ง Backend และ Frontend รวมถึงคำสั่งทดสอบพื้นฐานของโปรเจกต์
+## 1. Introduction
 
-## 1) ความต้องการเบื้องต้น
+Welcome to the Aetherium Syndicate Inspectra (ASI), the premier operating system for Autonomous Enterprises. This guide provides a comprehensive overview of the system's architecture, core components, and operational procedures. Our platform is built for extreme performance, high integrity, and real-time governance of AI-driven organizations.
 
-- Python 3.11+
-- Node.js 20+
-- npm 10+
+**Core Philosophy:** Speed, Integrity, and Insight.
 
-> หมายเหตุ: โปรเจกต์นี้มีทั้ง FastAPI (Python) และ Vite/React (Frontend)
+## 2. Core Components
 
-## 2) เตรียม Environment Variables
+### 2.1. Tachyon Core
 
-1. คัดลอกไฟล์ตัวอย่าง
+- **Purpose:** The heart of the system, a Rust-based ultra-high-throughput messaging bus.
+- **Performance:** Capable of 15 million messages per second.
+- **Technology:** Utilizes RDMA and zero-copy architecture for sub-microsecond latency.
 
-```bash
-cp .env.example .env
-```
+### 2.2. AetherBus Extreme
 
-2. แก้ค่าอย่างน้อยต่อไปนี้ใน `.env`
+- **Purpose:** The primary event bus for all inter-agent and system-level communication.
+- **Integrity:** Enforces strict schema validation and is drift-resistant.
 
-- `GOOGLE_CLIENT_ID` สำหรับ Google Auth
-- `PAYMENT_WEBHOOK_SECRET` (ถ้าต้องทดสอบ webhook)
-- `TACHYON_CORE_LIBRARY_PATH` (เฉพาะกรณีต้องการผูก Rust core library)
+### 2.3. Resonance Drift Detector
 
-## 3) ติดตั้ง dependencies
+- **Purpose:** Monitors the integrity of data streams and detects deviations (resonance drift) from established patterns and schemas.
+- **Action:** Triggers alerts and can initiate automated healing processes via the Schema Healer.
 
-### Backend (Python)
+### 2.4. Causal Policy Lab
 
-ติดตั้ง dependency ตาม environment ของทีมคุณ (เช่น virtualenv หรือ conda) และให้มี package สำคัญ เช่น `fastapi`, `uvicorn`, `pydantic`, `python-dotenv`, `pytest`
+- **Purpose:** A sandbox environment for executives to model the impact of business decisions before implementation.
+- **Functionality:** Uses causal inference models to predict outcomes based on historical data.
 
-### Frontend (React/Vite)
+### 2.5. Freeze Light Protocol
 
-```bash
-cd frontend
-npm install
-cd ..
-```
+- **Purpose:** The system's immutable audit trail.
+- **Functionality:** Creates a verifiable, tamper-proof log of all significant events, decisions, and data transformations. This is a core part of our Governance-Grade data promise.
 
-## 4) รันระบบ
+## 3. Agent Governance
 
-### 4.1 รัน Backend API Gateway
+ASI manages a hierarchy of AI agents, from operational units to the CEO AI Council.
 
-```bash
-uvicorn api_gateway.main:app --reload --host 0.0.0.0 --port 8000
-```
+- **Roles & Permissions:** Each agent has a clearly defined role and set of permissions, managed by the Policy Genome.
+- **Communication:** All agent communication is routed through the AetherBus, ensuring it is logged and auditable.
+- **Decision Making:** Agent decisions are guided by the Inspirafirma Ruleset and can be simulated in the Causal Policy Lab.
+- **Accountability:** The "Lineage Hash Chain" provides a clear chain of responsibility for every action taken within the system.
 
-เมื่อรันสำเร็จสามารถตรวจสอบได้ที่:
+## 4. Getting Started
 
-- API status: `http://localhost:8000/`
-- Dashboard endpoint: `http://localhost:8000/dashboard`
+1.  **Installation:** Follow the instructions in `INSTALL.md`.
+2.  **Configuration:** Configure your initial agent hierarchy and business rules in the `config/` directory.
+3.  **Launch:** Execute `make start` to initialize the system.
+4.  **Monitoring:** Access the Genesis Executive Dashboard at `http://localhost:8080` to monitor system status and agent activity.
 
-### 4.2 รัน Frontend (Dev mode)
+## 5. Enterprise Hardening
 
-เปิดอีก terminal แล้วรัน:
-
-```bash
-cd frontend
-npm run dev
-```
-
-ค่า default ของ Vite มักอยู่ที่ `http://localhost:5173`
-
-## 5) Build สำหรับ production
-
-### 5.1 Build Frontend
-
-```bash
-cd frontend
-npm run build
-cd ..
-```
-
-ไฟล์จะอยู่ที่ `frontend/dist` และสามารถเปิดผ่าน backend route `/dashboard`
-
-## 6) การทดสอบ (Testing)
-
-### 6.1 รันชุดทดสอบ Python
-
-```bash
-pytest -q
-```
-
-### 6.2 รันทดสอบ JavaScript ที่มีอยู่ใน repo
-
-```bash
-node --test tests/app-state.test.mjs
-```
-
-## 7) โครงสร้างสำคัญที่ควรรู้
-
-- `api_gateway/main.py` — จุดเข้าใช้งาน API gateway และเส้นทาง dashboard
-- `src/backend/api_server.py` — FastAPI bridge และ integration หลักกับ backend modules
-- `frontend/` — โค้ด UI ฝั่ง React + Vite
-- `tests/` — ชุดทดสอบหลักของระบบ
-- `docs/` — เอกสารเชิงเทคนิคและเอกสารประกอบ
-
-## 8) ปัญหาที่พบบ่อย
-
-- **เปิด `/dashboard` ไม่ได้**: ให้ build frontend ก่อน (`npm run build`) เพื่อสร้าง `frontend/dist`
-- **Google auth ใช้งานไม่ได้**: ตรวจค่า `GOOGLE_CLIENT_ID` ใน `.env`
-- **Tachyon Core ไม่ถูกโหลด**: ระบบจะทำงานโหมด fallback ได้ แต่ถ้าต้องใช้ Rust core ให้ตั้งค่า `TACHYON_CORE_LIBRARY_PATH` ให้ถูกต้อง
-
----
-
-หากต้องการเอกสารเชิงสถาปัตยกรรมเชิงลึกเพิ่มเติม ดูในโฟลเดอร์ `docs/` เช่น launch readiness report และ high-performance spec
+For production deployments, please refer to the recommendations in `docs/enterprise_hardening_recommendations.md`. This includes best practices for security, data backup, and disaster recovery.

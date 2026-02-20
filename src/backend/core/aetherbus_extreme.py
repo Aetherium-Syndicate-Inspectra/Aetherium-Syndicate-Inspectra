@@ -44,6 +44,9 @@ class AetherBusExtreme:
         if not self._is_active:
             return {}
 
+        if not isinstance(payload, dict):
+            raise TypeError(f"Payload must be a dictionary, but got {type(payload).__name__}")
+
         event = self._canonical_event(topic=topic, payload=payload)
         self._history.append(event)
         if len(self._history) > self._history_limit:

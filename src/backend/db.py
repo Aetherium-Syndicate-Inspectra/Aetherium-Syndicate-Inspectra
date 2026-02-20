@@ -489,9 +489,17 @@ def upsert_user_context(
     tiktok_user_id: str | None = None,
     context_json: str | None = None,
 ) -> None:
-    line_user_id = (line_user_id or '').strip() or None
-    google_sub = (google_sub or '').strip() or None
-    tiktok_user_id = (tiktok_user_id or '').strip() or None
+    provided_line_user_id = line_user_id is not None
+    provided_google_sub = google_sub is not None
+    provided_tiktok_user_id = tiktok_user_id is not None
+
+    line_user_id = line_user_id.strip() if line_user_id is not None else None
+    google_sub = google_sub.strip() if google_sub is not None else None
+    tiktok_user_id = tiktok_user_id.strip() if tiktok_user_id is not None else None
+
+    line_user_id = line_user_id or None
+    google_sub = google_sub or None
+    tiktok_user_id = tiktok_user_id or None
 
     timestamp = now_iso()
     with get_conn() as conn:
@@ -534,15 +542,36 @@ def upsert_user_context(
             VALUES (?, ?, ?, ?, COALESCE(?, '{}'), ?, ?)
             ON CONFLICT(user_id)
             DO UPDATE SET
-                line_user_id = COALESCE(excluded.line_user_id, user_contexts.line_user_id),
-                google_sub = COALESCE(excluded.google_sub, user_contexts.google_sub),
-                tiktok_user_id = COALESCE(excluded.tiktok_user_id, user_contexts.tiktok_user_id),
+                line_user_id = CASE
+                    WHEN ? = 1 THEN excluded.line_user_id
+                    ELSE user_contexts.line_user_id
+                END,
+                google_sub = CASE
+                    WHEN ? = 1 THEN excluded.google_sub
+                    ELSE user_contexts.google_sub
+                END,
+                tiktok_user_id = CASE
+                    WHEN ? = 1 THEN excluded.tiktok_user_id
+                    ELSE user_contexts.tiktok_user_id
+                END,
                 context_json = CASE
                     WHEN ? IS NULL THEN COALESCE(user_contexts.context_json, '{}')
                     ELSE excluded.context_json
                 END,
                 updated_at = excluded.updated_at
             """,
-            (user_id, line_user_id, google_sub, tiktok_user_id, context_json, timestamp, timestamp, context_json),
+            (
+                user_id,
+                line_user_id,
+                google_sub,
+                tiktok_user_id,
+                context_json,
+                timestamp,
+                timestamp,
+                int(provided_line_user_id),
+                int(provided_google_sub),
+                int(provided_tiktok_user_id),
+                context_json,
+            ),
         )
         conn.commit()

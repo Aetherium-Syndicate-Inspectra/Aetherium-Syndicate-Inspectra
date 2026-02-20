@@ -182,6 +182,21 @@ def test_upsert_user_context_treats_blank_identity_values_as_missing(tmp_path):
     assert row["tiktok_user_id"] is None
 
 
+def test_upsert_user_context_clears_existing_identity_when_blank_is_explicitly_provided(tmp_path):
+    db.DB_PATH = tmp_path / "asi-context-clear-identity.db"
+    db.init_db()
+    user_id, _ = db.create_default_user("ctx-clear@example.com", "Ctx Clear", None, None)
+
+    db.upsert_user_context(user_id=user_id, line_user_id="line-to-clear")
+    db.upsert_user_context(user_id=user_id, line_user_id="   ")
+
+    with db.get_conn() as conn:
+        row = conn.execute("SELECT * FROM user_contexts WHERE user_id = ?", (user_id,)).fetchone()
+
+    assert row is not None
+    assert row["line_user_id"] is None
+
+
 def test_init_db_backfills_duplicate_line_user_contexts_before_unique_index(tmp_path):
     db.DB_PATH = tmp_path / "asi-context-dedup-init.db"
     db.init_db()

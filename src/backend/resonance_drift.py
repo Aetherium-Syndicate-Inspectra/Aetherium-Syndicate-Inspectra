@@ -105,19 +105,33 @@ class DriftDetector:
         return profile
 
     def _check_drift(self, profile: ResonanceProfile) -> None:
-        if len(profile.resonance_history) < 3:
+        # We need at least 4 interactions to have a non-empty "older" window and a "recent" window of 3.
+        if len(profile.resonance_history) < 4:
             return
-        recent = profile.resonance_history[-3:]
-        older = profile.resonance_history[:-3] if len(profile.resonance_history) > 3 else profile.resonance_history
-        recent_avg = sum(item["score"] for item in recent) / len(recent)
-        older_avg = sum(item["score"] for item in older) / len(older) if older else recent_avg
+
+        # Define non-overlapping windows for comparison.
+        recent_window = profile.resonance_history[-3:]
+        older_window = profile.resonance_history[:-3]
+
+        # Calculate averages for each window.
+        recent_avg = sum(item["score"] for item in recent_window) / len(recent_window)
+        older_avg = sum(item["score"] for item in older_window) / len(older_window)
+
+        # Calculate drift. A positive ratio indicates a drop in resonance.
         drift_ratio = (older_avg - recent_avg) / older_avg if older_avg > 0 else 0.0
+
         cohort_id = self._cohort_id(profile)
-        adaptive_threshold = self.threshold_learner.get_threshold(cohort_id=cohort_id, fallback=profile.drift_threshold)
+        adaptive_threshold = self.threshold_learner.get_threshold(
+            cohort_id=cohort_id, fallback=profile.drift_threshold
+        )
+
         profile.current_cohort = cohort_id
         profile.last_drift_ratio = drift_ratio
+
+        # If resonance has dropped significantly, trigger an intervention.
         if drift_ratio > adaptive_threshold:
             self._trigger_intervention(profile, drift_ratio=drift_ratio, older_avg=older_avg)
+
         self.threshold_learner.observe_drift(cohort_id=cohort_id, drift_ratio=drift_ratio)
 
     @staticmethod

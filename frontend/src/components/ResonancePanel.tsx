@@ -140,7 +140,23 @@ export function ResonancePanel() {
               <LineChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,240,255,0.05)" />
                 <XAxis dataKey="time" tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.2)' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.2)' }} axisLine={false} tickLine={false} />
+                <YAxis
+                  yAxisId="left"
+                  domain={[0, 2.5]}
+                  tick={{ fontSize: 9, fill: 'rgba(239, 68, 68, 0.5)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  stroke="#ef4444"
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  domain={[90, 100]}
+                  tick={{ fontSize: 9, fill: 'rgba(34, 211, 238, 0.5)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  stroke="#22d3ee"
+                />
                 <Tooltip
                   contentStyle={{
                     background: 'rgba(10,14,26,0.95)',
@@ -150,8 +166,8 @@ export function ResonancePanel() {
                     color: '#fff',
                   }}
                 />
-                <Line type="monotone" dataKey="drift" stroke="#ef4444" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="confidence" stroke="#22d3ee" strokeWidth={1.5} dot={false} strokeDasharray="4 4" />
+                <Line yAxisId="left" type="monotone" dataKey="drift" stroke="#ef4444" strokeWidth={2} dot={false} />
+                <Line yAxisId="right" type="monotone" dataKey="confidence" stroke="#22d3ee" strokeWidth={1.5} dot={false} strokeDasharray="4 4" />
               </LineChart>
             </ResponsiveContainer>
           </div>

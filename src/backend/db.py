@@ -344,7 +344,7 @@ def create_or_get_user(email: str, name: str | None, picture: str | None, google
                 UPDATE users
                 SET name = COALESCE(?, name),
                     picture = COALESCE(?, picture),
-                    google_sub = COALESCE(NULLIF(google_sub, ''), ?)
+                    google_sub = COALESCE(NULLIF(?, ''), google_sub)
                 WHERE user_id = ?
                 """,
                 (name, picture, google_sub, existing["user_id"]),
@@ -466,7 +466,7 @@ def link_line_identity(*, user_id: str, line_user_id: str) -> IdentityLinkRecord
     return IdentityLinkRecord(**dict(row))
 
 
-async def update_payment_status(*, user_id: str, amount: float, status: str) -> str:
+def update_payment_status(*, user_id: str, amount: float, status: str) -> str:
     tx_type = "TOPUP"
     normalized_status = status if status in {"PENDING", "SUCCESS", "FAILED"} else "SUCCESS"
     return create_transaction(user_id=user_id, amount=amount, tx_type=tx_type, status=normalized_status)

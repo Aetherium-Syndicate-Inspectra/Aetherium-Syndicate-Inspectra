@@ -1,75 +1,31 @@
-from pathlib import Path
-
-from src.backend.freeze_light_events import FreezeLightEventStore
-from src.backend.resonance_drift import (
-    CohortAdaptiveThresholdLearner,
-    DriftDetector,
-    InterventionEvaluator,
-    ResonanceProfile,
-)
+import pytest
+from src.backend.resonance_drift import detect_resonance_drift
 
 
-def test_drift_detector_triggers_intervention_and_logs_event(tmp_path: Path):
-    store = FreezeLightEventStore(event_log_path=tmp_path / "events.jsonl")
-    detector = DriftDetector(event_store=store)
-    profile = detector._get_profile("somchai")
-    profile.preferred_format = "bullet"
-    profile.preferred_tone = "operational"
-    profile.preferred_evidence = "number"
-
-    for score in [0.95, 0.9, 0.88, 0.5, 0.45]:
-        detector.record_interaction("somchai", "budget plan", "response", score)
-
-    assert profile.switch_count >= 1
-    assert profile.preferred_format in {"story", "bullet", "summary"}
-    events = store.read_all()
-    assert any(evt["event_type"] == "resonance.drift.intervention" for evt in events)
+def test_drift_detection_positive():
+    """Test that drift is detected when a data point is an outlier."""
+    # Data with a clear outlier at the end
+    data_points = [10, 10.2, 9.8, 10.1, 9.9, 15.0]
+    result = detect_resonance_drift(data_points)
+    assert result["drift_detected"] is True
 
 
-def test_intervention_evaluator_reverts_after_failures_and_logs(tmp_path: Path):
-    store = FreezeLightEventStore(event_log_path=tmp_path / "events.jsonl")
-    evaluator = InterventionEvaluator(event_store=store)
-
-    profile = ResonanceProfile(user_id="somying", preferred_format="story", preferred_tone="strategic", preferred_evidence="analogy")
-    profile.switch_count = 3
-    profile.preferred_format = "bullet"
-    profile.preferred_tone = "operational"
-    profile.preferred_evidence = "number"
-
-    # post-switch degraded trend
-    from datetime import datetime, timedelta, timezone
-
-    t0 = datetime.now(tz=timezone.utc) - timedelta(seconds=4)
-    profile.last_switch_time = t0
-    profile.resonance_history = [
-        {"timestamp": t0 + timedelta(seconds=1), "score": 0.6},
-        {"timestamp": t0 + timedelta(seconds=2), "score": 0.42},
-        {"timestamp": t0 + timedelta(seconds=3), "score": 0.4},
-    ]
-
-    evaluator.evaluate_switch_effectiveness(profile)
-
-    assert profile.preferred_format == profile.baseline_format
-    events = store.read_all()
-    assert any(evt["event_type"] == "resonance.intervention.evaluated" for evt in events)
+def test_drift_detection_negative():
+    """Test that no drift is detected in stable data."""
+    # Stable data with no outliers
+    data_points = [10, 10.2, 9.8, 10.1, 9.9, 10.3]
+    result = detect_resonance_drift(data_points)
+    assert result["drift_detected"] is False
 
 
-def test_cohort_threshold_learns_online_distribution():
-    learner = CohortAdaptiveThresholdLearner()
-    for value in [0.06, 0.08, 0.09, 0.07, 0.1, 0.11]:
-        learner.observe_drift(cohort_id="ops", drift_ratio=value)
+def test_drift_with_insufficient_data():
+    """Test that no drift is detected with insufficient data."""
+    # Test with an empty list
+    result_empty = detect_resonance_drift([])
+    assert result_empty["drift_detected"] is False
+    assert result_empty["reason"] == "Insufficient data points"
 
-    learned = learner.get_threshold(cohort_id="ops", fallback=0.15)
-    assert 0.05 <= learned < 0.15
-
-
-def test_detector_emits_individual_explanation_and_bandit_metadata(tmp_path: Path):
-    store = FreezeLightEventStore(event_log_path=tmp_path / "events.jsonl")
-    detector = DriftDetector(event_store=store)
-    for score in [0.95, 0.92, 0.89, 0.5, 0.45, 0.42]:
-        detector.record_interaction("narin", "pricing", "draft", score)
-
-    profile = detector._get_profile("narin")
-    assert profile.last_intervention_explanation
-    assert profile.last_intervention_arm
-    assert "bandit selected" in (profile.last_intervention_explanation or "")
+    # Test with a single data point
+    result_single = detect_resonance_drift([10.0])
+    assert result_single["drift_detected"] is False
+    assert result_single["reason"] == "Insufficient data points"

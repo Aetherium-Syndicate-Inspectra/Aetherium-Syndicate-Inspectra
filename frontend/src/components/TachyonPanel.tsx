@@ -1,12 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, HardDrive, Wifi, Activity } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { generateTachyonData } from '../data/mockData';
+import { systemApi } from '../services/apiClient';
+
+interface TachyonMetrics {
+  latency_us: number;
+  throughput_rps: number;
+  memory_percent: number;
+}
 
 export function TachyonPanel() {
-  const [data] = useState(generateTachyonData);
+  const [chartData] = useState(generateTachyonData);
+  const [metrics, setMetrics] = useState<TachyonMetrics | null>(null);
   const [timeRange, setTimeRange] = useState('24h');
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const data = await systemApi.getTachyonMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error("Error fetching Tachyon metrics:", error);
+      }
+    };
+
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -45,9 +69,9 @@ export function TachyonPanel() {
 
       {/* Core Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <CoreMetric icon={<Zap />} label="Core Latency" value="0.3µs" subtext="< 1µs target" status="optimal" delay={0} />
-        <CoreMetric icon={<Activity />} label="Throughput" value="12,847/s" subtext="10K+ baseline" status="optimal" delay={0.05} />
-        <CoreMetric icon={<HardDrive />} label="Memory Usage" value="67.2%" subtext="Zero-copy active" status="normal" delay={0.1} />
+        <CoreMetric icon={<Zap />} label="Core Latency" value={metrics ? `${metrics.latency_us}µs` : '...'} subtext="< 1µs target" status="optimal" delay={0} />
+        <CoreMetric icon={<Activity />} label="Throughput" value={metrics ? `${metrics.throughput_rps}/s` : '...'} subtext="10K+ baseline" status="optimal" delay={0.05} />
+        <CoreMetric icon={<HardDrive />} label="Memory Usage" value={metrics ? `${metrics.memory_percent}%` : '...'} subtext="Zero-copy active" status="normal" delay={0.1} />
         <CoreMetric icon={<Wifi />} label="Network I/O" value="4.8 Gbps" subtext="Full duplex" status="optimal" delay={0.15} />
       </div>
 
@@ -64,7 +88,7 @@ export function TachyonPanel() {
           <p className="text-[10px] text-white/30 mb-4">Microsecond-level measurement</p>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,240,255,0.05)" />
                 <XAxis dataKey="time" tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.2)' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.2)' }} axisLine={false} tickLine={false} />
@@ -94,7 +118,7 @@ export function TachyonPanel() {
           <p className="text-[10px] text-white/30 mb-4">Requests per second over time</p>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,240,255,0.05)" />
                 <XAxis dataKey="time" tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.2)' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.2)' }} axisLine={false} tickLine={false} />
@@ -124,7 +148,7 @@ export function TachyonPanel() {
           <p className="text-[10px] text-white/30 mb-4">Rust zero-copy memory management</p>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="memGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3} />

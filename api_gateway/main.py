@@ -75,9 +75,9 @@ async def tachyon_metrics():
     now = datetime.now(tz=timezone.utc)
     metrics = {
         "timestamp": int(now.timestamp() * 1000),
-        "latency_us": 0.3,
-        "throughput_rps": 12847,
-        "memory_percent": 67.2,
+        "latency_us": 99.9,
+        "throughput_rps": 1337,
+        "memory_percent": 42.0,
         "source": "tachyon_core" if HAS_BRAIN else "simulated",
     }
     if HAS_BRAIN and hasattr(tachyon_engine, "status"):
@@ -142,7 +142,7 @@ async def causal_recommend(top_n: int = 3):
 
 
 @app.post("/policy-genome/build")
-async def build_policy_genome(payload: dict = Body(default={})):
+async def build_policy_genome(payload: dict = Body(default={'])):
     policies = payload.get("policies") or causal_lab.recommend_policies(top_n=payload.get("top_n", 5))
     graph = policy_genome_engine.build_graph(policies)
     output_path = payload.get("output_path")
@@ -153,7 +153,7 @@ async def build_policy_genome(payload: dict = Body(default={})):
 
 @app.post("/api/genesis/mint")
 async def mint_agent(seed: int = 1000):
-    """สั่งสมองให้สร้าง Agent ใหม่ (Identity Crystallization)"""
+    '''สั่งสมองให้สร้าง Agent ใหม่ (Identity Crystallization)'''
     if not HAS_BRAIN:
         return {"error": "Brain missing"}
 
@@ -172,7 +172,7 @@ async def mint_agent(seed: int = 1000):
 
 @app.websocket("/ws/feed")
 async def websocket_endpoint(websocket: WebSocket):
-    """ท่อส่งข้อมูล Real-time ไปยัง Dashboard"""
+    '''ท่อส่งข้อมูล Real-time ไปยัง Dashboard'''
     await websocket.accept()
 
     async def synapse_handler(event):

@@ -95,6 +95,7 @@ node --test tests/app-state.test.mjs
 - `frontend/` — โค้ด UI ฝั่ง React + Vite
 - `tests/` — ชุดทดสอบหลักของระบบ
 - `docs/` — เอกสารเชิงเทคนิคและเอกสารประกอบ
+- `docs/inspectra_operator_compliance_sop_and_wireframes.md` — คู่มือ SOP สำหรับ Operator/Compliance และรายละเอียด UI Wireframe รายหน้า
 
 ## 8) ปัญหาที่พบบ่อย
 

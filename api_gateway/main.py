@@ -37,6 +37,56 @@ from tools.contracts.contract_checker import ContractChecker
 
 logger = logging.getLogger("AetherGateway")
 
+try:
+    import tachyon_core
+except ImportError:  # pragma: no cover - optional runtime dependency
+    tachyon_core = None
+
+frontend_dist = Path(__file__).resolve().parents[1] / "frontend" / "dist"
+GENESIS_WEBHOOK_SECRET = "genesis-webhook-dev-secret"
+
+bus = AetherBusExtreme()
+immune_system = ContractChecker()
+causal_lab = CausalPolicyLab()
+policy_genome_engine = PolicyGenomeEngine()
+resonance_orchestrator = ResonanceFeedbackLoopOrchestrator()
+wisdom_store = WisdomGemStore()
+cogitator_engine = CogitatorXEngine(
+    generator=LanguageMixedThoughtGenerator(),
+    prm=ProcessRewardModel(),
+    pangenes=PangenesAgent(wisdom_store),
+)
+
+genesis_core = GenesisCoreService()
+genesis_bridge = WebSocketBridge(genesis_core.environment)
+lifecycle = LifecycleManager()
+
+tachyon_engine = tachyon_core.TachyonEngine() if tachyon_core is not None else None
+HAS_BRAIN = tachyon_engine is not None
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    try:
+        yield
+    finally:
+        await bus.shutdown()
+        await lifecycle.shutdown()
+
+
+app = FastAPI(title="Aetherium Gateway API", version="4.3.2", lifespan=lifespan)
+app.include_router(google_auth_router)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+assets_dir = frontend_dist / "assets"
+if assets_dir.exists():
+    app.mount("/dashboard/assets", StaticFiles(directory=assets_dir), name="dashboard_assets")
+
 @app.exception_handler(SoulBreakError)
 async def soulbreak_exception_handler(_request: Request, exc: SoulBreakError):
     status_code, payload = problem_details_from_error(exc, status_code=400)

@@ -3,9 +3,22 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 
-const TARGET_EXTENSIONS = new Set(['.rs', '.js', '.mjs']);
-const IGNORED_PREFIXES = ['backup/'];
+const TARGET_EXTENSIONS = new Set(['.py', '.rs', '.js', '.mjs', '.ts', '.tsx']);
+const IGNORED_PREFIXES = ['backup/', 'tests/'];
 const IGNORED_SEGMENTS = new Set(['.git', 'node_modules', 'target', 'dist', 'build']);
+const NON_FUNCTION_IDENTIFIERS = new Set(['if', 'for', 'while', 'switch', 'catch', 'try', 'do']);
+const COMMON_NAMES = new Set([
+  '__init__',
+  '__post_init__',
+  'constructor',
+  'render',
+  'main',
+  'init',
+  'list',
+  'save',
+  'subscribe',
+  'notify',
+]);
 
 function normalize(file) {
   return file.replaceAll('\\', '/');
@@ -29,7 +42,7 @@ function listViaGit() {
 }
 
 function listViaRipgrep() {
-  const output = execSync("rg --files -g '*.rs' -g '*.js' -g '*.mjs'", {
+  const output = execSync("rg --files -g '*.py' -g '*.rs' -g '*.js' -g '*.mjs' -g '*.ts' -g '*.tsx'", {
     encoding: 'utf8',
   });
   return output
@@ -83,8 +96,12 @@ const files = listSourceFiles();
 const map = new Map();
 
 const patterns = [
+  /\bdef\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
   /\bfn\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
+  /\basync\s+function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
   /\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
+  /^\s*(?:async\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\([^)]*\)\s*\{/gm,
+  /\bconst\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*async\s*\([^)]*\)\s*=>/g,
   /\bconst\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\([^)]*\)\s*=>/g,
 ];
 
@@ -96,6 +113,7 @@ for (const file of files) {
     while ((match = re.exec(src)) !== null) {
       const name = match[1];
       if (name.startsWith('test_')) continue;
+      if (NON_FUNCTION_IDENTIFIERS.has(name) || COMMON_NAMES.has(name)) continue;
       if (!map.has(name)) map.set(name, []);
       map.get(name).push(file);
     }

@@ -1,9 +1,11 @@
 import asyncio
 import json
 import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
@@ -37,45 +39,21 @@ from tools.contracts.contract_checker import ContractChecker
 
 logger = logging.getLogger("AetherGateway")
 
+
 try:
     import tachyon_core
-except ImportError:  # pragma: no cover - optional runtime dependency
+except ImportError:  # pragma: no cover - runtime integration check
     tachyon_core = None
-
-frontend_dist = Path(__file__).resolve().parents[1] / "frontend" / "dist"
-GENESIS_WEBHOOK_SECRET = "genesis-webhook-dev-secret"
-
-bus = AetherBusExtreme()
-immune_system = ContractChecker()
-causal_lab = CausalPolicyLab()
-policy_genome_engine = PolicyGenomeEngine()
-resonance_orchestrator = ResonanceFeedbackLoopOrchestrator()
-wisdom_store = WisdomGemStore()
-cogitator_engine = CogitatorXEngine(
-    generator=LanguageMixedThoughtGenerator(),
-    prm=ProcessRewardModel(),
-    pangenes=PangenesAgent(wisdom_store),
-)
-
-genesis_core = GenesisCoreService()
-genesis_bridge = WebSocketBridge(genesis_core.environment)
-lifecycle = LifecycleManager()
-
-tachyon_engine = tachyon_core.TachyonEngine() if tachyon_core is not None else None
-HAS_BRAIN = tachyon_engine is not None
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
-    try:
-        yield
-    finally:
-        await bus.shutdown()
-        await lifecycle.shutdown()
+async def _lifespan(_app: FastAPI):
+    yield
+    await lifecycle.shutdown()
+    await bus.shutdown()
 
 
-app = FastAPI(title="Aetherium Gateway API", version="4.3.2", lifespan=lifespan)
-app.include_router(google_auth_router)
+app = FastAPI(title="Aetherium Gateway", version="1.1.0", lifespan=_lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -83,9 +61,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-assets_dir = frontend_dist / "assets"
-if assets_dir.exists():
-    app.mount("/dashboard/assets", StaticFiles(directory=assets_dir), name="dashboard_assets")
+frontend_dist = Path("frontend/dist")
+HAS_BRAIN = tachyon_core is not None
+tachyon_engine = tachyon_core.TachyonEngine() if HAS_BRAIN else None
+
+bus = AetherBusExtreme()
+causal_lab = CausalPolicyLab()
+policy_genome_engine = PolicyGenomeEngine()
+resonance_orchestrator = ResonanceFeedbackLoopOrchestrator()
+immune_system = ContractChecker()
+
+_wisdom_store = WisdomGemStore()
+cogitator_engine = CogitatorXEngine(
+    generator=LanguageMixedThoughtGenerator(),
+    prm=ProcessRewardModel(),
+    pangenes=PangenesAgent(store=_wisdom_store),
+)
+
+genesis_core = GenesisCoreService()
+genesis_bridge = WebSocketBridge(genesis_core.environment)
+lifecycle = LifecycleManager()
+GENESIS_WEBHOOK_SECRET = os.getenv("GENESIS_WEBHOOK_SECRET", "genesis-webhook-dev-secret")
+
+app.include_router(google_auth_router)
+if frontend_dist.exists():
+    app.mount("/dashboard/assets", StaticFiles(directory=frontend_dist / "assets"), name="dashboard-assets")
 
 @app.exception_handler(SoulBreakError)
 async def soulbreak_exception_handler(_request: Request, exc: SoulBreakError):

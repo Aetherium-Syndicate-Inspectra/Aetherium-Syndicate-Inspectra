@@ -1,0 +1,122 @@
+[
+  {
+    "signature": "555efe1cbff63a4747aba5602a4efbbb15f7257f2ae85dd524938270722dca66",
+    "functions": [
+      {
+        "path": "./src/backend/db.py",
+        "name": "now_iso",
+        "line": 72
+      },
+      {
+        "path": "./src/backend/resonance_feedback_loop.py",
+        "name": "utc_now_iso",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "signature": "c291036bbeaaf7830750268a401fe10a9233fb9ff0939c02892a24d91fb6fe05",
+    "functions": [
+      {
+        "path": "./src/backend/crisis_tournament.py",
+        "name": "_score_resilience",
+        "line": 98
+      },
+      {
+        "path": "./src/backend/crisis_tournament.py",
+        "name": "_score_adaptability",
+        "line": 103
+      },
+      {
+        "path": "./src/backend/crisis_tournament.py",
+        "name": "_score_trust",
+        "line": 113
+      },
+      {
+        "path": "./src/backend/crisis_tournament.py",
+        "name": "_score_viability",
+        "line": 118
+      }
+    ]
+  },
+  {
+    "signature": "6d9ad4abcbd95ea092d481a49c413951fd04fd64de6f2eba52cf4e36426262e3",
+    "functions": [
+      {
+        "path": "./src/backend/db.py",
+        "name": "get_user_by_email",
+        "line": 261
+      },
+      {
+        "path": "./src/backend/db.py",
+        "name": "get_user_by_google_sub",
+        "line": 266
+      }
+    ]
+  },
+  {
+    "signature": "c89794b06e3f61aa6eb911b5f96a683497303ba7834b7aa86e8b434a4040dd41",
+    "functions": [
+      {
+        "path": "./src/backend/api_server.py",
+        "name": "get_agents",
+        "line": 280
+      },
+      {
+        "path": "./src/backend/api_server.py",
+        "name": "get_directives",
+        "line": 285
+      },
+      {
+        "path": "./src/backend/api_server.py",
+        "name": "get_meetings",
+        "line": 290
+      }
+    ]
+  },
+  {
+    "signature": "01a319f153598a856f22a1964e0ba3866449b9e2654b70a5e911ccde4a9ba6e9",
+    "functions": [
+      {
+        "path": "./tests/test_tachyon_scripts.py",
+        "name": "test_test_identity_import_safe_without_tachyon_core",
+        "line": 15
+      },
+      {
+        "path": "./tests/test_tachyon_scripts.py",
+        "name": "test_test_tachyon_import_safe_without_tachyon_core",
+        "line": 28
+      }
+    ]
+  },
+  {
+    "signature": "a84bc9e434cbe6708a24db3b819e1377b2c86144dc51972b8628224f7adeb63a",
+    "functions": [
+      {
+        "path": "./tests/test_tachyon_scripts.py",
+        "name": "fake_import",
+        "line": 18
+      },
+      {
+        "path": "./tests/test_tachyon_scripts.py",
+        "name": "fake_import",
+        "line": 31
+      }
+    ]
+  },
+  {
+    "signature": "7fa36ff13926f4ca90f3e4fb29ad60c97a4184e9f6225181b5fe69dacc7143e4",
+    "functions": [
+      {
+        "path": "./tests/test_reasoning_profile.py",
+        "name": "test_reasoning_profile_uses_low_budget_for_short_arithmetic_prompts",
+        "line": 4
+      },
+      {
+        "path": "./tests/test_reasoning_profile.py",
+        "name": "test_reasoning_profile_uses_balanced_budget_for_general_prompts",
+        "line": 13
+      }
+    ]
+  }
+]

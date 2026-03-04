@@ -1,9 +1,13 @@
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, Clock, CheckCircle2, Cpu, ArrowUpRight } from 'lucide-react';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
-import { aiAgents } from '../data/mockData';
+import { aiAgents, generateAutonomousStrategyPlan } from '../data/mockData';
 
 export function AgentsPanel() {
+  const [objective, setObjective] = useState('Increase enterprise growth while reducing governance risk');
+  const strategyPlan = useMemo(() => generateAutonomousStrategyPlan(objective), [objective]);
+
   return (
     <div className="space-y-6">
       {/* Council Header */}
@@ -95,6 +99,66 @@ export function AgentsPanel() {
           </ResponsiveContainer>
         </div>
       </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="card-glass rounded-2xl p-6 border border-cyan-glow/10"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-end gap-4 mb-5">
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-white/90 mb-2">Autonomous Strategy Council</h3>
+            <p className="text-xs text-white/40 mb-3">Council can independently decide and plan enterprise strategy from one objective.</p>
+            <input
+              value={objective}
+              onChange={(event) => setObjective(event.target.value)}
+              className="w-full bg-aether-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-glow/40"
+              placeholder="Set organization objective..."
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <KpiBox label="Efficiency" value={strategyPlan.projectedKpis.efficiencyGain} />
+            <KpiBox label="Risk" value={strategyPlan.projectedKpis.riskReduction} />
+            <KpiBox label="Growth" value={strategyPlan.projectedKpis.growthPotential} />
+          </div>
+        </div>
+
+        <div className="mb-4 text-xs text-white/50 flex flex-wrap gap-3">
+          <span>Objective: <span className="text-white/75">{strategyPlan.objective}</span></span>
+          <span>Autonomy: <span className="text-cyan-glow">{strategyPlan.autonomyLevel}%</span></span>
+          <span>Horizon: <span className="text-white/75">{strategyPlan.horizon}</span></span>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            {strategyPlan.decisions.map((decision) => (
+              <div key={`${decision.owner}-${decision.decision}`} className="rounded-xl border border-white/10 bg-aether-800/40 p-3">
+                <div className="text-[10px] text-cyan-glow/90 mb-1">{decision.owner} • {decision.impact.toUpperCase()} IMPACT</div>
+                <div className="text-xs text-white/80">{decision.decision}</div>
+                <div className="text-[10px] text-white/40 mt-1">Confidence {(decision.confidence * 100).toFixed(0)}%</div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-xl border border-white/10 bg-aether-800/40 p-4">
+            <div className="text-xs font-semibold text-white/80 mb-2">Execution Plan</div>
+            <ol className="space-y-2 text-xs text-white/70 list-decimal list-inside">
+              {strategyPlan.nextActions.map((action) => (
+                <li key={action}>{action}</li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function KpiBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-aether-800/60 border border-white/10 px-3 py-2 min-w-[74px]">
+      <div className="text-[9px] text-white/30">{label}</div>
+      <div className="text-sm font-mono text-white">{value}</div>
     </div>
   );
 }

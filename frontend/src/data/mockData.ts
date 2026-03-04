@@ -126,6 +126,26 @@ export interface PolicyItem {
   lastUpdated: string;
 }
 
+export interface CouncilDecision {
+  owner: string;
+  decision: string;
+  impact: 'high' | 'medium';
+  confidence: number;
+}
+
+export interface StrategyPlan {
+  objective: string;
+  autonomyLevel: number;
+  horizon: string;
+  projectedKpis: {
+    efficiencyGain: string;
+    riskReduction: string;
+    growthPotential: string;
+  };
+  decisions: CouncilDecision[];
+  nextActions: string[];
+}
+
 export const policies: PolicyItem[] = [
   { id: 'p1', name: 'Data Sovereignty Protocol', status: 'enforced', coverage: 100, lastUpdated: '2 hours ago' },
   { id: 'p2', name: 'AI Alignment Verification', status: 'enforced', coverage: 99.8, lastUpdated: '15 min ago' },
@@ -134,3 +154,54 @@ export const policies: PolicyItem[] = [
   { id: 'p5', name: 'Resource Allocation Limits', status: 'enforced', coverage: 98.2, lastUpdated: '45 min ago' },
   { id: 'p6', name: 'Cross-Agent Collaboration', status: 'draft', coverage: 78.0, lastUpdated: '3 hours ago' },
 ];
+
+export function generateAutonomousStrategyPlan(rawObjective: string): StrategyPlan {
+  const objective = rawObjective.trim() || 'Scale enterprise operations while preserving governance quality';
+  const normalized = objective.toLowerCase();
+
+  const focus: Array<{ keyword: string; signal: string; owner: string }> = [
+    { keyword: 'growth', signal: 'market expansion', owner: 'PULSE-Φ' },
+    { keyword: 'cost', signal: 'unit economics discipline', owner: 'VAULT-Σ' },
+    { keyword: 'risk', signal: 'regulatory shielding', owner: 'AEGIS-Θ' },
+    { keyword: 'talent', signal: 'workforce adaptability', owner: 'SYNTH-Λ' },
+  ];
+
+  const matched = focus.find((item) => normalized.includes(item.keyword));
+  const primarySignal = matched?.signal ?? 'cross-functional orchestration';
+
+  return {
+    objective,
+    autonomyLevel: 93,
+    horizon: '12 weeks',
+    projectedKpis: {
+      efficiencyGain: '+14%',
+      riskReduction: '-21%',
+      growthPotential: '+11%',
+    },
+    decisions: [
+      {
+        owner: 'APEX-Ω',
+        decision: `Authorize autonomous council execution around ${primarySignal} with governance guardrails.`,
+        impact: 'high',
+        confidence: 0.97,
+      },
+      {
+        owner: matched?.owner ?? 'PRISM-Ξ',
+        decision: `Deploy scenario simulation pods to optimize objective: "${objective}" before broad rollout.`,
+        impact: 'high',
+        confidence: 0.94,
+      },
+      {
+        owner: 'NEXUS-Ψ',
+        decision: 'Auto-reallocate shared resources every 6 hours based on live KPI drift.',
+        impact: 'medium',
+        confidence: 0.91,
+      },
+    ],
+    nextActions: [
+      'Spin up autonomous planning cycle and baseline governance metrics.',
+      'Run policy-safe experiment in one pilot business unit for 7 days.',
+      'Promote successful strategy to enterprise-wide execution with audit replay.',
+    ],
+  };
+}

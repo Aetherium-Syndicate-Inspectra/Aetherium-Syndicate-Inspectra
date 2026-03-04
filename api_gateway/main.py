@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -36,6 +37,57 @@ from src.backend.cogitator_x import (
 from tools.contracts.contract_checker import ContractChecker
 
 logger = logging.getLogger("AetherGateway")
+
+try:
+    import tachyon_core
+except ImportError:  # pragma: no cover - optional native extension
+    tachyon_core = None
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    try:
+        yield
+    finally:
+        await bus.shutdown()
+        await lifecycle.shutdown()
+
+
+app = FastAPI(title="Aetherium Gateway", version="4.3.1", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+frontend_dist = Path("frontend/dist")
+if frontend_dist.exists():
+    app.mount("/dashboard/assets", StaticFiles(directory=frontend_dist), name="dashboard-assets")
+
+app.include_router(google_auth_router)
+
+GENESIS_WEBHOOK_SECRET = os.getenv("GENESIS_WEBHOOK_SECRET", "genesis-dev-secret")
+HAS_BRAIN = tachyon_core is not None
+tachyon_engine = tachyon_core.TachyonEngine() if HAS_BRAIN else None
+
+bus = AetherBusExtreme()
+immune_system = ContractChecker()
+causal_lab = CausalPolicyLab()
+policy_genome_engine = PolicyGenomeEngine()
+resonance_orchestrator = ResonanceFeedbackLoopOrchestrator()
+
+wisdom_store = WisdomGemStore()
+pangenes_agent = PangenesAgent(store=wisdom_store)
+cogitator_engine = CogitatorXEngine(
+    generator=LanguageMixedThoughtGenerator(),
+    prm=ProcessRewardModel(),
+    pangenes=pangenes_agent,
+)
+
+genesis_core = GenesisCoreService()
+genesis_bridge = WebSocketBridge(genesis_core.environment)
+lifecycle = LifecycleManager()
 
 @app.exception_handler(SoulBreakError)
 async def soulbreak_exception_handler(_request: Request, exc: SoulBreakError):

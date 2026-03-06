@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -36,6 +37,49 @@ from src.backend.cogitator_x import (
 from tools.contracts.contract_checker import ContractChecker
 
 logger = logging.getLogger("AetherGateway")
+
+try:
+    import tachyon_core
+except ImportError:  # pragma: no cover - optional native extension
+    tachyon_core = None
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    yield
+
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+frontend_dist = ROOT_DIR / "frontend" / "dist"
+GENESIS_WEBHOOK_SECRET = os.getenv("GENESIS_WEBHOOK_SECRET", "asi-genesis-dev-secret")
+
+app = FastAPI(title="Aetherium API Gateway", version="1.0.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+app.include_router(google_auth_router)
+
+bus = AetherBusExtreme()
+immune_system = ContractChecker()
+causal_lab = CausalPolicyLab()
+policy_genome_engine = PolicyGenomeEngine()
+resonance_orchestrator = ResonanceFeedbackLoopOrchestrator()
+cogitator_engine = CogitatorXEngine(
+    generator=LanguageMixedThoughtGenerator(),
+    prm=ProcessRewardModel(),
+    pangenes=PangenesAgent(WisdomGemStore()),
+)
+
+genesis_core = GenesisCoreService()
+lifecycle = LifecycleManager()
+genesis_bridge = WebSocketBridge(genesis_core.environment)
+
+tachyon_engine = tachyon_core.TachyonEngine() if tachyon_core is not None else None
+HAS_BRAIN = tachyon_engine is not None
 
 @app.exception_handler(SoulBreakError)
 async def soulbreak_exception_handler(_request: Request, exc: SoulBreakError):

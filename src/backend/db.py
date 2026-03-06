@@ -69,8 +69,8 @@ def hash_api_key(api_key: str) -> str:
     return hashlib.sha256(api_key.encode("utf-8")).hexdigest()
 
 
-def now_iso() -> str:
-    return datetime.now(tz=timezone.utc).isoformat()
+from src.backend.utils.datetime_utils import now_iso
+
 
 
 def init_db() -> None:

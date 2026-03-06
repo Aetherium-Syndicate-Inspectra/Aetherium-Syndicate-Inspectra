@@ -101,3 +101,7 @@ class AetherBusExtreme:
                 await self._worker_task
             except asyncio.CancelledError:
                 pass
+
+
+# Compatibility alias
+AetherBus = AetherBusExtreme

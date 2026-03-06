@@ -8,13 +8,21 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from api_gateway.aetherbus_extreme import AetherBusExtreme
+from src.backend.core.aetherbus_extreme import AetherBusExtreme
 from src.backend.causal_policy_lab import CausalPolicyLab
 from src.backend.auth.google_auth import router as google_auth_router
+from src.backend.freeze_api import router as freeze_router
+from src.backend.resonance_drift_api import router as resonance_drift_router
+from src.backend.integration_layer import router as integration_router
+from src.backend.economy.router import (
+    router as billing_router,
+    credits_router,
+    marketplace_router
+)
 from src.backend.genesis_core import (
     GenesisCoreService,
     IntentIngressRequest,
@@ -35,34 +43,44 @@ from src.backend.cogitator_x import (
     RuleBasedOutcomeReward,
     WisdomGemStore,
 )
+from src.backend.db import init_db, register_agent
+from src.backend.economy.gatekeeper import require_feature, write_audit_log
 from tools.contracts.contract_checker import ContractChecker
 
 logger = logging.getLogger("AetherGateway")
 
 try:
     import tachyon_core
-except ImportError:  # pragma: no cover - optional native extension
+except ImportError:  # pragma: no cover
     tachyon_core = None
-
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    init_db()
     yield
-
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 frontend_dist = ROOT_DIR / "frontend" / "dist"
 GENESIS_WEBHOOK_SECRET = os.getenv("GENESIS_WEBHOOK_SECRET", "asi-genesis-dev-secret")
 
-app = FastAPI(title="Aetherium API Gateway", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Aetherium API Gateway", version="1.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+
+# Include Routers
 app.include_router(google_auth_router)
+app.include_router(freeze_router)
+app.include_router(resonance_drift_router)
+app.include_router(integration_router)
+app.include_router(billing_router)
+app.include_router(credits_router)
+app.include_router(marketplace_router)
 
 bus = AetherBusExtreme()
 immune_system = ContractChecker()
@@ -82,88 +100,55 @@ genesis_bridge = WebSocketBridge(genesis_core.environment)
 tachyon_engine = tachyon_core.TachyonEngine() if tachyon_core is not None else None
 HAS_BRAIN = tachyon_engine is not None
 
+# Mock Data for Legacy UI
+AGENTS = [
+    {"id": "alpha-1", "name": "Alpha-1", "role": "Chief Strategy Officer", "status": "active", "cpu": 75, "memory": 60},
+    {"id": "beta-x", "name": "Beta-X", "role": "Chief Financial Officer", "status": "busy", "cpu": 92, "memory": 85},
+]
+DIRECTIVES = [
+    {"id": "DIR-012", "title": "Market Pulse Q4", "status": "pending", "department": "Marketing", "time": "2h ago"},
+]
+
 @app.exception_handler(SoulBreakError)
 async def soulbreak_exception_handler(_request: Request, exc: SoulBreakError):
     status_code, payload = problem_details_from_error(exc, status_code=400)
     return JSONResponse(status_code=status_code, content=payload)
 
-
 @app.get("/")
 async def root():
     return {"status": "ONLINE", "brain_connected": HAS_BRAIN}
-
 
 @app.get("/dashboard")
 async def dashboard_index():
     index_file = frontend_dist / "index.html"
     if index_file.exists():
         return FileResponse(index_file)
-    return JSONResponse(
-        status_code=503,
-        content={"message": "frontend build is not available. Build frontend/ to enable /dashboard"},
-    )
-
-
-@app.get("/dashboard/{path:path}")
-async def dashboard_spa(path: str):
-    index_file = frontend_dist / "index.html"
-    asset_file = frontend_dist / path
-    if asset_file.exists() and asset_file.is_file():
-        return FileResponse(asset_file)
-    if index_file.exists():
-        return FileResponse(index_file)
     return JSONResponse(status_code=503, content={"message": "frontend build is not available"})
 
+@app.get("/api/agents")
+def get_agents():
+    return AGENTS
+
+@app.get("/api/directives")
+def get_directives():
+    return DIRECTIVES
 
 @app.get("/api/v1/tachyon/metrics")
 async def tachyon_metrics():
-    now = datetime.now(tz=timezone.utc)
-    metrics = {
-        "timestamp": int(now.timestamp() * 1000),
+    return {
+        "timestamp": int(datetime.now(tz=timezone.utc).timestamp() * 1000),
         "latency_us": 0.3,
         "throughput_rps": 12847,
-        "memory_percent": 67.2,
         "source": "tachyon_core" if HAS_BRAIN else "simulated",
     }
-    if HAS_BRAIN and hasattr(tachyon_engine, "status"):
-        try:
-            metrics["engine_status"] = tachyon_engine.status()
-        except Exception:  # pragma: no cover
-            metrics["engine_status"] = "unavailable"
-    return metrics
 
-
-@app.get("/api/v1/resonance/drift")
-async def resonance_drift():
-    snapshot = resonance_orchestrator.ingest_feedback(
-        user_id="dashboard-system",
-        intent="monitoring",
-        response="heartbeat",
-        feedback_score=0.97,
-    )
-    return {
-        "resonance_score": snapshot.resonance_score,
-        "switch_count": snapshot.switch_count,
-        "switch_success_rate": snapshot.switch_success_rate,
-        "current_preferences": snapshot.current_preferences,
-    }
-
-
-@app.get("/api/v1/agents/council")
-async def agents_council():
-    return {
-        "agents": [
-            {"id": "ceo-01", "name": "APEX-Ω", "role": "Chief Executive Officer", "status": "active"},
-            {"id": "cto-01", "name": "FORGE-Δ", "role": "Chief Technology Officer", "status": "processing"},
-            {"id": "cfo-01", "name": "VAULT-Σ", "role": "Chief Financial Officer", "status": "active"},
-        ]
-    }
-
-
-@app.get("/api/events/recent")
-async def recent_events(limit: int = 50):
-    return {"events": bus.recent_events(limit=limit)}
-
+@app.get("/api/events")
+async def sse_events() -> StreamingResponse:
+    async def event_generator():
+        while True:
+            yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+            await asyncio.sleep(2)
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.post("/causal/estimate")
 async def causal_estimate(payload: dict = Body(...)):
@@ -180,129 +165,19 @@ async def causal_estimate(payload: dict = Body(...)):
         method=method,
     )
 
-
 @app.get("/causal/recommend")
 async def causal_recommend(top_n: int = 3):
     return {"recommendations": causal_lab.recommend_policies(top_n=top_n)}
-
 
 @app.post("/policy-genome/build")
 async def build_policy_genome(payload: dict = Body(default={})):
     policies = payload.get("policies") or causal_lab.recommend_policies(top_n=payload.get("top_n", 5))
     graph = policy_genome_engine.build_graph(policies)
-    output_path = payload.get("output_path")
-    if output_path:
-        policy_genome_engine.save_graph(graph, output_path)
     return graph
-
-
-@app.post("/api/genesis/mint")
-async def mint_agent(seed: int = 1000):
-    """สั่งสมองให้สร้าง Agent ใหม่ (Identity Crystallization)"""
-    if not HAS_BRAIN:
-        return {"error": "Brain missing"}
-
-    deck_bytes = tachyon_engine.mint_starter_deck(seed)
-    sentinel, catalyst, harmonizer = deck_bytes
-
-    agents = {
-        "sentinel": json.loads(tachyon_engine.inspect_identity_json(sentinel)),
-        "catalyst": json.loads(tachyon_engine.inspect_identity_json(catalyst)),
-        "harmonizer": json.loads(tachyon_engine.inspect_identity_json(harmonizer)),
-    }
-
-    await bus.emit("AGENT_MINTED", agents)
-    return agents
-
-
-@app.websocket("/ws/feed")
-async def websocket_endpoint(websocket: WebSocket):
-    """ท่อส่งข้อมูล Real-time ไปยัง Dashboard"""
-    await websocket.accept()
-
-    async def synapse_handler(event):
-        try:
-            await websocket.send_json(event)
-        except Exception:  # pragma: no cover
-            logger.debug("WebSocket send failed")
-
-    await bus.subscribe("AGENT_MINTED", synapse_handler)
-    await bus.subscribe("SYSTEM_ALERT", synapse_handler)
-    await bus.subscribe("CODE_GEN_UPDATE", synapse_handler)
-
-    try:
-        while True:
-            data = await websocket.receive_text()
-            try:
-                parsed = json.loads(data)
-            except json.JSONDecodeError:
-                await bus.emit("SYSTEM_ALERT", {"message": "Malformed JSON payload", "raw": data})
-                continue
-
-            is_valid, result = immune_system.validate_adaptive(parsed, contract_type="ipw_v1")
-            if not is_valid:
-                await bus.emit("SYSTEM_ALERT", {"message": "Contract violation", "detail": result})
-                continue
-
-            event = immune_system.canonicalize_event(parsed, event_type="USER_INPUT", source="dashboard")
-            event["quality"] = result["quality"]
-            await bus.emit("USER_INPUT", event)
-
-    except WebSocketDisconnect:
-        await bus.unsubscribe("AGENT_MINTED", synapse_handler)
-        await bus.unsubscribe("SYSTEM_ALERT", synapse_handler)
-        await bus.unsubscribe("CODE_GEN_UPDATE", synapse_handler)
-        logger.info("🔌 Dashboard Disconnected")
-
-
-@app.websocket("/ws/aetherbus")
-async def websocket_aetherbus(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        while True:
-            await websocket.send_json(
-                {
-                    "type": "HEARTBEAT",
-                    "status": "AETHERBUS_ACTIVE",
-                    "timestamp": int(datetime.now(tz=timezone.utc).timestamp() * 1000),
-                }
-            )
-            await asyncio.sleep(1.5)
-    except WebSocketDisconnect:
-        logger.info("🔌 AetherBus client disconnected")
-
-
-@app.post("/api/v1/chat/llm")
-async def chat_with_internal_llm(payload: dict = Body(...)):
-    prompt = str(payload.get("prompt", "")).strip()
-    if not prompt:
-        return JSONResponse(status_code=400, content={"message": "prompt is required"})
-
-    compute_budget, base_branch_factor = select_reasoning_profile(prompt)
-
-    result = cogitator_engine.solve(
-        prompt=prompt,
-        outcome_reward=RuleBasedOutcomeReward(lambda _answer: True),
-        compute_budget=compute_budget,
-        base_branch_factor=base_branch_factor,
-        language_mode="mixed",
-    )
-
-    answer = str(result.get("answer", "")).strip()
-    if answer == "insufficient-data" or not answer:
-        answer = f"[Cogitator-X] ได้รับคำถามแล้ว: {prompt}\nสรุปเบื้องต้น: ควรเพิ่มบริบทหรือข้อมูลเชิงตัวเลขเพื่อให้ตอบได้แม่นยำยิ่งขึ้น"
-
-    return {
-        "answer": answer,
-        "confidence": float(result.get("confidence", 0.0)),
-        "engine": "cogitator_x_internal",
-    }
-
 
 @app.get("/api/genesis/terminology")
 async def get_genesis_terminology():
     return {"mapping": genesis_core.terminology.snapshot()}
-
 
 @app.post("/api/genesis/intent")
 async def ingest_genesis_intent(payload: dict = Body(...)):
@@ -311,7 +186,6 @@ async def ingest_genesis_intent(payload: dict = Body(...)):
         "protocol": ["devordota", "akashic_envelope", "aetherbus", "digisonic"],
         "envelope": envelope.model_dump(),
     }
-
 
 @app.post("/api/genesis/webhook/ingest")
 async def genesis_webhook_ingest(request: Request):
@@ -323,20 +197,24 @@ async def genesis_webhook_ingest(request: Request):
     envelope = await genesis_core.ingest_intent(IntentIngressRequest(**payload))
     return {"status": "ok", "vector_id": envelope.intent_vector.vector_id}
 
+@app.post("/api/genesis/mint")
+async def mint_agent(seed: int = 1000, user_sub=require_feature("MINT_AGENT")):
+    if not HAS_BRAIN:
+        return {"error": "Brain missing"}
+    deck = tachyon_engine.mint_starter_deck(seed)
+    register_agent(user_sub.user_id)
+    write_audit_log("MINT_AGENT", user_sub.user_id, {"seed": seed})
+    return {"sentinel": json.loads(tachyon_engine.inspect_identity_json(deck[0]))}
 
-@app.websocket("/ws/genesis")
-async def websocket_genesis(websocket: WebSocket):
+@app.websocket("/ws/feed")
+async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    await genesis_bridge.attach(websocket)
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        await genesis_bridge.detach(websocket)
-
+        pass
 
 if __name__ == "__main__":
     import uvicorn
-
-    logger.info("🚀 Aetherium Manifest: Awakening Sequence Initiated...")
     uvicorn.run(app, host="0.0.0.0", port=8000)

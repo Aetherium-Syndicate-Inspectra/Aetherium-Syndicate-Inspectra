@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 from src.backend.resonance_drift import DriftDetector, InterventionEvaluator, ResonanceProfile
 
 
-def utc_now_iso() -> str:
-    return datetime.now(tz=timezone.utc).isoformat()
+from src.backend.utils.datetime_utils import now_iso as utc_now_iso
+
 
 
 @dataclass

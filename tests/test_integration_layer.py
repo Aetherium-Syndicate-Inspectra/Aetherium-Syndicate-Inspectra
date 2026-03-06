@@ -4,7 +4,7 @@ pytest.importorskip("fastapi")
 
 from fastapi.testclient import TestClient
 
-from src.backend.api_server import app
+from api_gateway.main import app
 from src.backend.cogitator_x import SynergyResolver
 from src.backend.db import create_or_get_user, get_conn
 from src.backend.integration_layer import build_promptpay_qr_payload, build_tiktok_script

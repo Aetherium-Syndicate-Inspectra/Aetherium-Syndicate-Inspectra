@@ -35,7 +35,7 @@ class CrisisScenario:
             },
             "aerospace": {
                 "impact": "titanium_shortage",
-                "kpi_weight": {"resilience": 0.4, "adaptability": 0.2, "resource_efficiency": 0.1, "stakeholder_trust": 0.2, "long_term_viability": 0.1},
+                "kpi_weight": {"resilience": 0.4, "adaptability": 0.2, "resource_efficiency": 0.1, "stakeholder_trust": 0.25, "long_term_viability": 0.1},
             },
             "medical": {
                 "impact": "sterile_packaging_shortage",
@@ -95,14 +95,17 @@ class CrisisTournament:
         }
 
     @staticmethod
+    def _calculate_hit_score(decisions: list[dict[str, Any]], keys: list[str], base: float, inc: float) -> float:
+        hits = sum(1 for d in decisions if any(d.get(k) for k in keys))
+        return round(min(1.0, base + inc * hits), 4)
+
+    @staticmethod
     def _score_resilience(decisions: list[dict[str, Any]]) -> float:
-        hits = sum(1 for d in decisions if d.get("inventory_buffer") or d.get("contingency_plan"))
-        return round(min(1.0, 0.5 + 0.15 * hits), 4)
+        return CrisisTournament._calculate_hit_score(decisions, ["inventory_buffer", "contingency_plan"], 0.5, 0.15)
 
     @staticmethod
     def _score_adaptability(decisions: list[dict[str, Any]]) -> float:
-        hits = sum(1 for d in decisions if d.get("supplier_diversification") or d.get("workflow_reconfiguration"))
-        return round(min(1.0, 0.45 + 0.18 * hits), 4)
+        return CrisisTournament._calculate_hit_score(decisions, ["supplier_diversification", "workflow_reconfiguration"], 0.45, 0.18)
 
     @staticmethod
     def _score_efficiency(decisions: list[dict[str, Any]]) -> float:
@@ -111,13 +114,11 @@ class CrisisTournament:
 
     @staticmethod
     def _score_trust(decisions: list[dict[str, Any]]) -> float:
-        hits = sum(1 for d in decisions if d.get("stakeholder_communication") or d.get("regulatory_alignment"))
-        return round(min(1.0, 0.5 + 0.15 * hits), 4)
+        return CrisisTournament._calculate_hit_score(decisions, ["stakeholder_communication", "regulatory_alignment"], 0.5, 0.15)
 
     @staticmethod
     def _score_viability(decisions: list[dict[str, Any]]) -> float:
-        hits = sum(1 for d in decisions if d.get("long_term_investment") or d.get("vertical_integration"))
-        return round(min(1.0, 0.45 + 0.2 * hits), 4)
+        return CrisisTournament._calculate_hit_score(decisions, ["long_term_investment", "vertical_integration"], 0.45, 0.2)
 
     def freeze_tournament_results(self) -> None:
         ranking_payload = []

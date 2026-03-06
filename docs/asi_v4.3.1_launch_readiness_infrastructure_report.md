@@ -43,7 +43,7 @@
 
 เพื่อให้แพลตฟอร์ม “ขายได้จริง” ในวินาทีนี้:
 
-1. **เชื่อมต่อ Backend จริง:** ย้ายจากข้อมูลจำลอง (Mock Data) มาเป็นการรัน `api_server.py` บน Cloud จริง
+1. **เชื่อมต่อ Backend จริง:** ย้ายจากข้อมูลจำลอง (Mock Data) มาเป็นการรัน `api_gateway/main.py` บน Cloud จริง
 2. **สร้าง Demo Account:** ให้ลูกค้าสามารถกด “เข้าสู่ระบบ” แล้วเห็น Dashboard ที่มีข้อมูลเคลื่อนไหว (Live Telemetry)
 3. **Focus on One Industry:** เลือกอุตสาหกรรมที่ทำเงินเร็วที่สุด (เช่น FinTech หรือ Logistics) เพื่อทำ Case Study ครั้งแรก
 

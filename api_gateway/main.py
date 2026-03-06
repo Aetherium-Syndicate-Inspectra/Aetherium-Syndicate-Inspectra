@@ -47,48 +47,40 @@ except ImportError:  # pragma: no cover - optional native extension
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    try:
-        yield
-    finally:
-        await bus.shutdown()
-        await lifecycle.shutdown()
+    yield
 
 
-app = FastAPI(title="Aetherium Gateway", version="4.3.1", lifespan=lifespan)
+ROOT_DIR = Path(__file__).resolve().parents[1]
+frontend_dist = ROOT_DIR / "frontend" / "dist"
+GENESIS_WEBHOOK_SECRET = os.getenv("GENESIS_WEBHOOK_SECRET", "asi-genesis-dev-secret")
+
+app = FastAPI(title="Aetherium API Gateway", version="1.0.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-frontend_dist = Path("frontend/dist")
-if frontend_dist.exists():
-    app.mount("/dashboard/assets", StaticFiles(directory=frontend_dist), name="dashboard-assets")
-
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 app.include_router(google_auth_router)
-
-GENESIS_WEBHOOK_SECRET = os.getenv("GENESIS_WEBHOOK_SECRET", "genesis-dev-secret")
-HAS_BRAIN = tachyon_core is not None
-tachyon_engine = tachyon_core.TachyonEngine() if HAS_BRAIN else None
 
 bus = AetherBusExtreme()
 immune_system = ContractChecker()
 causal_lab = CausalPolicyLab()
 policy_genome_engine = PolicyGenomeEngine()
 resonance_orchestrator = ResonanceFeedbackLoopOrchestrator()
-
-wisdom_store = WisdomGemStore()
-pangenes_agent = PangenesAgent(store=wisdom_store)
 cogitator_engine = CogitatorXEngine(
     generator=LanguageMixedThoughtGenerator(),
     prm=ProcessRewardModel(),
-    pangenes=pangenes_agent,
+    pangenes=PangenesAgent(WisdomGemStore()),
 )
 
 genesis_core = GenesisCoreService()
-genesis_bridge = WebSocketBridge(genesis_core.environment)
 lifecycle = LifecycleManager()
+genesis_bridge = WebSocketBridge(genesis_core.environment)
+
+tachyon_engine = tachyon_core.TachyonEngine() if tachyon_core is not None else None
+HAS_BRAIN = tachyon_engine is not None
 
 @app.exception_handler(SoulBreakError)
 async def soulbreak_exception_handler(_request: Request, exc: SoulBreakError):

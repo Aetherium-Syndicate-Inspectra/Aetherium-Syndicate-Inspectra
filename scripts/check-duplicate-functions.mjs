@@ -83,7 +83,9 @@ const files = listSourceFiles();
 const occurrencesByName = new Map();
 
 const patterns = [
+  /\bdef\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
   /\bfn\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
+  /\basync\s+function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
   /\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
   /\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/g,
   /\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:async\s*)?[A-Za-z_][A-Za-z0-9_]*\s*=>/g,

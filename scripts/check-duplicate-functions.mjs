@@ -5,20 +5,7 @@ import path from 'node:path';
 
 const TARGET_EXTENSIONS = new Set(['.py', '.rs', '.js', '.mjs', '.ts', '.tsx']);
 const IGNORED_PREFIXES = ['backup/', 'tests/'];
-const IGNORED_SEGMENTS = new Set(['.git', 'node_modules', 'target', 'dist', 'build']);
-const NON_FUNCTION_IDENTIFIERS = new Set(['if', 'for', 'while', 'switch', 'catch', 'try', 'do']);
-const COMMON_NAMES = new Set([
-  '__init__',
-  '__post_init__',
-  'constructor',
-  'render',
-  'main',
-  'init',
-  'list',
-  'save',
-  'subscribe',
-  'notify',
-]);
+const IGNORED_SEGMENTS = new Set(['.git', 'node_modules', 'target', 'dist', 'build', '.venv', '__pycache__']);
 
 function normalize(file) {
   return file.replaceAll('\\', '/');
@@ -93,40 +80,53 @@ function listSourceFiles() {
 }
 
 const files = listSourceFiles();
-const map = new Map();
+const occurrencesByName = new Map();
 
 const patterns = [
   /\bdef\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
   /\bfn\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
   /\basync\s+function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
   /\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
-  /^\s*(?:async\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\([^)]*\)\s*\{/gm,
-  /\bconst\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*async\s*\([^)]*\)\s*=>/g,
-  /\bconst\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\([^)]*\)\s*=>/g,
+  /\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/g,
+  /\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:async\s*)?[A-Za-z_][A-Za-z0-9_]*\s*=>/g,
+  /^\s*async\s+def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/gm,
+  /^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/gm,
 ];
+
+function lineNumberFromIndex(source, index) {
+  let line = 1;
+  for (let i = 0; i < index; i += 1) {
+    if (source[i] === '\n') line += 1;
+  }
+  return line;
+}
 
 for (const file of files) {
   const src = readFileSync(file, 'utf8');
+
   for (const re of patterns) {
     re.lastIndex = 0;
     let match;
     while ((match = re.exec(src)) !== null) {
       const name = match[1];
-      if (name.startsWith('test_')) continue;
-      if (NON_FUNCTION_IDENTIFIERS.has(name) || COMMON_NAMES.has(name)) continue;
-      if (!map.has(name)) map.set(name, []);
-      map.get(name).push(file);
+      if (name.startsWith('test_') || name.startsWith('__')) continue;
+      const location = `${file}:${lineNumberFromIndex(src, match.index)}`;
+      if (!occurrencesByName.has(name)) occurrencesByName.set(name, []);
+      occurrencesByName.get(name).push(location);
     }
   }
 }
 
-const duplicates = [...map.entries()]
+const duplicates = [...occurrencesByName.entries()]
   .map(([name, locations]) => [name, [...new Set(locations)]])
-  .filter(([, locations]) => locations.length > 1)
+  .filter(([, locations]) => {
+    const uniqueFiles = new Set(locations.map((entry) => entry.split(':')[0]));
+    return uniqueFiles.size > 1;
+  })
   .sort((a, b) => a[0].localeCompare(b[0]));
 
 if (duplicates.length > 0) {
-  console.error('Duplicate function names detected (choose a single best function):');
+  console.error('Duplicate function names detected across files (choose a single best function):');
   for (const [name, locations] of duplicates) {
     console.error(`- ${name}: ${locations.join(', ')}`);
   }

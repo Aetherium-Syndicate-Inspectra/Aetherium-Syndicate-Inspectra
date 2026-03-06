@@ -10,7 +10,7 @@ from tools.contracts.contract_checker import ContractChecker
 
 
 def test_gateway_bootstrap_initializes_core_dependencies():
-    assert main.app.title == "Aetherium Gateway"
+    assert main.app.title == "Aetherium API Gateway"
     assert isinstance(main.bus, AetherBusExtreme)
     assert isinstance(main.immune_system, ContractChecker)
 

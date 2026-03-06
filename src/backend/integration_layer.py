@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
 
-from src.backend.aetherbus_extreme import AetherBus
+from src.backend.core.aetherbus_extreme import AetherBus
 from src.backend.cogitator_x import SynergyResolver
 from src.backend.db import get_user_by_google_sub, link_line_identity
 

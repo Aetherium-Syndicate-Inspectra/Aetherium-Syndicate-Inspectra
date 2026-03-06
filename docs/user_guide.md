@@ -43,7 +43,7 @@ cd ..
 ### 4.1 รัน Backend API Gateway
 
 ```bash
-uvicorn api_gateway.main:app --reload --host 0.0.0.0 --port 8000
+python3 api_gateway/main.py
 ```
 
 เมื่อรันสำเร็จสามารถตรวจสอบได้ที่:
@@ -91,7 +91,7 @@ node --test tests/app-state.test.mjs
 ## 7) โครงสร้างสำคัญที่ควรรู้
 
 - `api_gateway/main.py` — จุดเข้าใช้งาน API gateway และเส้นทาง dashboard
-- `src/backend/api_server.py` — FastAPI bridge และ integration หลักกับ backend modules
+- `src/backend/economy/router.py` — การจัดการระบบเศรษฐกิจและ Billing
 - `frontend/` — โค้ด UI ฝั่ง React + Vite
 - `tests/` — ชุดทดสอบหลักของระบบ
 - `docs/` — เอกสารเชิงเทคนิคและเอกสารประกอบ

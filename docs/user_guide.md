@@ -22,6 +22,7 @@ cp .env.example .env
 
 - `GOOGLE_CLIENT_ID` สำหรับ Google Auth
 - `PAYMENT_WEBHOOK_SECRET` (ถ้าต้องทดสอบ webhook)
+- `GENESIS_WEBHOOK_SECRET` (ถ้าต้องทดสอบ `/api/genesis/webhook/ingest`)
 - `TACHYON_CORE_LIBRARY_PATH` (เฉพาะกรณีต้องการผูก Rust core library)
 
 ## 3) ติดตั้ง dependencies
@@ -87,6 +88,13 @@ pytest -q
 ```bash
 node --test tests/app-state.test.mjs
 ```
+
+### 6.3 ทดสอบ Genesis webhook แบบลงลายเซ็น HMAC
+
+- Endpoint: `POST /api/genesis/webhook/ingest`
+- ต้องส่ง header `X-Genesis-Signature` โดยใช้ HMAC-SHA256 ของ raw JSON body ด้วยค่า `GENESIS_WEBHOOK_SECRET`
+- ถ้า signature ไม่ถูกต้อง จะได้ `401 {"status":"invalid_signature"}`
+- ถ้า signature ถูกต้องแต่ JSON เสีย จะได้ `400 {"status":"invalid_json"}`
 
 ## 7) โครงสร้างสำคัญที่ควรรู้
 

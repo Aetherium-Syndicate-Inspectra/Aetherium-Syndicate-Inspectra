@@ -193,7 +193,14 @@ async def genesis_webhook_ingest(request: Request):
     signature = request.headers.get("X-Genesis-Signature")
     if not verify_hmac_sha256(raw, signature, secret=GENESIS_WEBHOOK_SECRET):
         return JSONResponse(status_code=401, content={"status": "invalid_signature"})
-    payload = await request.json()
+
+    # Signed webhook payloads still need robust JSON validation to avoid
+    # surfacing internal parsing errors as a generic 500.
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return JSONResponse(status_code=400, content={"status": "invalid_json"})
+
     envelope = await genesis_core.ingest_intent(IntentIngressRequest(**payload))
     return {"status": "ok", "vector_id": envelope.intent_vector.vector_id}
 

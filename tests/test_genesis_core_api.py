@@ -58,15 +58,29 @@ def test_genesis_webhook_requires_hmac_signature():
 
     unauthorized = client.post(
         "/api/genesis/webhook/ingest",
-        data=raw,
+        content=raw,
         headers={"Content-Type": "application/json", "X-Genesis-Signature": "bad"},
     )
     assert unauthorized.status_code == 401
 
     authorized = client.post(
         "/api/genesis/webhook/ingest",
-        data=raw,
+        content=raw,
         headers={"Content-Type": "application/json", "X-Genesis-Signature": _signature(payload)},
     )
     assert authorized.status_code == 200
     assert authorized.json()["status"] == "ok"
+
+
+def test_genesis_webhook_rejects_invalid_json_even_with_valid_signature():
+    raw = b'{"intent": "sensor.ping", "payload": '
+    signature = hmac.new(GENESIS_WEBHOOK_SECRET.encode("utf-8"), raw, hashlib.sha256).hexdigest()
+
+    response = client.post(
+        "/api/genesis/webhook/ingest",
+        content=raw,
+        headers={"Content-Type": "application/json", "X-Genesis-Signature": signature},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"status": "invalid_json"}

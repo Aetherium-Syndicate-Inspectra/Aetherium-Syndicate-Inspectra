@@ -6,13 +6,25 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: duplicate-function-gate-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   duplicate-function-gate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Enforce single-best-function rule
         run: node scripts/check-duplicate-functions.mjs
